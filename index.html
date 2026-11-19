@@ -109,6 +109,10 @@ body.dragging .mapS{cursor:grabbing}
 .mhint{font-size:13px;color:#9aa5aa;text-align:center;margin:6px 0}
 .medbar{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}.medbar .btn{flex:1;background:#ffffff14;color:#fff;border-color:#ffffff33}.medbar .btn.pri{background:var(--hv);border-color:var(--hv)}.medbar .btn.red{color:#ffb3ad}
 body.wiz .mk:not(.af),body.wiz .pl{opacity:.45}
+.rt{gap:8px}.rt .sw2{width:34px;height:20px;border-radius:10px;background:#c9cfcc;position:relative;flex:none;transition:background .15s}.rt .sw2 i{position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left .15s}
+.rt[aria-pressed=true]{background:var(--hv);border-color:var(--hv);color:#fff}.rt[aria-pressed=true] .sw2{background:#ffffff66}.rt[aria-pressed=true] .sw2 i{left:16px}
+body.editing .mapS{box-shadow:inset 0 0 0 3px var(--hv)}
+.btn.ic{padding:8px;min-width:42px;font-size:18px}.tool .btn{padding-left:9px;padding-right:9px}
 @media print{.noprint,.tool,.top,.fab{display:none!important}.app{max-width:none}.rep{padding:0}body{background:#fff}}
 </style>
 </head>
@@ -184,7 +188,7 @@ function gpsOn(){if(watch!==null)return;if(!navigator.geolocation){gpsErr='Deze 
 function gpsOff(){if(watch!==null)navigator.geolocation.clearWatch(watch);watch=null;gps=null;}
 
 /* ---------- toestand ---------- */
-let trace=null,progScroll=false,wiz=null,ghost=null,pendingAdd=null,view='home',cur=null,drawUrl='',mask=null,sel=null,addMode=false,snap=true,zoom=1,follow=false,hist=[],placeHere=false;
+let editRoute=false,trace=null,progScroll=false,wiz=null,ghost=null,pendingAdd=null,view='home',cur=null,drawUrl='',mask=null,sel=null,addMode=false,snap=true,zoom=1,follow=false,hist=[],placeHere=false;
 const push=()=>{hist.push(JSON.stringify(cur.pts));hist.length>50&&hist.shift();};
 function nums(){let n=0;const m={};cur.pts.forEach(p=>{if(p.photo)m[p.id]=++n;});return m;}
 
@@ -256,9 +260,9 @@ async function pickPdfPage(file,done){
 async function openProject(id){cur=(await getAll()).find(p=>p.id===id);if(!cur)return home();view='proj';hist=[];sel=null;zoom=1;follow=false;drawUrl=await url(cur.draw);
  await Promise.all(cur.pts.map(p=>url(p.photo)));
  cur.anchors=(cur.anchors||[]).map((a,i)=>{if(a.id){const p=cur.pts.find(q=>q.id===a.id);return p?{k:'AB'[i]||'C',x:p.x,y:p.y,la:a.la,lo:a.lo,acc:a.acc,src:a.src}:null;}return a;}).filter(Boolean).slice(0,2);
- wiz=null;ghost=null;pendingAdd=null;document.body.classList.remove('wiz');solve();buildMask();
+ wiz=null;ghost=null;pendingAdd=null;editRoute=false;document.body.classList.remove('editing');document.body.classList.remove('wiz');solve();buildMask();
  app.innerHTML=`<div class="top" id="head"></div>
- <div class="stick"><div class="leg" id="legend"></div><div class="info" id="info" hidden><b>Oranje = foto</b>, met het fotonummer van het rapport. Vorm en kleur van een item volgen de legenda van de tekening: bruin met groene rand is nieuw, blauwgroen met gele rand is bestaand.</div><div class="tool"><button class="btn" id="snapBtn" aria-pressed="true">Magneet</button><button class="btn" id="meBtn">Positie</button><span class="sp"></span><button class="btn" id="zOut" aria-label="Uitzoomen">−</button><button class="btn" id="zIn" aria-label="Inzoomen">+</button><button class="btn" id="undo" aria-label="Ongedaan maken">↶</button></div>
+ <div class="stick"><div class="leg" id="legend"></div><div class="info" id="info" hidden><b>Oranje = foto</b>, met het fotonummer van het rapport. Vorm en kleur van een item volgen de legenda van de tekening: bruin met groene rand is nieuw, blauwgroen met gele rand is bestaand.</div><div class="tool"><button class="btn rt" id="rtBtn" aria-pressed="false"><span class="sw2"><i></i></span>Route verleggen</button><button class="btn ic" id="snapBtn" aria-pressed="true" aria-label="Magneet: bolletjes naar de lijn trekken" title="Magneet" hidden>🧲</button><button class="btn ic" id="meBtn" aria-label="Mijn positie" title="Mijn positie">📍</button><span class="sp"></span><button class="btn" id="zOut" aria-label="Uitzoomen">−</button><button class="btn" id="zIn" aria-label="Inzoomen">+</button><button class="btn" id="undo" aria-label="Ongedaan maken">↶</button></div>
   </div><div class="mapS" id="mapS"><div class="mapI" id="mapI"><svg id="svg" viewBox="0 0 ${cur.W} ${cur.H}" style="aspect-ratio:${cur.W}/${cur.H}"><image href="${drawUrl}" width="${cur.W}" height="${cur.H}"/><g id="lay"></g></svg></div></div>
  <div class="sec" id="list" style="padding-top:0"></div>
  <div class="sec noprint"><div class="row2"><button class="btn" id="repBtn">Rapport / PDF</button><button class="btn" id="editP">Project</button></div></div>
@@ -278,15 +282,15 @@ function drawHead(){const M=meters(),N=nums(),inv=cur.pts.findIndex(p=>p.it==='i
 function drawMap(){const s=cur.W/($('svg').getBoundingClientRect().width||cur.W),N=nums();
  let o=cur.pts.length>1?`<polyline points="${cur.pts.map(p=>p.x+','+p.y).join(' ')}" fill="none" stroke="${OR}" stroke-width="${3*s}" stroke-opacity=".55" stroke-linejoin="round"/>`:'';
  if(trace&&trace.stroke&&trace.stroke.length>1)o+=`<polyline points="${trace.stroke.map(q=>q[0]+','+q[1]).join(' ')}" fill="none" stroke="${OR}" stroke-width="${5*s}" stroke-linecap="round" stroke-linejoin="round"/>`;
- if(!wiz)for(let i=0;i<cur.pts.length-1;i++){const a=cur.pts[i],b=cur.pts[i+1];if(len(a,b)/s<46)continue;const mx=(a.x+b.x)/2,my=(a.y+b.y)/2,r=8*s;
+ if(!wiz&&(editRoute||trace))for(let i=0;i<cur.pts.length-1;i++){const a=cur.pts[i],b=cur.pts[i+1];if(len(a,b)/s<46)continue;const mx=(a.x+b.x)/2,my=(a.y+b.y)/2,r=8*s;
   o+=`<g class="pl" data-seg="${i}"><circle cx="${mx}" cy="${my}" r="${r}" fill="#fff" fill-opacity=".92" stroke="#1d2529" stroke-width="${1.6*s}"/><path d="M${mx-r*.55} ${my}H${mx+r*.55}M${mx} ${my-r*.55}V${my+r*.55}" stroke="#1d2529" stroke-width="${2*s}" stroke-linecap="round"/><circle cx="${mx}" cy="${my}" r="${18*s}" fill="transparent"/></g>`;}
  if(T&&gps&&watch!==null){const[x,y]=ll2img(gps.la,gps.lo);o+=`<circle cx="${x}" cy="${y}" r="${gps.acc/T.scale}" fill="#1a73e8" fill-opacity=".14" stroke="#1a73e8" stroke-opacity=".4" stroke-width="${s}"/><circle id="meDot" cx="${x}" cy="${y}" r="${7*s}" fill="#1a73e8" stroke="#fff" stroke-width="${2.2*s}"/>`;
   if(follow){const S=$('mapS'),r=$('svg').getBoundingClientRect(),k=r.width/cur.W,px=x*k-S.scrollLeft,py=y*k-S.scrollTop;
    if(px<S.clientWidth*.2||px>S.clientWidth*.8||py<S.clientHeight*.2||py>S.clientHeight*.8){progScroll=true;S.scrollLeft=x*k-S.clientWidth/2;S.scrollTop=y*k-S.clientHeight/2;requestAnimationFrame(()=>requestAnimationFrame(()=>progScroll=false));}}}
  if(ghost)o+=`<circle cx="${ghost.x}" cy="${ghost.y}" r="${9*s}" fill="${OR}" fill-opacity=".35" stroke="${OR}" stroke-width="${2*s}"/>`;
- cur.pts.forEach(p=>{const isA=false;
+ cur.pts.forEach(p=>{const isA=false;if(!editRoute&&!trace&&!wiz&&!p.photo&&!p.it&&p.id!==sel)return;
   o+=`<g class="mk" data-id="${p.id}">${p.id===sel?`<circle cx="${p.x}" cy="${p.y}" r="${17*s}" fill="none" stroke="#1d2529" stroke-width="${2*s}" stroke-dasharray="${4*s} ${3*s}"/>`:''}${isA?`<path d="M${p.x} ${p.y-14*s} l${4*s} ${-8*s} h${-8*s}z" fill="#1d2529"/>`:''}${sym(p.it,p.x,p.y,s,N[p.id])}<circle cx="${p.x}" cy="${p.y}" r="${20*s}" fill="transparent"/></g>`;});
- cur.anchors.forEach((a,i)=>{const c=a.la!=null?'#1f7a4a':'#1d2529',h=30*s;
+ if(wiz||editRoute)cur.anchors.forEach((a,i)=>{const c=a.la!=null?'#1f7a4a':'#1d2529',h=30*s;
   o+=`<g class="mk af" data-a="${i}"><circle cx="${a.x}" cy="${a.y}" r="${4*s}" fill="${c}" stroke="#fff" stroke-width="${1.5*s}"/><line x1="${a.x}" y1="${a.y}" x2="${a.x}" y2="${a.y-h}" stroke="${c}" stroke-width="${2.4*s}"/><rect x="${a.x}" y="${a.y-h}" width="${20*s}" height="${15*s}" rx="${2*s}" fill="${c}" stroke="#fff" stroke-width="${1.2*s}"/><text x="${a.x+10*s}" y="${a.y-h+11.5*s}" font-size="${11*s}" font-weight="700" text-anchor="middle" fill="#fff" font-family="Barlow,sans-serif">${a.la!=null?'✓':a.k}</text><circle cx="${a.x+6*s}" cy="${a.y-14*s}" r="${20*s}" fill="transparent"/></g>`;});
  $('lay').innerHTML=o;}
 const thumb=p=>p.photo&&urls[p.photo]?`<img src="${urls[p.photo]}" alt="">`:'geen foto';
@@ -317,16 +321,16 @@ function bindProject(){const svg=$('svg'),S=$('mapS'),P=new Map();let g=null;
   const mk=!wiz&&e.target.closest&&e.target.closest('.mk'),pl=!wiz&&e.target.closest&&e.target.closest('.pl'),mouse=e.pointerType==='mouse';
   g={mode:'pending',sx:e.clientX,sy:e.clientY,lx:e.clientX,ly:e.clientY,mouse};
   if(pl&&!wiz){g.kind='plus';g.seg=+pl.dataset.seg;}
-  else if(mk){g.kind=mk.dataset.a!=null?'anc':'pt';g.id=mk.dataset.id;g.a=mk.dataset.a;}
+  else if(mk){g.kind=mk.dataset.a!=null?'anc':'pt';g.id=mk.dataset.id;g.a=mk.dataset.a;g.locked=!editRoute&&!trace;}
   else if(trace){g.mode='stroke';trace.stroke=[pt(e.clientX,e.clientY)];return;}
   else g.kind='bg';
-  if(g.kind!=='bg'&&!mouse)g.timer=setTimeout(()=>{if(g&&g.mode==='pending')activate();},300);});
+  if(g.kind!=='bg'&&!mouse&&!g.locked)g.timer=setTimeout(()=>{if(g&&g.mode==='pending')activate();},300);});
  S.addEventListener('pointermove',e=>{if(!P.has(e.pointerId))return;P.set(e.pointerId,{x:e.clientX,y:e.clientY});if(!g)return;
   if(g.mode==='pinch'){if(P.size<2)return;const t=two();setZoomAt(g.z0*t.d/g.d0,t.x,t.y);panBy(t.x-g.lx,t.y-g.ly);g.lx=t.x;g.ly=t.y;return;}
   const dx=e.clientX-g.lx,dy=e.clientY-g.ly;g.lx=e.clientX;g.ly=e.clientY;
   if(g.mode==='stroke'){const q=pt(e.clientX,e.clientY),l=trace.stroke[trace.stroke.length-1];if(Math.hypot(q[0]-l[0],q[1]-l[1])>1.5*cur.W/svg.getBoundingClientRect().width){trace.stroke.push(q);drawMap();}return;}
   if(g.mode==='pending'&&Math.hypot(e.clientX-g.sx,e.clientY-g.sy)>8){
-   if(g.mouse&&g.kind!=='bg')activate();else{clearTimeout(g.timer);g.mode='pan';panBy(e.clientX-g.sx,e.clientY-g.sy);return;}}
+   if(g.mouse&&g.kind!=='bg'&&!g.locked)activate();else{clearTimeout(g.timer);g.mode='pan';panBy(e.clientX-g.sx,e.clientY-g.sy);return;}}
   if(g.mode==='pan'){panBy(dx,dy);return;}
   if(g.mode==='drag'){const[x,y]=pt(e.clientX,e.clientY);if(g.kind==='anc'){const a=cur.anchors[+g.a];a.x=x;a.y=y;}else{const p=cur.pts.find(q=>q.id===g.id);if(p){p.x=x;p.y=y;}}drawMap();}});
  const up=e=>{if(!P.has(e.pointerId))return;P.delete(e.pointerId);if(!g)return;const cancel=e.type==='pointercancel';
@@ -343,6 +347,7 @@ function bindProject(){const svg=$('svg'),S=$('mapS'),P=new Map();let g=null;
  document.addEventListener('gesturestart',e=>e.preventDefault());
  addEventListener('resize',()=>{if(view==='proj'){applyZoom();drawMap();}});
  $('mapS').addEventListener('scroll',()=>{if(!progScroll)hideBubble();},{passive:true});
+ $('rtBtn').onclick=()=>{setEdit(!editRoute);toast(editRoute?'Route verleggen aan: sleep bolletjes of gebruik de plusjes':'Route vast. Tik op de lijn voor een foto of item.');};
  $('snapBtn').onclick=()=>{snap=!snap;$('snapBtn').setAttribute('aria-pressed',snap);};
  const zc=f=>{const r=S.getBoundingClientRect();setZoomAt(zoom*f,r.left+r.width/2,r.top+Math.min(r.height,innerHeight-r.top)/2);};$('zIn').onclick=()=>zc(1.5);$('zOut').onclick=()=>zc(1/1.5);
  $('undo').onclick=()=>{if(!hist.length)return;cur.pts=JSON.parse(hist.pop());solve();save();drawAll();};
@@ -405,6 +410,10 @@ function pointSheet(id,panel=''){const p=cur.pts.find(q=>q.id===id);if(!p)return
 function hideBubble(){const b=$('bubble');if(b&&!b.hidden){b.hidden=true;if(!pendingAdd){ghost=null;drawMap();}}}
 function mapTap([x,y],cx,cy){
  if(wiz){wizTap(x,y);return;}
+ if(!editRoute&&cur.pts.length>1){const s=cur.W/$('svg').getBoundingClientRect().width;let bd=1e9,bp=null;
+  for(let i=0;i<cur.pts.length-1;i++){const a=cur.pts[i],q=cur.pts[i+1],dx=q.x-a.x,dy=q.y-a.y,tt=Math.max(0,Math.min(1,((x-a.x)*dx+(y-a.y)*dy)/((dx*dx+dy*dy)||1))),px=a.x+tt*dx,py=a.y+tt*dy,d=Math.hypot(px-x,py-y);if(d<bd){bd=d;bp=[px,py];}}
+  if(bd/s>32){toast('Tik op de lijn om daar een punt te zetten');return;}
+  ghost={x:bp[0],y:bp[1]};drawMap();lockedBubble(cx,cy);return;}
  [x,y]=snapTo(x,y);ghost={x,y};drawMap();
  const b=$('bubble');b.innerHTML=`<button class="btn pri" id="bFoto">📷 Foto</button><button class="btn" id="bGal">Foto uit galerij</button><button class="btn" id="bPunt">Alleen een punt</button><button class="btn" id="bItem">Punt met item…</button><button class="btn red" id="bX">✕ Annuleren</button>`;
  b.hidden=false;const w=200,h=b.offsetHeight;b.style.left=Math.max(8,Math.min(innerWidth-w-8,cx-w/2))+'px';b.style.top=(cy+16+h<innerHeight-8?cy+16:Math.max(8,cy-h-16))+'px';
@@ -413,6 +422,13 @@ function mapTap([x,y],cx,cy){
  $('bGal').onclick=()=>{pendingAdd={x:ghost.x,y:ghost.y};b.hidden=true;$('fPick').value='';$('fPick').click();};
  $('bPunt').onclick=()=>{add({});toast('Punt toegevoegd');};
  $('bItem').onclick=()=>{const np=add({});pointSheet(np.id,'items');};$('bX').onclick=()=>{b.hidden=true;ghost=null;drawMap();};}
+function lockedBubble(cx,cy){const b=$('bubble');b.innerHTML=`<button class="btn pri" id="bFoto">📷 Foto</button><button class="btn" id="bGal">Foto uit galerij</button><button class="btn" id="bItem">Item kiezen…</button><button class="btn red" id="bX">✕ Annuleren</button>`;
+ b.hidden=false;const w=200,h=b.offsetHeight;b.style.left=Math.max(8,Math.min(innerWidth-w-8,cx-w/2))+'px';b.style.top=(cy+16+h<innerHeight-8?cy+16:Math.max(8,cy-h-16))+'px';
+ $('bFoto').onclick=()=>{pendingAdd={x:ghost.x,y:ghost.y};b.hidden=true;$('fCam').value='';$('fCam').click();};
+ $('bGal').onclick=()=>{pendingAdd={x:ghost.x,y:ghost.y};b.hidden=true;$('fPick').value='';$('fPick').click();};
+ $('bItem').onclick=()=>{push();const np=insertAt(ghost.x,ghost.y,{});ghost=null;b.hidden=true;sel=np.id;save();solve();drawAll();pointSheet(np.id,'items');};
+ $('bX').onclick=()=>{b.hidden=true;ghost=null;drawMap();};}
+function setEdit(v){editRoute=v;const b=$('rtBtn');if(!b)return;b.setAttribute('aria-pressed',v);$('snapBtn').hidden=!v;document.body.classList.toggle('editing',v);hideBubble();sel=null;drawMap();}
 let toastT=null;
 function toast(msg,btn,fn){const t=$('toast');if(!t)return;t.innerHTML=`<span>${msg}</span>${btn?`<button class="btn" id="tBtn">${btn}</button>`:''}`;t.hidden=false;if(btn)$('tBtn').onclick=()=>{t.hidden=true;fn();};clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,4500);}
 function photoToast(p){toast(`Foto ${nums()[p.id]} toegevoegd`,'✎ Markeren',()=>markEditor(p));const t=$('toast'),b=document.createElement('button');b.className='btn';b.textContent='Meer';b.onclick=()=>{t.hidden=true;pointSheet(p.id);};t.appendChild(b);}
@@ -495,7 +511,7 @@ function fitTrace(on){const I=$('mapI'),S=$('mapS');if(!I)return;
   requestAnimationFrame(()=>scrollTo({top:S.getBoundingClientRect().top+scrollY-tb}));}
  else{traceBase=null;zoom=1;I.style.margin='';S.style.maxHeight='';applyZoom();}}
 function startTrace(){trace={stroke:null};document.body.classList.add('trace');zoom=1;drawAll();fitTrace(true);drawMap();}
-function endTrace(){trace=null;document.body.classList.remove('trace');fitTrace(false);drawAll();if(cur.pts.length)toast('Tik op een plusje om een punt toe te voegen.');}
+function endTrace(){trace=null;setEdit(false);document.body.classList.remove('trace');fitTrace(false);drawAll();if(cur.pts.length)toast('Tik op een plusje om een punt toe te voegen.');}
 function finishStroke(){const S=trace.stroke;trace.stroke=null;const s=cur.W/$('svg').getBoundingClientRect().width;
  if(!S||S.length<3||Math.hypot(S[0][0]-S[S.length-1][0],S[0][1]-S[S.length-1][1])<12*s){drawMap();return;}
  let V=rdp(S,4*s).filter((q,i,A)=>i===0||Math.hypot(q[0]-A[i-1][0],q[1]-A[i-1][1])>10*s);
