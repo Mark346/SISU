@@ -100,6 +100,14 @@ body.trace #svg{touch-action:none}body.trace .app{padding-bottom:230px}body.trac
 .nogps .ic{width:34px;height:34px;flex:none;border-radius:50%;background:#1d1300;color:#ffb020;font:700 22px/34px "Barlow Semi Condensed",sans-serif;text-align:center}
 .top .nogps small{color:#3d2b00}.nogps b{display:block;font:700 20px "Barlow Semi Condensed",sans-serif}.nogps small{display:block;font-size:13.5px;line-height:1.3}
 body.dragging .mapS{cursor:grabbing}
+.mph{position:relative;width:100%;height:100%}.mph img{width:100%;height:100%;object-fit:cover;display:block}.mph svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.rep figure .mph{aspect-ratio:4/3;border-radius:4px;overflow:hidden}.rep figure .mph img{aspect-ratio:auto;border-radius:0}
+.med{position:fixed;inset:0;z-index:20;background:#0e1214;color:#fff;display:flex;flex-direction:column;padding:calc(10px + env(safe-area-inset-top)) 10px calc(10px + env(safe-area-inset-bottom))}
+.medtop{display:flex;justify-content:space-between;gap:10px;align-items:baseline;padding:4px 4px 8px;font-size:14px;color:#b8c2c6}.medtop b{color:#fff;font:700 19px "Barlow Semi Condensed",sans-serif}
+.stage{flex:1;min-height:0;display:grid;place-items:center}.sw{position:relative;max-width:100%;max-height:100%}.sw img{display:block;max-width:100%;max-height:calc(100vh - 230px);border-radius:6px}
+.sw svg{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
+.mhint{font-size:13px;color:#9aa5aa;text-align:center;margin:6px 0}
+.medbar{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}.medbar .btn{flex:1;background:#ffffff14;color:#fff;border-color:#ffffff33}.medbar .btn.pri{background:var(--hv);border-color:var(--hv)}.medbar .btn.red{color:#ffb3ad}
 @media print{.noprint,.tool,.top,.fab{display:none!important}.app{max-width:none}.rep{padding:0}body{background:#fff}}
 </style>
 </head>
@@ -369,10 +377,10 @@ function pointSheet(id,panel=''){const p=cur.pts.find(q=>q.id===id);if(!p)return
   return;}
  const cap=p.c?(p.c.length>22?p.c.slice(0,21)+'…':p.c):'';
  let body='';
- if(panel==='foto')body=`<div class="pan">${p.photo?`<div class="bigph">${thumb(p)}</div>`:''}<div class="row2" style="margin-top:${p.photo?10:0}px"><button class="btn pri" id="cam">📷 Camera</button><button class="btn" id="gal">Uit galerij</button>${p.photo?'<button class="btn red" id="noPh">Weghalen</button>':''}</div></div>`;
+ if(panel==='foto')body=`<div class="pan">${p.photo?`<div class="bigph">${photoHtml(p)}</div><div class="row2" style="margin-top:10px"><button class="btn pri" id="mkB">✎ ${p.mark?'Markering aanpassen':'Markeren'}</button></div>`:''}<div class="row2" style="margin-top:${p.photo?8:0}px"><button class="btn ${p.photo?'':'pri'}" id="cam">📷 Camera</button><button class="btn" id="gal">Uit galerij</button>${p.photo?'<button class="btn red" id="noPh">Weghalen</button>':''}</div></div>`;
  else if(panel==='cap')body=`<div class="pan"><input id="cap" value="${esc(p.c)}" placeholder="Typ of kies hieronder"><div class="qcap">${byUse(CAPS,'capUse').map(x=>`<button class="btn" data-cap="${esc(x.v)}">${esc(x.v)}</button>`).join('')}</div></div>`;
  else if(panel==='item')body=`<div class="pan">${I?`<div class="cur">${icon(p.it,0,40,34)}<div><b>${I.l}</b><br><span class="note">${I.g}</span></div></div><div class="row2"><button class="btn" id="noIt">Item weghalen</button><button class="btn pri" id="chIt">Ander item kiezen</button></div>`:''}</div>`;
- else if(p.photo)body=`<div class="bigph" style="margin-top:12px">${thumb(p)}</div>`;
+ else if(p.photo)body=`<div class="bigph" style="margin-top:12px">${photoHtml(p)}</div>`;
  b.innerHTML=head+`<div class="tiles">
   <button class="tile${panel==='foto'?' on':''}" data-pan="foto"><span class="tv">${p.photo&&urls[p.photo]?`<img src="${urls[p.photo]}" alt="">`:'📷'}</span><b>Foto</b><small>${p.photo?'foto '+N[p.id]:'toevoegen'}</small></button>
   <button class="tile${panel==='cap'?' on':''}" data-pan="cap"><span class="tv">✎</span><b>Bijschrift</b><small>${cap?esc(cap):'toevoegen'}</small></button>
@@ -386,6 +394,7 @@ function pointSheet(id,panel=''){const p=cur.pts.find(q=>q.id===id);if(!p)return
  b.querySelectorAll('[data-cap]').forEach(x=>x.onclick=()=>{p.c=x.dataset.cap;bump('capUse',p.c);save();drawList();pointSheet(id,'');});
  $('cap')&&($('cap').onchange=()=>{keep();save();drawList();});
  $('cam')&&($('cam').onclick=()=>{photoFor=id;$('fCam').value='';$('fCam').click();});$('gal')&&($('gal').onclick=()=>{photoFor=id;$('fPick').value='';$('fPick').click();});
+ $('mkB')&&($('mkB').onclick=()=>markEditor(p));
  $('noPh')&&($('noPh').onclick=()=>{push();delBlob(p.photo);p.photo='';save();drawAll();pointSheet(id);});
  $('chIt')&&($('chIt').onclick=()=>pointSheet(id,'items'));$('noIt')&&($('noIt').onclick=()=>{push();p.it='';save();drawAll();pointSheet(id);});
  $('del').onclick=()=>{push();if(p.photo)delBlob(p.photo);cur.pts=cur.pts.filter(q=>q!==p);sel=null;solve();save();closeSheet();drawAll();};
@@ -405,7 +414,7 @@ function mapTap([x,y],cx,cy){
  $('bItem').onclick=()=>{const np=add({});pointSheet(np.id,'items');};}
 let toastT=null;
 function toast(msg,btn,fn){const t=$('toast');if(!t)return;t.innerHTML=`<span>${msg}</span>${btn?`<button class="btn" id="tBtn">${btn}</button>`:''}`;t.hidden=false;if(btn)$('tBtn').onclick=()=>{t.hidden=true;fn();};clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,4500);}
-function photoToast(p){toast(`Foto ${nums()[p.id]} toegevoegd`,'Bijschrift / item',()=>pointSheet(p.id));}
+function photoToast(p){toast(`Foto ${nums()[p.id]} toegevoegd`,'✎ Markeren',()=>markEditor(p));const t=$('toast'),b=document.createElement('button');b.className='btn';b.textContent='Meer';b.onclick=()=>{t.hidden=true;pointSheet(p.id);};t.appendChild(b);}
 
 /* ---------- gps koppelen: in één keer lopen ---------- */
 let measT=null;
@@ -495,6 +504,54 @@ function traceGuide(g){g.hidden=false;const n=cur.pts.length;
  const on=(id,f)=>{const e=$(id);if(e)e.onclick=f;};
  on('tSkip',endTrace);on('tOk',endTrace);on('tRe',()=>{push();cur.pts=[];save();drawAll();});}
 
+/* ---------- foto markeren ---------- */
+function arrowPoly(a,w){const[x1,y1,x2,y2]=a.map((v,i)=>v*(i%2?1:1)),L=Math.hypot(x2-x1,y2-y1)||1,ux=(x2-x1)/L,uy=(y2-y1)/L,nx=-uy,ny=ux,t=.014*w,hl=Math.min(.05*w,L*.5),hw=.034*w,bx=x2-ux*hl,by=y2-uy*hl;
+ return[[x1+nx*t,y1+ny*t],[bx+nx*t,by+ny*t],[bx+nx*hw,by+ny*hw],[x2,y2],[bx-nx*hw,by-ny*hw],[bx-nx*t,by-ny*t],[x1-nx*t,y1-ny*t]].map(q=>q.map(v=>v.toFixed(1)).join(',')).join(' ');}
+function markLayer(p,m){if(!m)return'';const w=m.w,h=m.h,I=ITEMS[p.it];let o='';
+ const col=I?{f:I.f,s:I.s}:{f:'#943a22',s:'#3bdc5a'};
+ for(const a of m.arrows){const A=[a[0]*w,a[1]*h,a[2]*w,a[3]*h];o+=`<polygon points="${arrowPoly(A,w)}" fill="${col.f==='#fff'?'#943a22':col.f}" stroke="${col.s}" stroke-width="${.007*w}" stroke-linejoin="round"/>`;}
+ if(I&&m.sym){const cx=m.sym.x*w,cy=m.sym.y*h,rx=m.sym.s*w,ry=rx*.45,sw=.008*w;
+  if(I.sh==='ci')o+=`<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="${I.f}" stroke="${I.s}" stroke-width="${sw}" ${I.dash?`stroke-dasharray="${sw*2} ${sw*1.5}"`:''}/>`;
+  else o+=`<polygon points="${[[cx-rx*.75,cy-ry],[cx+rx*.75,cy-ry],[cx+rx,cy+ry],[cx-rx,cy+ry]].map(q=>q.join(',')).join(' ')}" fill="${I.f}" stroke="${I.s}" stroke-width="${sw}" stroke-linejoin="round"/>`;
+  if(I.t)o+=`<text x="${cx}" y="${cy+ry*.35}" font-size="${ry*.95}" font-weight="700" text-anchor="middle" fill="#fff" font-family="Barlow,sans-serif">${I.t}</text>`;}
+ return o;}
+function photoHtml(p){const u=urls[p.photo];if(!u)return'geen foto';const m=p.mark;
+ return`<div class="mph"><img src="${u}" alt="">${m?`<svg viewBox="0 0 ${m.w} ${m.h}" preserveAspectRatio="xMidYMid slice">${markLayer(p,m)}</svg>`:''}</div>`;}
+function proposal(p,w,h){const i=cur.pts.indexOf(p),pr=cur.pts[i-1],nx=cur.pts[i+1];
+ let d=0;if(pr&&nx){d=Math.atan2(nx.y-p.y,nx.x-p.x)-Math.atan2(p.y-pr.y,p.x-pr.x);while(d>Math.PI)d-=2*Math.PI;while(d<-Math.PI)d+=2*Math.PI;}
+ const has=!!ITEMS[p.it],arrows=[];
+ if(pr||!nx)arrows.push([.5,.99,.5,has?.81:.74]);
+ if(nx){const sx=.5+Math.sin(d)*.06,ex=Math.max(.06,Math.min(.94,.5+Math.sin(d)*.34)),ey=Math.max(.2,.64-Math.max(.12,Math.cos(d))*.28);arrows.push([sx,has?.63:.7,ex,ey]);}
+ return{w,h,sym:{x:.5,y:.72,s:.13},arrows};}
+function markEditor(p){const u=urls[p.photo];if(!u)return;closeSheet();
+ loadImg(u).then(im=>{const w=im.naturalWidth,h=im.naturalHeight;let m=p.mark?JSON.parse(JSON.stringify(p.mark)):proposal(p,w,h);m.w=w;m.h=h;let selA=m.arrows.length-1;
+  const ov=document.createElement('div');ov.className='med';ov.innerHTML=`<div class="medtop"><b>Markeren · foto ${nums()[p.id]||''}</b><span>${ITEMS[p.it]?esc(ITEMS[p.it].l):'Geen item gekozen, alleen pijlen'}</span></div>
+   <div class="stage"><div class="sw"><img src="${u}" alt=""><svg id="msvg" viewBox="0 0 ${w} ${h}"></svg></div></div>
+   <p class="mhint">Sleep de bolletjes. Grote bolletjes zijn pijlpunten.</p>
+   <div class="medbar">${ITEMS[p.it]?`<button class="btn" id="sMin" aria-label="Symbool kleiner">◯−</button><button class="btn" id="sPlus" aria-label="Symbool groter">◯+</button>`:''}<button class="btn" id="aAdd">+ Pijl</button><button class="btn" id="aDel">Pijl weg</button><button class="btn" id="mReset">Voorstel</button></div>
+   <div class="medbar"><button class="btn" id="mCancel">Annuleren</button>${p.mark?'<button class="btn red" id="mOff">Wissen</button>':''}<button class="btn pri" id="mOk">Klaar</button></div>`;
+  document.body.appendChild(ov);const S=ov.querySelector('#msvg');
+  const sc=()=>w/S.getBoundingClientRect().width;
+  const draw=()=>{const k=sc(),r=13*k;let o=markLayer(p,m);if(ITEMS[p.it]&&m.sym)o+=`<ellipse cx="${m.sym.x*w}" cy="${m.sym.y*h}" rx="${m.sym.s*w}" ry="${m.sym.s*w*.45}" fill="transparent" data-h="sym"/>`;
+   m.arrows.forEach((a,i)=>{o+=`<line x1="${a[0]*w}" y1="${a[1]*h}" x2="${a[2]*w}" y2="${a[3]*h}" stroke="transparent" stroke-width="${30*k}" data-sel="${i}"/>`;
+    o+=`<circle cx="${a[0]*w}" cy="${a[1]*h}" r="${r*.8}" fill="#fff" stroke="${i===selA?'#ff6a13':'#1d2529'}" stroke-width="${3*k}" data-h="a${i}s"/><circle cx="${a[2]*w}" cy="${a[3]*h}" r="${r}" fill="${i===selA?'#ff6a13':'#fff'}" stroke="#1d2529" stroke-width="${3*k}" data-h="a${i}e"/>`;});
+   if(ITEMS[p.it]&&m.sym){const rx=m.sym.s*w;o+=`<circle cx="${m.sym.x*w+rx*.62}" cy="${m.sym.y*h}" r="${r*.85}" fill="#fff" fill-opacity=".9" stroke="#ff6a13" stroke-width="${3*k}" data-h="sym"/>`;}
+   S.innerHTML=o;};
+  draw();addEventListener('resize',draw);
+  let dr=null;const P=e=>{const q=S.createSVGPoint();q.x=e.clientX;q.y=e.clientY;const r=q.matrixTransform(S.getScreenCTM().inverse());return[Math.max(0,Math.min(1,r.x/w)),Math.max(0,Math.min(1,r.y/h))];};
+  S.addEventListener('pointerdown',e=>{const t=e.target;if(t.dataset.sel){selA=+t.dataset.sel;draw();return;}if(!t.dataset.h)return;e.preventDefault();S.setPointerCapture(e.pointerId);dr=t.dataset.h;const mm=dr.match(/^a(\d+)/);if(mm)selA=+mm[1];});
+  S.addEventListener('pointermove',e=>{if(!dr)return;const[x,y]=P(e);if(dr==='sym'){m.sym.x=x;m.sym.y=y;}else{const mm=dr.match(/^a(\d+)([se])$/),a=m.arrows[+mm[1]];if(mm[2]==='s'){a[0]=x;a[1]=y;}else{a[2]=x;a[3]=y;}}draw();});
+  const end=()=>{dr=null;};S.addEventListener('pointerup',end);S.addEventListener('pointercancel',end);
+  const on=(id,f)=>{const el=ov.querySelector('#'+id);if(el)el.onclick=f;};
+  const close=()=>{removeEventListener('resize',draw);ov.remove();};
+  on('sMin',()=>{m.sym.s=Math.max(.04,m.sym.s/1.2);draw();});on('sPlus',()=>{m.sym.s=Math.min(.4,m.sym.s*1.2);draw();});
+  on('aAdd',()=>{m.arrows.push([.35,.6,.65,.4]);selA=m.arrows.length-1;draw();});
+  on('aDel',()=>{if(selA>=0&&m.arrows.length){m.arrows.splice(selA,1);selA=m.arrows.length-1;draw();}});
+  on('mReset',()=>{m=proposal(p,w,h);selA=m.arrows.length-1;draw();});
+  on('mCancel',()=>{close();pointSheet(p.id,'foto');});
+  on('mOff',()=>{push();delete p.mark;save();close();drawAll();pointSheet(p.id,'foto');});
+  on('mOk',()=>{push();p.mark=m;save();close();drawAll();pointSheet(p.id,'foto');toast('Markering opgeslagen');});});}
+
 /* ---------- project-instellingen ---------- */
 function projSheet(){const b=$('sheetBody'),n=cur.pts.filter(p=>p.photo).length;
  b.innerHTML=`<h2 style="font-size:22px">Project</h2><label for="pn">Naam / adres</label><input id="pn" value="${esc(cur.name)}"><label for="pa">Plaats / gebouw</label><input id="pa" value="${esc(cur.addr)}"><label for="ps">Projectnummer</label><input id="ps" value="${esc(cur.sid)}">
@@ -517,7 +574,7 @@ function report(){view='rep';gpsOff();const M=meters(),N=nums(),s=cur.W/700;
  <table><tr><td>Lengte route</td><td class="n">${M?Math.round(M[M.length-1])+' m':'niet gekoppeld'}</td></tr>${inv>0&&M?`<tr><td>Buitentracé tot invoering</td><td class="n">${Math.round(M[inv])} m</td></tr>`:''}<tr><td>Punten / foto's</td><td class="n">${cur.pts.length} / ${Object.keys(N).length}</td></tr><tr><td>Gps-koppeling</td><td class="n">${T?`${cur.anchors.length} ankers${T.err.length?`, afwijking ${T.err.map(e=>e.toFixed(1)).join('/')} m`:''}`:'geen'}</td></tr></table>
  <h2>Tracé</h2><div class="mapc">${mapSvg}</div>
  <h2>Punten</h2><table><tr><th>#</th><th>Item</th><th>Omschrijving</th><th class="n">m</th></tr>${cur.pts.map((p,i)=>`<tr><td>${i+1}</td><td>${label(p)}${N[p.id]?` · foto ${N[p.id]}`:''}</td><td>${esc(p.c)}</td><td class="n">${M?Math.round(M[i]):''}</td></tr>`).join('')}</table>
- <h2>Foto's</h2><div class="pgrid">${cur.pts.filter(p=>p.photo&&urls[p.photo]).map(p=>`<figure><img src="${urls[p.photo]}" alt=""><figcaption><b>Foto ${N[p.id]}</b> · ${esc(p.c||label(p))}</figcaption></figure>`).join('')||'<p class="note">Geen foto\'s.</p>'}</div></div>`;
+ <h2>Foto's</h2><div class="pgrid">${cur.pts.filter(p=>p.photo&&urls[p.photo]).map(p=>`<figure>${photoHtml(p)}<figcaption><b>Foto ${N[p.id]}</b> · ${esc(p.c||label(p))}</figcaption></figure>`).join('')||'<p class="note">Geen foto\'s.</p>'}</div></div>`;
  $('rb').onclick=()=>openProject(cur.id);$('pr').onclick=()=>window.print();}
 
 init();
