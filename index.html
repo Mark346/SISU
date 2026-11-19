@@ -430,7 +430,7 @@ function pointSheet(id,panel=''){const p=cur.pts.find(q=>q.id===id);if(!p)return
   <button class="tile${panel==='foto'?' on':''}" data-pan="foto"><span class="tv">${p.photo&&urls[p.photo]?`<img src="${urls[p.photo]}" alt="">`:'📷'}</span><b>Foto</b><small>${p.photo?'foto '+N[p.id]:'toevoegen'}</small></button>
   <button class="tile${panel==='cap'?' on':''}" data-pan="cap"><span class="tv">✎</span><b>Bijschrift</b><small>${cap?esc(cap):'toevoegen'}</small></button>
   <button class="tile${panel==='item'?' on':''}" data-pan="item"><span class="tv">${I?icon(p.it,0,36,30):'◇'}</span><b>Item</b><small>${I?I.l:'kiezen'}</small></button></div>
-  ${body}<div class="row2"><button class="btn red" id="del">Punt verwijderen</button><button class="btn dk" id="ok">Klaar</button></div>`;
+  ${body}${isEntry(p)?indoorItems():''}<div class="row2"><button class="btn red" id="del">Punt verwijderen</button><button class="btn dk" id="ok">Klaar</button></div>`;
  const keep=()=>{if($('cap'))p.c=$('cap').value;};
  b.querySelectorAll('[data-pan]').forEach(x=>x.onclick=()=>{keep();save();const pn=x.dataset.pan;
   if(pn==='item'&&!p.it)return pointSheet(id,'items');
@@ -443,7 +443,9 @@ function pointSheet(id,panel=''){const p=cur.pts.find(q=>q.id===id);if(!p)return
  $('noPh')&&($('noPh').onclick=()=>{push();delBlob(p.photo);p.photo='';save();drawAll();pointSheet(id);});
  $('chIt')&&($('chIt').onclick=()=>pointSheet(id,'items'));$('noIt')&&($('noIt').onclick=()=>{push();p.it='';save();drawAll();pointSheet(id);});
  $('del').onclick=()=>{push();if(p.photo)delBlob(p.photo);cur.pts=cur.pts.filter(q=>q!==p);sel=null;solve();save();closeSheet();drawAll();};
- $('ok').onclick=()=>{keep();save();closeSheet();drawAll();};}
+ $('ok').onclick=()=>{keep();save();closeSheet();drawAll();};
+ if(isEntry(p))bindIndoorItems(p.id);}
+const isEntry=p=>endKind(p)==='pand'||p.it==='inv'||p.it==='brw';
 
 /* ---------- tikken op de kaart: foto eerst ---------- */
 function hideBubble(){const b=$('bubble');if(b&&!b.hidden){b.hidden=true;if(!pendingAdd){ghost=null;drawMap();}}}
@@ -621,18 +623,19 @@ const ICO={pos:'<svg viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7
  geo:'<svg viewBox="0 0 24 24"><path d="M5 21V4M5 4h10l-2 3 2 3H5" fill="none" stroke="#1d2529" stroke-width="2" stroke-linejoin="round"/><circle cx="19" cy="19" r="2.5" fill="#1d2529"/></svg>',
  metro:'<svg viewBox="0 0 24 24"><path d="M3 17h6V7h6v10h6" fill="none" stroke="#ff6a13" stroke-width="2.6" stroke-linejoin="round"/><circle cx="3" cy="17" r="2.2" fill="#1d2529"/><circle cx="12" cy="7" r="2.2" fill="#1d2529"/><circle cx="21" cy="17" r="2.2" fill="#1d2529"/></svg>',
  kruim:'<svg viewBox="0 0 24 24"><ellipse cx="8" cy="15" rx="2.6" ry="4" fill="#1d2529"/><ellipse cx="16" cy="8" rx="2.6" ry="4" fill="#1d2529"/><circle cx="4" cy="22" r="1" fill="#ff6a13"/><circle cx="12" cy="20" r="1" fill="#ff6a13"/><circle cx="20" cy="15" r="1" fill="#ff6a13"/></svg>'};
-function locMenu(){const I=cur.indoor,n=I?I.haltes.length:0,cont=I?` · verder gaan (${n} halte${n===1?'':'s'})`:'';
- const it=(id,ic,t,s)=>`<button class="mi" id="${id}"><span class="mic">${ic}</span><span><b>${t}</b><small>${s}</small></span></button>`;
+const miBtn=(id,ic,t,s)=>`<button class="mi" id="${id}"><span class="mic">${ic}</span><span><b>${t}</b><small>${s}</small></span></button>`;
+function indoorItems(){const I=cur.indoor,n=I?I.haltes.length:0,cont=I?` · verder gaan (${n} halte${n===1?'':'s'})`:'';
+ return`<div class="msep">Binnentracé vanaf hier</div><div class="mlist">${miBtn('lmMetro',ICO.metro,'Indoor metrolijn','Ruimte voor ruimte, zonder sensoren'+cont)}${miBtn('lmKruim',ICO.kruim,'Indoor broodkruimelspoor','Telefoon meet afstand en richting'+cont)}</div>`;}
+function bindIndoorItems(ptId){$('lmMetro').onclick=()=>{closeSheet();openIndoor('metrolijn',ptId);};$('lmKruim').onclick=()=>{closeSheet();openIndoor('broodkruimel',ptId);};}
+function locMenu(){const it=miBtn;
  $('sheetBody').innerHTML=`<h2 style="font-size:22px">Locatie</h2><div class="mlist">
  ${it('lmPos',ICO.pos,'Mijn positie op de tekening',watch!==null&&follow?'Staat aan · tik om uit te zetten':T?'Blauwe stip volgen':'Werkt na koppelen aan gps')}
  ${it('lmGeo',ICO.geo,T?'Gps-koppeling':'Koppel aan gps',T?'Gekoppeld · bekijken of opnieuw koppelen':'Tekening koppelen met twee punten')}
- </div><div class="msep">Binnentracé</div><div class="mlist">
- ${it('lmMetro',ICO.metro,'Indoor metrolijn','Ruimte voor ruimte, zonder sensoren'+cont)}
- ${it('lmKruim',ICO.kruim,'Indoor broodkruimelspoor','Telefoon meet afstand en richting'+cont)}</div>
+ </div>
  <div class="row2"><button class="btn dk" id="lmClose">Sluiten</button></div>`;
  $('sheet').hidden=false;$('lmClose').onclick=closeSheet;
  $('lmPos').onclick=()=>{closeSheet();togglePos();};$('lmGeo').onclick=()=>{closeSheet();geoMenu();};
- $('lmMetro').onclick=()=>{closeSheet();openIndoor('metrolijn');};$('lmKruim').onclick=()=>{closeSheet();openIndoor('broodkruimel');};}
+}
 
 /* ---------- binnentracé: data ---------- */
 const ROOMS=['Gang','Kelder','Schacht','MER','Trappenhuis','Plafond','Doorvoer','Patchkast'];
@@ -679,7 +682,7 @@ function dsSvg(hl=-1,drag=null){const H=IND.haltes,fl=[0,IND.floor,...H.map(h=>h
  return`<svg viewBox="0 0 ${W} ${Ht}" width="${W}" height="${Ht}" class="dsv">${o}</svg>`;}
 
 /* ---------- binnentracé: scherm ---------- */
-function openIndoor(mode){IND=ensureIndoor(mode);if(IND.modus!==mode){IND.modus=mode;if(mode==='metrolijn')stopSensors();}save();
+function openIndoor(mode,ptId){IND=ensureIndoor(mode);if(ptId)IND.startpunt={type:'IN',ptId};if(IND.modus!==mode){IND.modus=mode;if(mode==='metrolijn')stopSensors();}save();
  view='indoor';follow=false;gpsOff();document.body.classList.remove('wiz','trace','editing');
  $('fCam').onchange=e=>indoorPhoto(e.target.files[0]);$('fPick').onchange=e=>indoorPhoto(e.target.files[0]);renderIndoor();scrollTo({top:0});}
 function lastText(){const H=IND.haltes;if(!H.length){const L=sens&&!sens.calib?segLen(0):null;return`Nog geen haltes. Start bij ${IND.startpunt.type==='IN'?'de invoering':'de voordeur'}.`+(L!=null?`<br><span class="note">Nu onderweg: ca. ${fmtM(L)} m sinds de start</span>`:'');}
