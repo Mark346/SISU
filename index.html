@@ -12,7 +12,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Semi+Condensed:wght@600;700&display=swap" rel="stylesheet">
 <style>
 :root{color-scheme:light;--bg:#e9ebe8;--card:#fff;--ink:#151a1d;--mute:#5d676c;--line:#d9ddda;--asf:#1d2529;--hv:#ff6a13;--hv2:#c24a00;--ok:#1f7a4a;--bad:#b3261e}
-*{box-sizing:border-box;min-width:0}
+*{box-sizing:border-box;min-width:0}[hidden]{display:none!important}
 html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Barlow,system-ui,sans-serif;overflow-x:clip}
 h1,h2,h3{font-family:"Barlow Semi Condensed",Barlow,sans-serif;line-height:1.1;margin:0}
 .app{max-width:560px;margin:0 auto;min-height:100vh;background:var(--card)}
@@ -108,6 +108,7 @@ body.dragging .mapS{cursor:grabbing}
 .sw svg{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
 .mhint{font-size:13px;color:#9aa5aa;text-align:center;margin:6px 0}
 .medbar{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}.medbar .btn{flex:1;background:#ffffff14;color:#fff;border-color:#ffffff33}.medbar .btn.pri{background:var(--hv);border-color:var(--hv)}.medbar .btn.red{color:#ffb3ad}
+body.wiz .mk:not(.af),body.wiz .pl{opacity:.45}
 @media print{.noprint,.tool,.top,.fab{display:none!important}.app{max-width:none}.rep{padding:0}body{background:#fff}}
 </style>
 </head>
@@ -313,7 +314,7 @@ function bindProject(){const svg=$('svg'),S=$('mapS'),P=new Map();let g=null;
   P.set(e.pointerId,{x:e.clientX,y:e.clientY});
   if(P.size===2){if(g){clearTimeout(g.timer);if(g.mode==='drag')endDrag();if(g.mode==='stroke'&&trace)trace.stroke=null;}document.body.classList.remove('dragging');const t=two();g={mode:'pinch',d0:t.d,z0:zoom,lx:t.x,ly:t.y};drawMap();return;}
   if(P.size>2)return;
-  const mk=e.target.closest&&e.target.closest('.mk'),pl=e.target.closest&&e.target.closest('.pl'),mouse=e.pointerType==='mouse';
+  const mk=!wiz&&e.target.closest&&e.target.closest('.mk'),pl=!wiz&&e.target.closest&&e.target.closest('.pl'),mouse=e.pointerType==='mouse';
   g={mode:'pending',sx:e.clientX,sy:e.clientY,lx:e.clientX,ly:e.clientY,mouse};
   if(pl&&!wiz){g.kind='plus';g.seg=+pl.dataset.seg;}
   else if(mk){g.kind=mk.dataset.a!=null?'anc':'pt';g.id=mk.dataset.id;g.a=mk.dataset.a;}
@@ -405,13 +406,13 @@ function hideBubble(){const b=$('bubble');if(b&&!b.hidden){b.hidden=true;if(!pen
 function mapTap([x,y],cx,cy){
  if(wiz){wizTap(x,y);return;}
  [x,y]=snapTo(x,y);ghost={x,y};drawMap();
- const b=$('bubble');b.innerHTML=`<button class="btn pri" id="bFoto">📷 Foto</button><button class="btn" id="bGal">Foto uit galerij</button><button class="btn" id="bPunt">Alleen een punt</button><button class="btn" id="bItem">Punt met item…</button>`;
+ const b=$('bubble');b.innerHTML=`<button class="btn pri" id="bFoto">📷 Foto</button><button class="btn" id="bGal">Foto uit galerij</button><button class="btn" id="bPunt">Alleen een punt</button><button class="btn" id="bItem">Punt met item…</button><button class="btn red" id="bX">✕ Annuleren</button>`;
  b.hidden=false;const w=200,h=b.offsetHeight;b.style.left=Math.max(8,Math.min(innerWidth-w-8,cx-w/2))+'px';b.style.top=(cy+16+h<innerHeight-8?cy+16:Math.max(8,cy-h-16))+'px';
  const add=extra=>{push();const np=insertAt(ghost.x,ghost.y,extra);ghost=null;b.hidden=true;sel=np.id;save();solve();drawAll();return np;};
  $('bFoto').onclick=()=>{pendingAdd={x:ghost.x,y:ghost.y};b.hidden=true;$('fCam').value='';$('fCam').click();};
  $('bGal').onclick=()=>{pendingAdd={x:ghost.x,y:ghost.y};b.hidden=true;$('fPick').value='';$('fPick').click();};
  $('bPunt').onclick=()=>{add({});toast('Punt toegevoegd');};
- $('bItem').onclick=()=>{const np=add({});pointSheet(np.id,'items');};}
+ $('bItem').onclick=()=>{const np=add({});pointSheet(np.id,'items');};$('bX').onclick=()=>{b.hidden=true;ghost=null;drawMap();};}
 let toastT=null;
 function toast(msg,btn,fn){const t=$('toast');if(!t)return;t.innerHTML=`<span>${msg}</span>${btn?`<button class="btn" id="tBtn">${btn}</button>`:''}`;t.hidden=false;if(btn)$('tBtn').onclick=()=>{t.hidden=true;fn();};clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,4500);}
 function photoToast(p){toast(`Foto ${nums()[p.id]} toegevoegd`,'✎ Markeren',()=>markEditor(p));const t=$('toast'),b=document.createElement('button');b.className='btn';b.textContent='Meer';b.onclick=()=>{t.hidden=true;pointSheet(p.id);};t.appendChild(b);}
@@ -438,8 +439,8 @@ function drawGuide(){const g=$('guide');if(!g)return;if(trace)return traceGuide(
  const dots=`<div class="steps">${[0,1,2].map(j=>`<i class="${j<phase?'done':j===phase?'on':''}"></i>`).join('')}</div>`;
  const live=gpsErr?`<p class="gw">${esc(gpsErr)}</p>`:gps?`<div class="live"><b>± ${Math.round(gps.acc)} m</b><span>${gps.acc<=10?'Gps is goed':gps.acc<=20?'Gps is redelijk':'Gps is nog onnauwkeurig, ga onder de open hemel staan'}</span></div>`:`<div class="live"><span>Gps zoeken… Sta je buiten?</span></div>`;
  const A=cur.anchors.find(a=>a.k==='A'),B=cur.anchors.find(a=>a.k==='B');let h='';
- if(s==='A')h=`<h3>Sta je op een herkenbare plek?</h3><p>Bijvoorbeeld een putdeksel, een handhole of de hoek van een stoep. <b>Tik op de kaart precies waar je staat</b>, dan begint het meten meteen.</p>${live}<div class="row2"><button class="btn" id="wPaste">Ik heb coördinaten</button><button class="btn" id="wStop">Stoppen</button></div>`;
- else if(s==='B'){const d=A&&gps?gpsDist(A,gps):null;h=`<h3>✓ A staat vast. Nu naar B</h3><p>Loop naar een tweede herkenbare plek, <b>zo ver mogelijk van A</b>. Tik daar op de kaart waar je staat.</p><div class="live">${d!=null?`<b>${Math.round(d)} m</b><span>van A${d<20?', liefst nog verder':''}</span>`:''}</div>${gpsErr?`<p class="gw">${esc(gpsErr)}</p>`:''}<div class="row2"><button class="btn" id="wRedoA">A opnieuw</button><button class="btn" id="wStop">Stoppen</button></div>`;}
+ if(s==='A')h=`<h3>Tik op de kaart voor punt A</h3><p>Ga op een herkenbare plek staan, bijvoorbeeld een putdeksel, een handhole of de hoek van een stoep. Tik op de kaart precies waar je staat; het meten begint meteen.</p>${live}<div class="row2"><button class="btn" id="wStop">Stoppen</button></div>`;
+ else if(s==='B'){const d=A&&gps?gpsDist(A,gps):null;h=`<h3>✓ A staat vast. Tik op de kaart voor punt B</h3><p>Loop naar een tweede herkenbare plek, <b>zo ver mogelijk van A</b>, en tik op de kaart precies waar je staat.</p><div class="live">${d!=null?`<b>${Math.round(d)} m</b><span>van A${d<20?', liefst nog verder':''}</span>`:''}</div>${gpsErr?`<p class="gw">${esc(gpsErr)}</p>`:''}<div class="row2"><button class="btn" id="wRedoA">A opnieuw</button><button class="btn" id="wStop">Stoppen</button></div>`;}
  else if(s==='measA'||s==='measB'){const m=wiz.meas,k=m.k;
   if(!m.t0)h=`<h3>Vlag ${k} staat. Wachten op gps…</h3><p>Blijf staan. Het meten begint zodra het signaal goed genoeg is.</p>${live}`;
   else{const sec=(Date.now()-m.t0)/1000;h=`<h3>Blijf stilstaan bij ${k}…</h3><p>Nog ${Math.max(0,Math.ceil(10-sec))} seconden. Staat de vlag niet precies goed? Tik opnieuw op de kaart.</p><div class="bar"><i style="width:${Math.min(100,sec*10)}%"></i></div>${live}${sec>10?`<p class="note" style="color:#b8c2c6">Nog niet nauwkeurig genoeg, even geduld…</p>`:''}`;}
@@ -482,9 +483,9 @@ function pasteSheet(){const b=$('sheetBody');
 /* ---------- route trekken & plusjes ---------- */
 function confirmTwice0(btn,msg,fn){let armed=!msg;btn.onclick=()=>{if(!armed){armed=true;btn.textContent='Zeker? Tik nog een keer';$('conf').textContent=msg;return;}fn();};}
 function splitSeg(i){push();const a=cur.pts[i],b=cur.pts[i+1],np={id:uid(),x:Math.round((a.x+b.x)/2),y:Math.round((a.y+b.y)/2),it:'',c:'',photo:''};cur.pts.splice(i+1,0,np);sel=np.id;solve();save();drawAll();return np;}
-function pointBubble(p,cx,cy){const b=$('bubble');b.innerHTML=`<button class="btn pri" id="bFoto">📷 Foto</button><button class="btn" id="bItem">Item kiezen…</button><button class="btn" id="bKlaar">Alleen een punt</button>`;
+function pointBubble(p,cx,cy){const b=$('bubble');b.innerHTML=`<button class="btn pri" id="bFoto">📷 Foto</button><button class="btn" id="bItem">Item kiezen…</button><button class="btn" id="bKlaar">Alleen een punt</button><button class="btn red" id="bDel">🗑 Verwijderen</button>`;
  b.hidden=false;const w=200,h=b.offsetHeight;b.style.left=Math.max(8,Math.min(innerWidth-w-8,cx-w/2))+'px';b.style.top=(cy+16+h<innerHeight-8?cy+16:Math.max(8,cy-h-16))+'px';
- $('bFoto').onclick=()=>{b.hidden=true;photoFor=p.id;$('fCam').value='';$('fCam').click();};$('bItem').onclick=()=>{b.hidden=true;pointSheet(p.id,'items');};$('bKlaar').onclick=()=>{b.hidden=true;};}
+ $('bFoto').onclick=()=>{b.hidden=true;photoFor=p.id;$('fCam').value='';$('fCam').click();};$('bItem').onclick=()=>{b.hidden=true;pointSheet(p.id,'items');};$('bKlaar').onclick=()=>{b.hidden=true;};$('bDel').onclick=()=>{b.hidden=true;push();cur.pts=cur.pts.filter(q=>q!==p);sel=null;solve();save();drawAll();};}
 function rdp(P,eps){if(P.length<3)return P.slice();const a=P[0],b=P[P.length-1],dx=b[0]-a[0],dy=b[1]-a[1],L=Math.hypot(dx,dy)||1;let dm=0,ix=0;
  for(let i=1;i<P.length-1;i++){const d=L>1e-6?Math.abs(dy*P[i][0]-dx*P[i][1]+b[0]*a[1]-b[1]*a[0])/L:Math.hypot(P[i][0]-a[0],P[i][1]-a[1]);if(d>dm){dm=d;ix=i;}}
  return dm>eps?rdp(P.slice(0,ix+1),eps).slice(0,-1).concat(rdp(P.slice(ix),eps)):[a,b];}
