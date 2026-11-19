@@ -116,6 +116,25 @@ body.editing .mapS{box-shadow:inset 0 0 0 3px var(--hv)}
 .row{grid-template-columns:40px minmax(0,1fr) 64px 36px}.row.on{background:#fff4ec;margin:0 -16px;padding-left:16px;padding-right:16px}.det{min-height:40px;width:36px;padding:0;font-size:22px}
 .pulse{transform-box:fill-box;transform-origin:center;animation:pulse 0.85s ease-out 3}@keyframes pulse{from{transform:scale(.6);opacity:1}to{transform:scale(2.2);opacity:0}}
 @media (prefers-reduced-motion:reduce){.pulse{animation:none}}
+.mlist{display:grid;gap:6px;margin-top:10px}.mi{display:flex;gap:12px;align-items:center;text-align:left;width:100%;min-height:60px;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer;font:500 15px Barlow,system-ui,sans-serif}
+.mi b{display:block;font-size:16px}.mi small{display:block;color:var(--mute);font-size:13px}.mic{width:34px;height:34px;flex:none;display:grid;place-items:center}.mic svg{width:28px;height:28px}
+.msep{margin:16px 0 0;padding-top:12px;border-top:2px solid var(--line);font:700 13px Barlow,sans-serif;color:var(--mute);text-transform:none}
+.sbar{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:10px}.sbar .btn{min-height:40px;background:#ffffff14;color:#fff;border-color:#ffffff33}.sbar .btn.pri{background:var(--hv);border-color:var(--hv)}
+.spst{font:700 14px Barlow,sans-serif;padding:6px 12px;border-radius:20px}.spst.on{background:#1f7a4a;color:#fff}.spst.off{background:#5d676c;color:#fff}
+.wakew{margin:8px 0 0;font-size:13.5px;color:#ffd7a8;display:flex;gap:8px;align-items:center;flex-wrap:wrap}.wakew .btn{min-height:34px;background:#ffffff14;color:#fff;border-color:#ffffff33}
+.dsw{overflow-x:auto;background:#fff;border-bottom:1px solid var(--line);-webkit-overflow-scrolling:touch}.dsw svg{display:block}
+.last{margin:0 0 4px;font-size:15px}
+.rchips,.vchips{display:flex;flex-wrap:wrap;gap:6px}.rc,.vc{min-height:44px;font-weight:500}.rc[aria-pressed=true],.vc[aria-pressed=true]{background:var(--hv);border-color:var(--hv);color:#fff}
+.step{display:flex;align-items:center;gap:12px}.step .btn{width:52px;min-height:48px;font-size:22px}.step b{font:700 24px "Barlow Semi Condensed",sans-serif;min-width:80px;text-align:center}
+.ibar{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:min(560px,100%);display:flex;gap:8px;padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:var(--card);border-top:1px solid var(--line);z-index:5}
+.ibar .big{flex:1;min-height:58px;font-size:18px}body.indoor .app{padding-bottom:96px}
+.hfotos{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.hf{position:relative;aspect-ratio:4/3;border-radius:8px;overflow:hidden;background:var(--bg)}.hf img{width:100%;height:100%;object-fit:cover}
+.fn{position:absolute;left:6px;top:6px;min-width:24px;height:24px;border-radius:12px;background:var(--hv);color:#fff;font:700 13px/24px Barlow,sans-serif;text-align:center;padding:0 6px;border:2px solid #fff}
+.fx{position:absolute;right:4px;top:4px;width:30px;height:30px;border-radius:50%;border:0;background:#000a;color:#fff;font-size:18px;cursor:pointer}
+.hverb{display:flex;gap:10px;align-items:center;justify-content:space-between;font-size:15px;flex-wrap:wrap}
+textarea{width:100%;font:16px Barlow,system-ui,sans-serif;padding:10px;border-radius:9px;border:1px solid var(--line);background:#f6f7f6;color:var(--ink)}
+.rep .hblk{break-inside:avoid;page-break-inside:avoid;border-top:1px solid #e3e3e3;padding-top:10px;margin-top:14px}.rep .hblk h3{font-size:18px;margin:0 0 8px}
+.rep .dsr{overflow:hidden}.rep .dsr svg{width:100%;height:auto;max-height:240px}.rep .nf{position:relative}.rep .nf img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:4px;display:block}
 @media print{.noprint,.tool,.top,.fab{display:none!important}.app{max-width:none}.rep{padding:0}body{background:#fff}}
 </style>
 </head>
@@ -213,7 +232,7 @@ async function makeDemo(){try{const b=await (await fetch('voorbeeld-tekening.jpg
 
 /* ---------- home ---------- */
 let showArch=false;const fotos=n=>n+(n===1?' foto':" foto's");
-async function home(){view='home';cur=null;gpsOff();hist=[];document.body.classList.remove('wiz','trace');
+async function home(){view='home';stopSensors();document.body.classList.remove('indoor');cur=null;gpsOff();hist=[];document.body.classList.remove('wiz','trace');
  const all=(await getAll()).sort((a,b)=>b.updated-a.updated),act=all.filter(p=>!p.archived),arc=all.filter(p=>p.archived);
  const th={};await Promise.all(all.map(async p=>th[p.id]=await url(p.draw)));
  const row=p=>`<div class="proj" data-p="${p.id}"><div class="th">${th[p.id]?`<img src="${th[p.id]}" alt="">`:''}</div><div><b>${esc(p.name)}</b><span>${esc(p.addr)}${p.addr?' · ':''}${p.pts.length} punten · ${fotos(p.pts.filter(q=>q.photo).length)} · ${new Date(p.updated).toLocaleDateString('nl-NL')}</span></div><button class="btn more" data-m="${p.id}" aria-label="Opties voor ${esc(p.name)}">⋯</button></div>`;
@@ -236,10 +255,11 @@ function projActions(p){const n=p.pts.filter(q=>q.photo).length,b=$('sheetBody')
  $('aArc').onclick=async()=>{p.archived=!p.archived;await putProj(p);closeSheet();if(p.archived)showArch=false;home();};
  let armed=false;$('aDel').onclick=async()=>{if(!armed){armed=true;$('aDel').querySelector('b').textContent='Zeker weten? Tik nog een keer';$('conf').textContent=n?'Tip: bewaar eerst de foto\'s of maak het rapport als PDF.':'';return;}
   await deleteProject(p);closeSheet();home();};}
-async function deleteProject(p){clearTimeout(saveT);saveT=null;for(const q of p.pts)if(q.photo){await delBlob(q.photo).catch(()=>{});if(urls[q.photo]){URL.revokeObjectURL(urls[q.photo]);delete urls[q.photo];}}
+async function deleteProject(p){clearTimeout(saveT);saveT=null;if(p.indoor)for(const h of p.indoor.haltes)for(const k of h.fotos)await delBlob(k).catch(()=>{});for(const q of p.pts)if(q.photo){await delBlob(q.photo).catch(()=>{});if(urls[q.photo]){URL.revokeObjectURL(urls[q.photo]);delete urls[q.photo];}}
  await delBlob(p.draw).catch(()=>{});await delProj(p.id);}
 async function sharePhotos(p){const N={};let n=0;p.pts.forEach(q=>{if(q.photo)N[q.id]=++n;});const files=[];
- for(const q of p.pts)if(q.photo){const b=await getBlob(q.photo);if(b)files.push(new File([b],`${(p.sid||p.name).replace(/[^\w-]+/g,'_')}_foto${String(N[q.id]).padStart(2,'0')}.jpg`,{type:'image/jpeg'}));}
+  for(const q of p.pts)if(q.photo){const b=await getBlob(q.photo);if(b)files.push(new File([b],`${(p.sid||p.name).replace(/[^\w-]+/g,'_')}_foto${String(N[q.id]).padStart(2,'0')}.jpg`,{type:'image/jpeg'}));}
+ if(p.indoor){let j=0;for(const h of p.indoor.haltes)for(const k of h.fotos){const b=await getBlob(k);j++;if(b)files.push(new File([b],`${(p.sid||p.name).replace(/[^\w-]+/g,'_')}_binnen_halte${h.nummer}_foto${String(j).padStart(2,'0')}.jpg`,{type:'image/jpeg'}));}}
  if(!files.length)return toast('Geen foto\'s gevonden');
  if(navigator.canShare&&navigator.canShare({files})){try{await navigator.share({files,title:p.name});}catch(e){}return;}
  for(const f of files){const a=document.createElement('a');a.href=URL.createObjectURL(f);a.download=f.name;document.body.appendChild(a);a.click();a.remove();await sleep(300);}}
@@ -267,11 +287,11 @@ async function pickPdfPage(file,done){
 
 /* ---------- project ---------- */
 async function openProject(id){cur=(await getAll()).find(p=>p.id===id);if(!cur)return home();view='proj';hist=[];sel=null;zoom=1;follow=false;drawUrl=await url(cur.draw);
- await Promise.all(cur.pts.map(p=>url(p.photo)));
+ await Promise.all(cur.pts.map(p=>url(p.photo)));if(cur.indoor)await Promise.all(cur.indoor.haltes.flatMap(h=>h.fotos).map(url));document.body.classList.remove('indoor');
  cur.anchors=(cur.anchors||[]).map((a,i)=>{if(a.id){const p=cur.pts.find(q=>q.id===a.id);return p?{k:'AB'[i]||'C',x:p.x,y:p.y,la:a.la,lo:a.lo,acc:a.acc,src:a.src}:null;}return a;}).filter(Boolean).slice(0,2);
  wiz=null;ghost=null;pendingAdd=null;editRoute=false;document.body.classList.remove('editing');document.body.classList.remove('wiz');solve();buildMask();
  app.innerHTML=`<div class="top" id="head"></div>
- <div class="stick"><div class="leg" id="legend"></div><div class="info" id="info" hidden><b>Oranje = foto</b>, met het fotonummer van het rapport. Vorm en kleur van een item volgen de legenda van de tekening: bruin met groene rand is nieuw, blauwgroen met gele rand is bestaand.</div><div class="tool"><button class="btn rt" id="rtBtn" aria-pressed="false"><span class="sw2"><i></i></span>Route verleggen</button><button class="btn ic" id="snapBtn" aria-pressed="true" aria-label="Magneet: bolletjes naar de lijn trekken" title="Magneet" hidden>🧲</button><button class="btn ic" id="meBtn" aria-label="Mijn positie" title="Mijn positie">📍</button><span class="sp"></span><button class="btn" id="zOut" aria-label="Uitzoomen">−</button><button class="btn" id="zIn" aria-label="Inzoomen">+</button><button class="btn" id="undo" aria-label="Ongedaan maken">↶</button></div>
+ <div class="stick"><div class="leg" id="legend"></div><div class="info" id="info" hidden><b>Oranje = foto</b>, met het fotonummer van het rapport. Vorm en kleur van een item volgen de legenda van de tekening: bruin met groene rand is nieuw, blauwgroen met gele rand is bestaand.</div><div class="tool"><button class="btn rt" id="rtBtn" aria-pressed="false"><span class="sw2"><i></i></span>Route verleggen</button><button class="btn ic" id="snapBtn" aria-pressed="true" aria-label="Magneet: bolletjes naar de lijn trekken" title="Magneet" hidden>🧲</button><button class="btn ic" id="meBtn" aria-label="Locatie en binnentracé" title="Locatie en binnentracé">📍</button><span class="sp"></span><button class="btn" id="zOut" aria-label="Uitzoomen">−</button><button class="btn" id="zIn" aria-label="Inzoomen">+</button><button class="btn" id="undo" aria-label="Ongedaan maken">↶</button></div>
   </div><div class="mapS" id="mapS"><div class="mapI" id="mapI"><svg id="svg" viewBox="0 0 ${cur.W} ${cur.H}" style="aspect-ratio:${cur.W}/${cur.H}"><image href="${drawUrl}" width="${cur.W}" height="${cur.H}"/><g id="lay"></g></svg></div></div>
  <div class="sec" id="list" style="padding-top:0"></div>
  <div class="sec noprint"><div class="row2"><button class="btn" id="repBtn">Rapport / PDF</button><button class="btn" id="editP">Project</button></div></div>
@@ -370,7 +390,7 @@ function bindProject(){const svg=$('svg'),S=$('mapS'),P=new Map();let g=null;
  $('snapBtn').onclick=()=>{snap=!snap;$('snapBtn').setAttribute('aria-pressed',snap);};
  const zc=f=>{const r=S.getBoundingClientRect();setZoomAt(zoom*f,r.left+r.width/2,r.top+Math.min(r.height,innerHeight-r.top)/2);};$('zIn').onclick=()=>zc(1.5);$('zOut').onclick=()=>zc(1/1.5);
  $('undo').onclick=()=>{if(!hist.length)return;cur.pts=JSON.parse(hist.pop());solve();save();drawAll();};
- $('meBtn').onclick=()=>{if(watch!==null&&follow){follow=false;gpsOff();$('meBtn').setAttribute('aria-pressed',false);drawAll();return;}gpsOn();follow=!!T;$('meBtn').setAttribute('aria-pressed',true);drawAll();};
+ $('meBtn').onclick=locMenu;
  $('list').onclick=e=>{const d=e.target.closest('[data-open]');if(d){sel=d.dataset.open;drawMap();pointSheet(sel);return;}const r=e.target.closest('[data-hl]');if(r)highlight(r.dataset.hl);};
  $('repBtn').onclick=report;$('editP').onclick=projSheet;
  $('fab').onclick=()=>{placeHere=true;$('fCam').value='';$('fCam').click();};
@@ -595,6 +615,227 @@ function markEditor(p){const u=urls[p.photo];if(!u)return;closeSheet();
   on('mOff',()=>{push();delete p.mark;save();close();drawAll();pointSheet(p.id,'foto');});
   on('mOk',()=>{push();p.mark=m;save();close();drawAll();pointSheet(p.id,'foto');toast('Markering opgeslagen');});});}
 
+/* ---------- locatiemenu ---------- */
+function togglePos(){if(watch!==null&&follow){follow=false;gpsOff();$('meBtn').setAttribute('aria-pressed',false);drawAll();return;}gpsOn();follow=!!T;$('meBtn').setAttribute('aria-pressed',true);drawAll();}
+const ICO={pos:'<svg viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7z" fill="#ff6a13"/><circle cx="12" cy="9" r="2.6" fill="#fff"/></svg>',
+ geo:'<svg viewBox="0 0 24 24"><path d="M5 21V4M5 4h10l-2 3 2 3H5" fill="none" stroke="#1d2529" stroke-width="2" stroke-linejoin="round"/><circle cx="19" cy="19" r="2.5" fill="#1d2529"/></svg>',
+ metro:'<svg viewBox="0 0 24 24"><path d="M3 17h6V7h6v10h6" fill="none" stroke="#ff6a13" stroke-width="2.6" stroke-linejoin="round"/><circle cx="3" cy="17" r="2.2" fill="#1d2529"/><circle cx="12" cy="7" r="2.2" fill="#1d2529"/><circle cx="21" cy="17" r="2.2" fill="#1d2529"/></svg>',
+ kruim:'<svg viewBox="0 0 24 24"><ellipse cx="8" cy="15" rx="2.6" ry="4" fill="#1d2529"/><ellipse cx="16" cy="8" rx="2.6" ry="4" fill="#1d2529"/><circle cx="4" cy="22" r="1" fill="#ff6a13"/><circle cx="12" cy="20" r="1" fill="#ff6a13"/><circle cx="20" cy="15" r="1" fill="#ff6a13"/></svg>'};
+function locMenu(){const I=cur.indoor,n=I?I.haltes.length:0,cont=I?` · verder gaan (${n} halte${n===1?'':'s'})`:'';
+ const it=(id,ic,t,s)=>`<button class="mi" id="${id}"><span class="mic">${ic}</span><span><b>${t}</b><small>${s}</small></span></button>`;
+ $('sheetBody').innerHTML=`<h2 style="font-size:22px">Locatie</h2><div class="mlist">
+ ${it('lmPos',ICO.pos,'Mijn positie op de tekening',watch!==null&&follow?'Staat aan · tik om uit te zetten':T?'Blauwe stip volgen':'Werkt na koppelen aan gps')}
+ ${it('lmGeo',ICO.geo,T?'Gps-koppeling':'Koppel aan gps',T?'Gekoppeld · bekijken of opnieuw koppelen':'Tekening koppelen met twee punten')}
+ </div><div class="msep">Binnentracé</div><div class="mlist">
+ ${it('lmMetro',ICO.metro,'Indoor metrolijn','Ruimte voor ruimte, zonder sensoren'+cont)}
+ ${it('lmKruim',ICO.kruim,'Indoor broodkruimelspoor','Telefoon meet afstand en richting'+cont)}</div>
+ <div class="row2"><button class="btn dk" id="lmClose">Sluiten</button></div>`;
+ $('sheet').hidden=false;$('lmClose').onclick=closeSheet;
+ $('lmPos').onclick=()=>{closeSheet();togglePos();};$('lmGeo').onclick=()=>{closeSheet();geoMenu();};
+ $('lmMetro').onclick=()=>{closeSheet();openIndoor('metrolijn');};$('lmKruim').onclick=()=>{closeSheet();openIndoor('broodkruimel');};}
+
+/* ---------- binnentracé: data ---------- */
+const ROOMS=['Gang','Kelder','Schacht','MER','Trappenhuis','Plafond','Doorvoer','Patchkast'];
+const VERB=['kabelgoot','buis','boven plafond','onder vloer','door wand/vloer (doorvoer)','anders'];
+const isDoor=v=>v&&v.type==='door wand/vloer (doorvoer)';
+const isKast=h=>/^(MER|Patchkast|Serverkast)$/i.test(h.ruimtetype||'');
+const r1=v=>Math.round(v*10)/10,fmtM=v=>String(r1(v)).replace('.',',');
+let IND=null,sens=null,wl=null;
+function ensureIndoor(mode){const inv=cur.pts.find(p=>p.it==='inv'||p.it==='brw');
+ if(!cur.indoor)cur.indoor={id:uid(),schouwId:cur.id,modus:mode,startpunt:inv?{type:'IN',ptId:inv.id}:{type:'voordeur'},haltes:[],spoor:[],floor:0};
+ else if(cur.indoor.startpunt.type==='voordeur'&&inv)cur.indoor.startpunt={type:'IN',ptId:inv.id};
+ return cur.indoor;}
+const renum=()=>IND.haltes.forEach((h,i)=>h.nummer=i+1);
+function fotoNrs(){let n=0;const m={};IND.haltes.forEach(h=>h.fotos.forEach(k=>m[k]=++n));return m;}
+function roomList(){const u=ls.get('roomUse',{}),all=[...ROOMS,...ls.get('roomCustom',[])];return all.map((v,i)=>({v,i,n:u[v]||0})).sort((a,b)=>b.n-a.n||a.i-b.i).map(x=>x.v);}
+function segLen(k){const prev=k>0?IND.haltes[k-1].anker:null;let x=prev?prev.x:0,y=prev?prev.y:0,L=0,any=false;
+ for(const s of IND.spoor){if(s.seg!==k)continue;any=true;if(s.pause){L+=s.len||0;continue;}L+=Math.hypot(s.x-x,s.y-y);x=s.x;y=s.y;}return any?L:null;}
+const curPos=()=>{for(let i=IND.spoor.length-1;i>=0;i--)if(!IND.spoor[i].pause)return IND.spoor[i];return{x:0,y:0,c:0};};
+
+/* ---------- binnentracé: doorsnede ---------- */
+const DS={dx:72,x0:54,bh:62,top:8};
+function dsSvg(hl=-1,drag=null){const H=IND.haltes,fl=[0,IND.floor,...H.map(h=>h.verdieping)],mn=Math.min(...fl),mx=Math.max(...fl),nb=mx-mn+1;
+ const W=Math.max(DS.x0+(H.length+1)*DS.dx+20,Math.min(560,(document.querySelector('.app')||{}).clientWidth||360)),Ht=DS.top*2+nb*DS.bh,yF=f=>DS.top+(mx-f)*DS.bh+DS.bh/2,xI=i=>DS.x0+i*DS.dx;
+ let o='';for(let f=mx;f>=mn;f--){const y=DS.top+(mx-f)*DS.bh;o+=`<rect x="0" y="${y}" width="${W}" height="${DS.bh}" fill="${f%2?'#eef0ee':'#f7f8f7'}"/><line x1="0" x2="${W}" y1="${y+DS.bh}" y2="${y+DS.bh}" stroke="#d9ddda"/><text x="8" y="${y+16}" font-size="12" font-weight="600" fill="#5d676c" font-family="Barlow,sans-serif">${f<0?'−'+(-f):f}${f===-1?' kelder':''}</text>`;}
+ // spoor: grijze stippellijn achter de route
+ if(IND.spoor.length){let d='';for(let k=0;k<=H.length;k++){const pts=IND.spoor.filter(s=>s.seg===k&&!s.pause);if(!pts.length)continue;
+   const a=k>0?H[k-1].anker||{x:0,y:0}:{x:0,y:0},b=k<H.length&&H[k].anker?H[k].anker:pts[pts.length-1],L=segLen(k)||1,bx=b.x-a.x,by=b.y-a.y,bl=Math.hypot(bx,by)||1;
+   const xa=xI(k),xb=k<H.length?xI(k+1):xI(k)+DS.dx*.8,fa=k>0?H[k-1].verdieping:0;let c=0,px=a.x,py=a.y;d+=`M${xa} ${yF(fa)+9}`;
+   for(const s of pts){c+=Math.hypot(s.x-px,s.y-py);px=s.x;py=s.y;const off=Math.max(-14,Math.min(14,((s.x-a.x)*by-(s.y-a.y)*bx)/bl*2));d+=` L${(xa+(xb-xa)*Math.min(1,c/L)).toFixed(1)} ${(yF(s.verdieping)+9+off).toFixed(1)}`;}}
+  o+=`<path d="${d}" fill="none" stroke="#8a9397" stroke-width="1.6" stroke-dasharray="3 3"/>`;}
+ // route
+ let p=`M${xI(0)} ${yF(0)}`,pf=0;H.forEach((h,i)=>{const x=xI(i+1);if(h.verdieping!==pf)p+=` L${x} ${yF(pf)} L${x} ${yF(h.verdieping)}`;else p+=` L${x} ${yF(h.verdieping)}`;pf=h.verdieping;});
+ o+=`<path d="${p}" fill="none" stroke="#ff6a13" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"/>`;
+ // start
+ const sx=xI(0),sy=yF(0);o+=IND.startpunt.type==='IN'?`<circle cx="${sx}" cy="${sy}" r="13" fill="#943a22" stroke="#3bdc5a" stroke-width="3"/><text x="${sx}" y="${sy+4.5}" font-size="12" font-weight="700" text-anchor="middle" fill="#fff" font-family="Barlow,sans-serif">IN</text>`
+  :`<path d="M${sx} ${sy-14} L${sx+13} ${sy-3} V${sy+12} H${sx-13} V${sy-3}Z" fill="#1d2529" stroke="#fff" stroke-width="2"/><rect x="${sx-4}" y="${sy+2}" width="8" height="10" fill="#ff6a13"/>`;
+ o+=`<text x="${sx}" y="${sy+28}" font-size="11" text-anchor="middle" fill="#5d676c" font-family="Barlow,sans-serif">${IND.startpunt.type==='IN'?'Invoering':'Voordeur'}</text>`;
+ H.forEach((h,i)=>{let x=xI(i+1);const y=yF(h.verdieping),ph=h.fotos.length>0,hi=i===hl,st=ph?'#ff6a13':'#1d2529',sw=ph?4:2.5;
+  if(drag&&drag.i===i)x=drag.x;
+  o+=`<g class="hl" data-h="${i}">${hi?`<circle cx="${x}" cy="${y}" r="22" fill="none" stroke="#1d2529" stroke-width="2" stroke-dasharray="4 3"/>`:''}`;
+  o+=isKast(h)?`<rect x="${x-13}" y="${y-11}" width="26" height="22" rx="2" fill="#fff" stroke="${ph?'#ff6a13':'#3bdc5a'}" stroke-width="${sw}"/>`:`<circle cx="${x}" cy="${y}" r="12" fill="#fff" stroke="${st}" stroke-width="${sw}"/>`;
+  o+=`<text x="${x}" y="${y+4.5}" font-size="12.5" font-weight="700" text-anchor="middle" fill="#1b1b1b" font-family="Barlow,sans-serif">${i+1}</text>`;
+  o+=`<text x="${x}" y="${y+28}" font-size="11" text-anchor="middle" fill="#5d676c" font-family="Barlow,sans-serif">${esc((h.ruimtetype||'Halte').slice(0,11))}</text><circle cx="${x}" cy="${y}" r="24" fill="transparent"/></g>`;});
+ return`<svg viewBox="0 0 ${W} ${Ht}" width="${W}" height="${Ht}" class="dsv">${o}</svg>`;}
+
+/* ---------- binnentracé: scherm ---------- */
+function openIndoor(mode){IND=ensureIndoor(mode);if(IND.modus!==mode){IND.modus=mode;if(mode==='metrolijn')stopSensors();}save();
+ view='indoor';follow=false;gpsOff();document.body.classList.remove('wiz','trace','editing');
+ $('fCam').onchange=e=>indoorPhoto(e.target.files[0]);$('fPick').onchange=e=>indoorPhoto(e.target.files[0]);renderIndoor();scrollTo({top:0});}
+function lastText(){const H=IND.haltes;if(!H.length){const L=sens&&!sens.calib?segLen(0):null;return`Nog geen haltes. Start bij ${IND.startpunt.type==='IN'?'de invoering':'de voordeur'}.`+(L!=null?`<br><span class="note">Nu onderweg: ca. ${fmtM(L)} m sinds de start</span>`:'');}
+ const h=H[H.length-1],v=h.verbinding,from=H.length>1?'halte '+(H.length-1):(IND.startpunt.type==='IN'?'invoering':'voordeur');
+ let s=`<b>Laatste stuk:</b> ${from} → halte ${H.length}`;if(v.type)s+=` · ${v.type}`;if(v.lengte!=null)s+=` · ${v.lengteBron==='geschat'?'ca. ':''}${fmtM(v.lengte)} m`;if(isDoor(v)&&v.brandwerend!=null)s+=` · brandwerend ${v.brandwerend?'ja':'nee'}`;
+ if(sens&&!sens.calib){const L=segLen(H.length);if(L!=null)s+=`<br><span class="note">Nu onderweg: ca. ${fmtM(L)} m sinds halte ${H.length}</span>`;}return s;}
+function sensBar(){if(IND.modus!=='broodkruimel')return'';
+ if(!sens)return`<div class="sbar"><span class="spst off">Spoor uit</span><button class="btn pri" id="sStart">Spoor starten</button><button class="btn" id="sCal">⚙ Kalibreren</button></div>`;
+ return`<div class="sbar"><span class="spst ${sens.paused?'off':'on'}">${sens.paused?'Spoor gepauzeerd':'Spoor aan'}</span><button class="btn" id="sPause">${sens.paused?'▶ Hervat':'⏸ Pauze'}</button><button class="btn" id="sHome">Terug bij start</button><button class="btn" id="sCal">⚙</button></div>${!wl&&sens?`<p class="wakew" id="wakeW">Scherm kan uitgaan. Dan stopt het meten. <button class="btn" id="sWake">Scherm aan houden</button></p>`:''}`;}
+function renderIndoor(){if(view!=='indoor')return;const n=IND.haltes.length;
+ app.innerHTML=`<div class="top"><button class="back" id="iBk">‹ Buitentracé</button><br><small>${esc(cur.addr||'')}${cur.addr?' · ':''}${esc(cur.name)}</small><h1>Binnentracé</h1>
+  <div class="chips"><span class="geo on"><i></i>${IND.modus==='metrolijn'?'Indoor metrolijn':'Indoor broodkruimelspoor'}</span><button class="geo" id="iMode">Modus wisselen</button></div>${sensBar()}</div>
+ <div class="dsw" id="dsw">${dsSvg()}</div>
+ <div class="sec"><p class="last" id="iLast">${lastText()}</p>
+  <span class="lab">Ruimtetype · tik maakt een nieuwe halte</span><div class="rchips">${roomList().map(r=>`<button class="btn rc" data-room="${esc(r)}">${esc(r)}</button>`).join('')}<button class="btn rc" id="rPlus" aria-label="Eigen ruimtenaam">+</button></div>
+  <span class="lab">Verdieping voor de volgende halte</span><div class="step"><button class="btn" id="fMin" aria-label="Verdieping lager">–</button><b id="fVal">${IND.floor<0?'−'+(-IND.floor):IND.floor}${IND.floor===-1?' (kelder)':''}</b><button class="btn" id="fPlus" aria-label="Verdieping hoger">+</button></div>
+  <p class="note" style="margin-top:14px">Tik op een halte om hem te openen. Houd een halte vast om te wijzigen, te verwijderen of te verslepen.</p>
+  <div class="row2"><button class="btn" id="iRep">Rapport / PDF</button></div></div>
+ <div class="ibar"><button class="btn big" id="iFoto">📷 Foto</button><button class="btn pri big" id="iHalte">Halte hier</button></div>`;
+ document.body.classList.add('indoor');
+ $('iBk').onclick=()=>{stopSensors();document.body.classList.remove('indoor');openProject(cur.id);};
+ $('iMode').onclick=()=>{IND.modus=IND.modus==='metrolijn'?'broodkruimel':'metrolijn';if(IND.modus==='metrolijn'){stopSensors();toast('Metrolijn: sensoren uit. Het spoor blijft bewaard.');}save();renderIndoor();};
+ document.querySelectorAll('[data-room]').forEach(b=>b.onclick=()=>newHalte(b.dataset.room));
+ $('rPlus').onclick=customRoom;
+ $('fMin').onclick=()=>{IND.floor--;save();renderIndoor();};$('fPlus').onclick=()=>{IND.floor++;save();renderIndoor();};
+ $('iHalte').onclick=()=>newHalte('');
+ $('iFoto').onclick=()=>{if(!n){toast('Maak eerst een halte, dan hoort de foto daarbij.');return;}photoHalte=n-1;$('fCam').value='';$('fCam').click();};
+ $('iRep').onclick=()=>{stopSensors();document.body.classList.remove('indoor');report();};
+ const on=(id,f)=>{const e=$(id);if(e)e.onclick=f;};
+ on('sStart',startSpoor);on('sCal',()=>calibrate(false));on('sPause',togglePause);on('sHome',backAtStart);on('sWake',keepAwake);
+ bindDs();const w=$('dsw');w.scrollLeft=w.scrollWidth;}
+function refreshIndoor(){if(view!=='indoor')return;const w=$('dsw'),sl=w.scrollLeft,atEnd=sl+w.clientWidth>=w.scrollWidth-4;w.innerHTML=dsSvg();w.scrollLeft=atEnd?w.scrollWidth:sl;$('iLast').innerHTML=lastText();bindDs();}
+function customRoom(){$('sheetBody').innerHTML=`<h2 style="font-size:22px">Eigen ruimtenaam</h2><label for="rn">Naam</label><input id="rn" placeholder="bv. Meterkast"><div class="row2"><button class="btn" id="rc">Annuleren</button><button class="btn pri" id="ro">Halte maken</button></div>`;
+ $('sheet').hidden=false;setTimeout(()=>$('rn').focus(),50);$('rc').onclick=closeSheet;
+ $('ro').onclick=()=>{const v=$('rn').value.trim();if(!v)return;const c=ls.get('roomCustom',[]);if(!c.includes(v)&&!ROOMS.includes(v)){c.push(v);ls.set('roomCustom',c);}closeSheet();newHalte(v);};}
+function newHalte(type){const k=IND.haltes.length,h={id:uid(),nummer:k+1,ruimtetype:type,verdieping:IND.floor,fotos:[],notitie:'',verbinding:{type:'',lengte:null,lengteBron:'',brandwerendDichtzetten:null}};
+ if(IND.modus==='broodkruimel'&&IND.spoor.some(s=>s.seg===k)){const L=segLen(k);if(L!=null){h.verbinding.lengte=r1(L);h.verbinding.lengteBron='geschat';}}
+ if(sens){const p=curPos();h.anker={x:p.x,y:p.y,c:p.c||0};}
+ if(type)bump('roomUse',type);IND.haltes.push(h);renum();save();renderIndoor();connSheet(k,true);}
+function connSheet(i,isNew){const h=IND.haltes[i],v=h.verbinding,from=i>0?'halte '+i:(IND.startpunt.type==='IN'?'de invoering':'de voordeur');
+ const draw=()=>{$('sheetBody').innerHTML=`<h2 style="font-size:22px">Hoe loopt de kabel hierheen?</h2><p class="note">Van ${from} naar halte ${i+1}${h.ruimtetype?' · '+esc(h.ruimtetype):''}</p>
+  <div class="vchips">${VERB.map(t=>`<button class="btn vc" data-v="${t}" aria-pressed="${v.type===t}">${t}</button>`).join('')}</div>
+  <label for="vl">Lengte in meters (mag leeg)</label><input id="vl" inputmode="decimal" value="${v.lengte!=null?fmtM(v.lengte):''}" placeholder="bv. 12">${v.lengteBron==='geschat'?'<p class="note">Geschat met het broodkruimelspoor. Pas aan als je het beter weet.</p>':''}
+  ${isDoor(v)?`<span class="lab">Brandwerend dichtzetten?</span><div class="row2" style="margin-top:0"><button class="btn vc" data-b="1" aria-pressed="${v.brandwerendDichtzetten===true}">Ja</button><button class="btn vc" data-b="0" aria-pressed="${v.brandwerendDichtzetten===false}">Nee</button></div>`:''}
+  <div class="row2"><button class="btn" id="vSkip">${isNew?'Overslaan':'Annuleren'}</button><button class="btn pri" id="vOk">Opslaan</button></div>`;
+  $('sheet').hidden=false;
+  document.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>{keepL();v.type=v.type===b.dataset.v?'':b.dataset.v;if(!isDoor(v))v.brandwerendDichtzetten=null;draw();});
+  document.querySelectorAll('[data-b]').forEach(b=>b.onclick=()=>{keepL();v.brandwerendDichtzetten=b.dataset.b==='1';draw();});
+  $('vSkip').onclick=()=>{closeSheet();save();refreshIndoor();};$('vOk').onclick=()=>{keepL();save();closeSheet();refreshIndoor();};};
+ const keepL=()=>{const s=$('vl').value.trim().replace(',','.');if(s===''){if(v.lengteBron!=='geschat'){v.lengte=null;v.lengteBron='';}return;}const x=parseFloat(s);if(isFinite(x)&&x>=0&&(v.lengte==null||Math.abs(x-v.lengte)>.04)){v.lengte=x;v.lengteBron='handmatig';}};
+ draw();}
+let photoHalte=null;
+async function indoorPhoto(f){if(!f||photoHalte==null)return;const h=IND.haltes[photoHalte];if(!h)return;const b=await shrink(f),k='f_'+uid();await putBlob(k,b);await url(k);h.fotos.push(k);save();
+ const nr=fotoNrs()[k];toast(`Foto ${nr} bij halte ${photoHalte+1}`);if(!$('sheet').hidden)halteSheet(photoHalte);refreshIndoor();}
+function halteSheet(i){const h=IND.haltes[i];if(!h)return;const v=h.verbinding,FN=fotoNrs();
+ $('sheetBody').innerHTML=`<h2 style="font-size:22px">Halte ${i+1}${h.ruimtetype?' · '+esc(h.ruimtetype):''}</h2>
+ <span class="lab">Ruimtetype</span><div class="rchips">${roomList().map(r=>`<button class="btn rc" data-rt="${esc(r)}" aria-pressed="${h.ruimtetype===r}">${esc(r)}</button>`).join('')}</div>
+ <span class="lab">Verdieping</span><div class="step"><button class="btn" id="hfMin">–</button><b>${h.verdieping<0?'−'+(-h.verdieping):h.verdieping}</b><button class="btn" id="hfPlus">+</button></div>
+ <span class="lab">Foto's</span><div class="hfotos">${h.fotos.map(k=>`<div class="hf">${urls[k]?`<img src="${urls[k]}" alt="">`:''}<span class="fn">${FN[k]}</span><button class="fx" data-del="${k}" aria-label="Foto ${FN[k]} weghalen">×</button></div>`).join('')}</div>
+ <div class="row2" style="margin-top:8px"><button class="btn pri" id="hCam">📷 Camera</button><button class="btn" id="hGal">Uit galerij</button></div>
+ <span class="lab">Verbinding vanaf ${i>0?'halte '+i:(IND.startpunt.type==='IN'?'invoering':'voordeur')}</span>
+ <div class="hverb">${v.type||'nog niet gekozen'}${v.lengte!=null?` · ${v.lengteBron==='geschat'?'ca. ':''}${fmtM(v.lengte)} m`:''}${isDoor(v)&&v.brandwerendDichtzetten!=null?` · brandwerend ${v.brandwerendDichtzetten?'ja':'nee'}`:''} <button class="btn" id="hVerb">Wijzigen</button></div>
+ <label for="hn">Notitie</label><textarea id="hn" rows="3">${esc(h.notitie)}</textarea>
+ <div class="row2"><button class="btn red" id="hDel">Halte verwijderen</button><button class="btn dk" id="hOk">Klaar</button></div>`;
+ $('sheet').hidden=false;const keep=()=>{h.notitie=$('hn').value;};
+ document.querySelectorAll('[data-rt]').forEach(b=>b.onclick=()=>{keep();h.ruimtetype=h.ruimtetype===b.dataset.rt?'':b.dataset.rt;if(h.ruimtetype)bump('roomUse',h.ruimtetype);save();refreshIndoor();halteSheet(i);});
+ $('hfMin').onclick=()=>{keep();h.verdieping--;save();refreshIndoor();halteSheet(i);};$('hfPlus').onclick=()=>{keep();h.verdieping++;save();refreshIndoor();halteSheet(i);};
+ document.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{keep();h.fotos=h.fotos.filter(k=>k!==b.dataset.del);delBlob(b.dataset.del);save();refreshIndoor();halteSheet(i);});
+ $('hCam').onclick=()=>{keep();photoHalte=i;$('fCam').value='';$('fCam').click();};$('hGal').onclick=()=>{keep();photoHalte=i;$('fPick').value='';$('fPick').click();};
+ $('hVerb').onclick=()=>{keep();save();connSheet(i,false);};
+ confirmTwice0($('hDel'),'De foto\'s van deze halte worden ook gewist.',()=>{h.fotos.forEach(k=>delBlob(k));IND.haltes.splice(i,1);IND.spoor.forEach(s=>{if(s.seg>i)s.seg--;});renum();save();closeSheet();renderIndoor();});
+ $('hOk').onclick=()=>{keep();save();closeSheet();refreshIndoor();};}
+function halteMenu(i){const h=IND.haltes[i];
+ $('sheetBody').innerHTML=`<h2 style="font-size:22px">Halte ${i+1}${h.ruimtetype?' · '+esc(h.ruimtetype):''}</h2><div class="meth" style="margin-top:12px">
+ <button class="btn" id="mW"><b>Wijzigen</b><small>Ruimte, verdieping, foto's, verbinding en notitie</small></button>
+ <button class="btn" id="mL"><b>◀ Eerder in de volgorde</b><small>Of: houd de halte vast en schuif hem opzij</small></button>
+ <button class="btn" id="mR"><b>Later in de volgorde ▶</b></button>
+ <button class="btn red" id="mD"><b>Verwijderen</b><small>Ook de foto's van deze halte</small></button></div><p class="note warn" id="conf"></p>
+ <div class="row2"><button class="btn dk" id="mC">Sluiten</button></div>`;
+ $('sheet').hidden=false;$('mC').onclick=closeSheet;$('mW').onclick=()=>halteSheet(i);
+ $('mL').onclick=()=>{moveHalte(i,i-1);closeSheet();};$('mR').onclick=()=>{moveHalte(i,i+1);closeSheet();};
+ let armed=false;$('mD').onclick=()=>{if(!armed){armed=true;$('mD').querySelector('b').textContent='Zeker? Tik nog een keer';return;}h.fotos.forEach(k=>delBlob(k));IND.haltes.splice(i,1);IND.spoor.forEach(s=>{if(s.seg>i)s.seg--;});renum();save();closeSheet();renderIndoor();};}
+function moveHalte(a,b){const H=IND.haltes;if(b<0||b>=H.length||a===b)return;const[h]=H.splice(a,1);H.splice(b,0,h);renum();save();refreshIndoor();toast(`Halte staat nu op plek ${b+1}`);}
+function bindDs(){const w=$('dsw'),svg=w.querySelector('svg');if(!svg)return;let g=null;
+ const sx=e=>{const q=svg.createSVGPoint();q.x=e.clientX;q.y=e.clientY;return q.matrixTransform(svg.getScreenCTM().inverse()).x;};
+ svg.addEventListener('pointerdown',e=>{const t=e.target.closest('.hl');if(!t)return;g={i:+t.dataset.h,sx:e.clientX,sy:e.clientY,lp:false,moved:false,id:e.pointerId};
+  g.timer=setTimeout(()=>{if(!g)return;g.lp=true;if(navigator.vibrate)navigator.vibrate(25);try{svg.setPointerCapture(g.id);}catch(_){}},450);});
+ svg.addEventListener('pointermove',e=>{if(!g)return;const d=Math.hypot(e.clientX-g.sx,e.clientY-g.sy);
+  if(!g.lp){if(d>8){clearTimeout(g.timer);g=null;}return;}if(d>6)g.moved=true;if(g.moved){svg.innerHTML=new DOMParser().parseFromString(dsSvg(-1,{i:g.i,x:sx(e)}),'image/svg+xml').documentElement.innerHTML;}});
+ const up=e=>{if(!g)return;clearTimeout(g.timer);const d=g;g=null;
+  if(!d.lp){if(e.type==='pointerup'&&Math.hypot(e.clientX-d.sx,e.clientY-d.sy)<8){lastTap=Date.now();halteSheet(d.i);}return;}
+  if(!d.moved){lastTap=Date.now();halteMenu(d.i);return;}
+  const to=Math.max(0,Math.min(IND.haltes.length-1,Math.round((sx(e)-DS.x0)/DS.dx)-1));if(to!==d.i)moveHalte(d.i,to);else refreshIndoor();};
+ svg.addEventListener('pointerup',up);svg.addEventListener('pointercancel',up);
+ w.ontouchmove=e=>{if(g&&g.lp)e.preventDefault();};}
+
+/* ---------- broodkruimelspoor: sensoren ---------- */
+const stride=()=>ls.get('stride',null);
+async function askSensors(){try{if(typeof DeviceMotionEvent!=='undefined'&&typeof DeviceMotionEvent.requestPermission==='function'){if(await DeviceMotionEvent.requestPermission()!=='granted')return'Je hebt geen toestemming gegeven voor de bewegingssensoren.';}
+  if(typeof DeviceOrientationEvent!=='undefined'&&typeof DeviceOrientationEvent.requestPermission==='function'){if(await DeviceOrientationEvent.requestPermission()!=='granted')return'Je hebt geen toestemming gegeven voor het kompas.';}}
+ catch(e){return'De bewegingssensoren konden niet worden gestart.';}
+ if(typeof DeviceMotionEvent==='undefined')return'Deze telefoon of browser heeft geen bewegingssensoren.';return'';}
+function sensorFail(msg){stopSensors();$('sheetBody').innerHTML=`<h2 style="font-size:22px">Spoor werkt hier niet</h2><p>${esc(msg)}</p><div class="row2"><button class="btn" id="sfX">Sluiten</button><button class="btn pri" id="sfM">Doorgaan als metrolijn</button></div>`;
+ $('sheet').hidden=false;$('sfX').onclick=closeSheet;$('sfM').onclick=()=>{IND.modus='metrolijn';save();closeSheet();renderIndoor();};}
+async function startSpoor(){if(!stride())return calibrate(true);const err=await askSensors();if(err)return sensorFail(err);beginSensors(false);}
+function beginSensors(calib){const p=curPos();sens={paused:false,calib,steps:0,x:p.x,y:p.y,c:p.c||0,heading:null,fast:9.81,slow:9.81,armed:true,last:0,got:false,lastDraw:0};
+ addEventListener('devicemotion',onMotion);addEventListener(ORI,onOrient);keepAwake();
+ setTimeout(()=>{if(sens&&!sens.got)sensorFail('De telefoon geeft geen bewegingsgegevens door.');},4000);if(!calib)renderIndoor();}
+function stopSensors(){removeEventListener('devicemotion',onMotion);removeEventListener(ORI,onOrient);sens=null;if(wl){const w=wl;wl=null;w.release().catch(()=>{});}}
+const ORI='ondeviceorientationabsolute' in window?'deviceorientationabsolute':'deviceorientation';
+function onOrient(e){const h=e.webkitCompassHeading!=null?e.webkitCompassHeading:e.alpha!=null?(360-e.alpha)%360:null;if(sens&&h!=null)sens.heading=h;}
+function onMotion(e){if(!sens)return;const a=e.accelerationIncludingGravity;if(!a||a.x==null)return;sens.got=true;
+ const m=Math.hypot(a.x,a.y,a.z),now=e.timeStamp||performance.now();sens.fast+=(m-sens.fast)*.35;sens.slow+=(m-sens.slow)*.02;const d=sens.fast-sens.slow;
+ if(sens.armed&&d>1.1&&now-sens.last>280){sens.armed=false;sens.last=now;onStep();}if(d<.3)sens.armed=true;}
+function onStep(){sens.steps++;if(sens.calib){const c=$('calN');if(c)c.textContent=sens.steps;return;}if(sens.paused)return;
+ const L=stride()||.7,h=(sens.heading||0)*Math.PI/180;sens.x+=L*Math.sin(h);sens.y+=L*Math.cos(h);sens.c+=L;
+ IND.spoor.push({x:r1(sens.x*10)/10,y:r1(sens.y*10)/10,verdieping:IND.floor,tijd:Date.now(),seg:IND.haltes.length,c:sens.c});save();
+ const now=Date.now();if(now-sens.lastDraw>400){sens.lastDraw=now;refreshIndoor();}}
+function togglePause(){if(!sens)return;if(!sens.paused){sens.paused=true;renderIndoor();toast('Spoor gepauzeerd. Handig in een lift, kruipruimte of op een ladder.');return;}
+ $('sheetBody').innerHTML=`<h2 style="font-size:22px">Hoe lang was het gepauzeerde stuk?</h2><p class="note">Bijvoorbeeld de hoogte van de lift of de lengte van de kruipruimte. Mag leeg blijven.</p><label for="pl">Meters</label><input id="pl" inputmode="decimal" placeholder="bv. 6"><div class="row2"><button class="btn" id="plS">Weet ik niet</button><button class="btn pri" id="plO">Hervatten</button></div>`;
+ $('sheet').hidden=false;const go=len=>{IND.spoor.push({pause:true,len:len||0,seg:IND.haltes.length,tijd:Date.now()});sens.paused=false;save();closeSheet();renderIndoor();};
+ $('plS').onclick=()=>go(0);$('plO').onclick=()=>{const x=parseFloat($('pl').value.replace(',','.'));go(isFinite(x)&&x>0?x:0);};}
+function backAtStart(){if(!sens)return;const p=curPos(),L=p.c||0,ex=p.x,ey=p.y,err=Math.hypot(ex,ey);if(!L||err<.5){toast('Geen afwijking om te verdelen.');return;}
+ IND.spoor.forEach(s=>{if(s.pause)return;const f=(s.c||0)/L;s.x=r1((s.x-ex*f)*10)/10;s.y=r1((s.y-ey*f)*10)/10;});
+ IND.haltes.forEach(h=>{if(h.anker){const f=(h.anker.c||0)/L;h.anker.x-=ex*f;h.anker.y-=ey*f;}});
+ IND.haltes.forEach((h,k)=>{if(h.verbinding.lengteBron==='geschat'){const s=segLen(k);if(s!=null)h.verbinding.lengte=r1(s);}});
+ sens.x=0;sens.y=0;save();refreshIndoor();toast(`Afwijking van ca. ${fmtM(err)} m verdeeld over de route.`);}
+async function keepAwake(){if(!('wakeLock' in navigator)){if(view==='indoor')toast('Houd het scherm zelf aan, anders stopt het meten.');return;}
+ try{wl=await navigator.wakeLock.request('screen');wl.addEventListener('release',()=>{wl=null;if(sens&&view==='indoor')renderIndoor();});if(view==='indoor'&&$('wakeW'))renderIndoor();}catch(e){wl=null;}}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&sens&&!wl)keepAwake();});
+async function calibrate(thenStart){const old=stride();
+ $('sheetBody').innerHTML=`<h2 style="font-size:22px">Kalibreren</h2><p>Loop 10 meter langs een meetlint, in je gewone tempo, met de telefoon voor je.</p><p class="note">${old?`Huidige staplengte: ${fmtM(old)} m.`:'Zonder kalibratie gebruikt de app 0,7 m per stap.'}</p>
+ <p class="big" style="margin:10px 0"><span id="calN">0</span> stappen</p><div class="row2"><button class="btn" id="cSkip">${old?'Annuleren':'Overslaan (0,7 m)'}</button><button class="btn pri" id="cGo">Start</button></div>`;
+ $('sheet').hidden=false;
+ $('cSkip').onclick=async()=>{closeSheet();if(!old)ls.set('stride',.7);if(thenStart){const err=await askSensors();if(err)return sensorFail(err);beginSensors(false);}};
+ $('cGo').onclick=async()=>{const err=await askSensors();if(err)return sensorFail(err);const wasOn=!!sens;stopSensors();beginSensors(true);
+  $('cGo').textContent='Stop bij 10 m';$('cGo').onclick=()=>{const n=sens?sens.steps:0;stopSensors();
+   if(n<6){$('calN').textContent=n;$('cGo').textContent='Opnieuw';$('cGo').onclick=()=>calibrate(thenStart);toast('Te weinig stappen gemeten. Probeer het nog een keer.');return;}
+   const s=Math.round(10/n*100)/100;ls.set('stride',s);closeSheet();toast(`Staplengte opgeslagen: ${fmtM(s)} m`);if(thenStart||wasOn)beginSensors(false);else renderIndoor();};};}
+
+
+/* ---------- rapport: binnentracé ---------- */
+function indoorReport(){const I=cur.indoor;if(!I||!I.haltes.length)return'';IND=I;const FN=fotoNrs(),H=I.haltes;
+ const blocks=H.map((h,i)=>{const v=h.verbinding,from=i>0?'halte '+i:(I.startpunt.type==='IN'?'invoering':'voordeur');
+  return`<div class="hblk"><h3>Halte ${i+1}${h.ruimtetype?' · '+esc(h.ruimtetype):''}</h3><div class="dsr">${dsSvg(i)}</div>
+  <table><tr><td>Ruimte</td><td>${esc(h.ruimtetype||'–')}</td></tr><tr><td>Verdieping</td><td>${h.verdieping}${h.verdieping===-1?' (kelder)':''}</td></tr>
+  <tr><td>Verbinding vanaf ${from}</td><td>${esc(v.type||'niet ingevuld')}</td></tr><tr><td>Lengte</td><td>${v.lengte!=null?`${v.lengteBron==='geschat'?'ca. ':''}${fmtM(v.lengte)} m`:'onbekend'}</td></tr>
+  ${isDoor(v)?`<tr><td>Brandwerend dichtzetten</td><td>${v.brandwerendDichtzetten==null?'niet ingevuld':v.brandwerendDichtzetten?'ja':'nee'}</td></tr>`:''}
+  ${h.notitie?`<tr><td>Notitie</td><td>${esc(h.notitie)}</td></tr>`:''}</table>
+  ${h.fotos.length?`<div class="pgrid">${h.fotos.filter(k=>urls[k]).map(k=>`<figure class="nf"><img src="${urls[k]}" alt=""><span class="fn">${FN[k]}</span></figure>`).join('')}</div>`:''}</div>`;}).join('');
+ const door=H.filter(h=>isDoor(h.verbinding)),bw=door.filter(h=>h.verbinding.brandwerendDichtzetten===true).length;
+ const known=H.filter(h=>h.verbinding.lengte!=null),tot=known.reduce((s,h)=>s+h.verbinding.lengte,0),est=known.some(h=>h.verbinding.lengteBron==='geschat'),unk=H.length-known.length;
+ return`<h2>Binnentracé</h2><p class="note">${I.modus==='metrolijn'?'Indoor metrolijn':'Indoor broodkruimelspoor'} · start bij ${I.startpunt.type==='IN'?'de invoering':'de voordeur'}</p><div class="dsr">${dsSvg()}</div>${blocks}
+ <h2>Totaaloverzicht binnen</h2><table><tr><td>Aantal haltes</td><td class="n">${H.length}</td></tr><tr><td>Aantal doorvoeren</td><td class="n">${door.length} (waarvan ${bw} brandwerend)</td></tr>
+ <tr><td>Totale kabellengte</td><td class="n">${known.length?`${est?'ca. ':''}${fmtM(tot)} m`:'onbekend'}${unk&&known.length?` · ${unk} stuk${unk===1?'':'ken'} zonder lengte`:''}</td></tr></table>`;}
+
 /* ---------- project-instellingen ---------- */
 function projSheet(){const b=$('sheetBody'),n=cur.pts.filter(p=>p.photo).length;
  b.innerHTML=`<h2 style="font-size:22px">Project</h2><label for="pn">Naam / adres</label><input id="pn" value="${esc(cur.name)}"><label for="pa">Plaats / gebouw</label><input id="pa" value="${esc(cur.addr)}"><label for="ps">Projectnummer</label><input id="ps" value="${esc(cur.sid)}">
@@ -604,7 +845,7 @@ function projSheet(){const b=$('sheetBody'),n=cur.pts.filter(p=>p.photo).length;
  confirmTwice0($('reTr'),cur.pts.some(p=>p.photo||p.it)?'Punten met foto of item gaan verloren.':'',()=>{closeSheet();push();cur.pts.forEach(p=>p.photo&&delBlob(p.photo));cur.pts=[];save();startTrace();});
  $('pSave').onclick=()=>{cur.name=$('pn').value.trim()||cur.name;cur.addr=$('pa').value.trim();cur.sid=$('ps').value.trim();save();closeSheet();drawHead();};
  const confirmTwice=(btn,msg,fn)=>{let armed=false;btn.onclick=()=>{if(!armed){armed=true;btn.textContent='Zeker? Tik nog een keer';$('conf').textContent=msg;return;}fn();};};
- confirmTwice($('wipe'),'Maak eerst het rapport als PDF. Daarna zijn de foto\'s weg.',async()=>{for(const p of cur.pts)if(p.photo){await delBlob(p.photo);p.photo='';}await putProj(cur);closeSheet();drawAll();});
+ confirmTwice($('wipe'),'Maak eerst het rapport als PDF. Daarna zijn de foto\'s weg.',async()=>{for(const p of cur.pts)if(p.photo){await delBlob(p.photo);p.photo='';}if(cur.indoor)for(const h of cur.indoor.haltes){for(const k of h.fotos)await delBlob(k);h.fotos=[];}await putProj(cur);closeSheet();drawAll();});
  confirmTwice($('delP'),'Tekening, punten en foto\'s worden uit de app gewist. Foto\'s uit je galerij blijven daar staan.',async()=>{await deleteProject(cur);closeSheet();home();});
  $('shP').onclick=()=>sharePhotos(cur);$('arcP').onclick=async()=>{cur.archived=true;await putProj(cur);closeSheet();toast('Gearchiveerd');home();};}
 
@@ -617,7 +858,7 @@ function report(){view='rep';gpsOff();const M=meters(),N=nums(),s=cur.W/700;
  <table><tr><td>Lengte route</td><td class="n">${M?Math.round(M[M.length-1])+' m':'niet gekoppeld'}</td></tr>${inv>0&&M?`<tr><td>Buitentracé tot invoering</td><td class="n">${Math.round(M[inv])} m</td></tr>`:''}<tr><td>Punten / foto's</td><td class="n">${keyPts().length} / ${Object.keys(N).length}</td></tr><tr><td>Gps-koppeling</td><td class="n">${T?`${cur.anchors.length} ankers${T.err.length?`, afwijking ${T.err.map(e=>e.toFixed(1)).join('/')} m`:''}`:'geen'}</td></tr></table>
  <h2>Tracé</h2><div class="mapc">${mapSvg}</div>
  <h2>Punten</h2><table><tr><th>#</th><th>Item</th><th>Omschrijving</th><th class="n">m</th></tr>${keyPts().map(({p,i},n)=>`<tr><td>${n+1}</td><td>${label(p)}${N[p.id]?` · foto ${N[p.id]}`:''}</td><td>${esc(p.c)}</td><td class="n">${M?Math.round(M[i]):''}</td></tr>`).join('')}</table>
- <h2>Foto's</h2><div class="pgrid">${cur.pts.filter(p=>p.photo&&urls[p.photo]).map(p=>`<figure>${photoHtml(p)}<figcaption><b>Foto ${N[p.id]}</b> · ${esc(p.c||label(p))}</figcaption></figure>`).join('')||'<p class="note">Geen foto\'s.</p>'}</div></div>`;
+ <h2>Foto's</h2><div class="pgrid">${cur.pts.filter(p=>p.photo&&urls[p.photo]).map(p=>`<figure>${photoHtml(p)}<figcaption><b>Foto ${N[p.id]}</b> · ${esc(p.c||label(p))}</figcaption></figure>`).join('')||'<p class="note">Geen foto\'s.</p>'}</div>${indoorReport()}</div>`;
  $('rb').onclick=()=>openProject(cur.id);$('pr').onclick=()=>window.print();}
 
 init();
