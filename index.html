@@ -164,7 +164,13 @@ function sym(it,cx,cy,s,num){let o='';const I=ITEMS[it],r=10*s;
  if(num)o+=`<circle cx="${cx+r*.95}" cy="${cy-r*.95}" r="${7.5*s}" fill="${OR}" stroke="#fff" stroke-width="${1.6*s}"/><text x="${cx+r*.95}" y="${cy-r*.95+3.3*s}" font-size="${9.5*s}" font-weight="700" text-anchor="middle" fill="#fff" font-family="Barlow,sans-serif">${num}</text>`;
  return o;}
 const icon=(it,num,w=40,h=34)=>`<svg viewBox="0 0 ${w} ${h}" aria-hidden="true">${sym(it,w/2-(ITEMS[it]&&num?3:0),h/2+(ITEMS[it]&&num?3:0),1,num)}</svg>`;
-const label=p=>ITEMS[p.it]?.l||(p.photo?'Fotopunt':'Routepunt');
+const endKind=p=>{const P=cur&&cur.pts;if(!P||P.length<2)return'';return p===P[0]?'net':p===P[P.length-1]?'pand':'';};
+const END={net:'Aansluiting netwerk',pand:'Invoer pand'};
+const label=p=>ITEMS[p.it]?.l||END[endKind(p)]||(p.photo?'Fotopunt':'Routepunt');
+function endSym(k,x,y,s){if(k==='net')return`<circle cx="${x}" cy="${y}" r="${9*s}" fill="#1d2529" stroke="#fff" stroke-width="${2.2*s}"/><circle cx="${x}" cy="${y}" r="${3.4*s}" fill="#ff6a13"/>`;
+ const r=9*s;return`<path d="M${x} ${y-r*1.15} L${x+r} ${y-r*.2} L${x+r} ${y+r} L${x-r} ${y+r} L${x-r} ${y-r*.2}Z" fill="#1d2529" stroke="#fff" stroke-width="${2*s}" stroke-linejoin="round"/><rect x="${x-r*.32}" y="${y+r*.15}" width="${r*.64}" height="${r*.85}" fill="#ff6a13"/>`;}
+function endTag(k,x,y,s){const txt=k==='net'?'Netwerk':'Pand',fs=10.5*s,w=(txt.length*5.6+10)*s,h=15*s;let tx=x+13*s,ty=y-22*s;if(tx+w>cur.W-2)tx=x-13*s-w;if(ty<2)ty=y+8*s;
+ return`<rect x="${tx}" y="${ty}" width="${w}" height="${h}" rx="${3*s}" fill="#1d2529" fill-opacity=".9"/><text x="${tx+5*s}" y="${ty+11*s}" font-size="${fs}" font-weight="600" fill="#fff" font-family="Barlow,sans-serif">${txt}</text>`;}
 
 /* ---------- geometrie & gps ---------- */
 const cm=(a,b)=>[a[0]*b[0]-a[1]*b[1],a[0]*b[1]+a[1]*b[0]],cd=(a,b)=>{const q=b[0]**2+b[1]**2;return[(a[0]*b[0]+a[1]*b[1])/q,(a[1]*b[0]-a[0]*b[1])/q];};
@@ -288,8 +294,9 @@ function drawMap(){const s=cur.W/($('svg').getBoundingClientRect().width||cur.W)
   if(follow){const S=$('mapS'),r=$('svg').getBoundingClientRect(),k=r.width/cur.W,px=x*k-S.scrollLeft,py=y*k-S.scrollTop;
    if(px<S.clientWidth*.2||px>S.clientWidth*.8||py<S.clientHeight*.2||py>S.clientHeight*.8){progScroll=true;S.scrollLeft=x*k-S.clientWidth/2;S.scrollTop=y*k-S.clientHeight/2;requestAnimationFrame(()=>requestAnimationFrame(()=>progScroll=false));}}}
  if(ghost)o+=`<circle cx="${ghost.x}" cy="${ghost.y}" r="${9*s}" fill="${OR}" fill-opacity=".35" stroke="${OR}" stroke-width="${2*s}"/>`;
- cur.pts.forEach(p=>{const isA=false;if(!editRoute&&!trace&&!wiz&&!p.photo&&!p.it&&p.id!==sel)return;
-  o+=`<g class="mk" data-id="${p.id}">${p.id===sel?`<circle cx="${p.x}" cy="${p.y}" r="${17*s}" fill="none" stroke="#1d2529" stroke-width="${2*s}" stroke-dasharray="${4*s} ${3*s}"/>`:''}${isA?`<path d="M${p.x} ${p.y-14*s} l${4*s} ${-8*s} h${-8*s}z" fill="#1d2529"/>`:''}${sym(p.it,p.x,p.y,s,N[p.id])}<circle cx="${p.x}" cy="${p.y}" r="${20*s}" fill="transparent"/></g>`;});
+ const last=cur.pts.length-1;
+ cur.pts.forEach((p,pi)=>{const isA=false,end=cur.pts.length>1&&(pi===0||pi===last)?(pi===0?'net':'pand'):'';if(!editRoute&&!trace&&!wiz&&!p.photo&&!p.it&&!end&&p.id!==sel)return;
+  o+=`<g class="mk" data-id="${p.id}">${p.id===sel?`<circle cx="${p.x}" cy="${p.y}" r="${17*s}" fill="none" stroke="#1d2529" stroke-width="${2*s}" stroke-dasharray="${4*s} ${3*s}"/>`:''}${isA?`<path d="M${p.x} ${p.y-14*s} l${4*s} ${-8*s} h${-8*s}z" fill="#1d2529"/>`:''}${end&&!p.it&&!p.photo?endSym(end,p.x,p.y,s):sym(p.it,p.x,p.y,s,N[p.id])}${end&&!trace?endTag(end,p.x,p.y,s):''}<circle cx="${p.x}" cy="${p.y}" r="${20*s}" fill="transparent"/></g>`;});
  if(wiz||editRoute)cur.anchors.forEach((a,i)=>{const c=a.la!=null?'#1f7a4a':'#1d2529',h=30*s;
   o+=`<g class="mk af" data-a="${i}"><circle cx="${a.x}" cy="${a.y}" r="${4*s}" fill="${c}" stroke="#fff" stroke-width="${1.5*s}"/><line x1="${a.x}" y1="${a.y}" x2="${a.x}" y2="${a.y-h}" stroke="${c}" stroke-width="${2.4*s}"/><rect x="${a.x}" y="${a.y-h}" width="${20*s}" height="${15*s}" rx="${2*s}" fill="${c}" stroke="#fff" stroke-width="${1.2*s}"/><text x="${a.x+10*s}" y="${a.y-h+11.5*s}" font-size="${11*s}" font-weight="700" text-anchor="middle" fill="#fff" font-family="Barlow,sans-serif">${a.la!=null?'✓':a.k}</text><circle cx="${a.x+6*s}" cy="${a.y-14*s}" r="${20*s}" fill="transparent"/></g>`;});
  $('lay').innerHTML=o;}
