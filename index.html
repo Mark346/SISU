@@ -23,7 +23,7 @@ h1,h2,h3{font-family:"Barlow Semi Condensed",Barlow,sans-serif;line-height:1.1;m
 .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
 .geo{display:inline-flex;gap:6px;align-items:center;font:500 14px Barlow,sans-serif;border-radius:20px;padding:4px 11px;background:#ffffff1f;color:#fff;border:0;cursor:pointer;min-height:36px}
 .geo i{width:9px;height:9px;border-radius:50%;background:#ffb357}.geo.on i{background:#5fd39a}.geo.err i{background:#ff6b6b}
-.tool{display:flex;gap:5px;padding:10px;flex-wrap:wrap;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--card);z-index:3}
+.tool{display:flex;gap:5px;padding:8px 10px;flex-wrap:wrap;border-bottom:1px solid var(--line);background:var(--card);z-index:3}
 .btn{font:600 14px Barlow,system-ui,sans-serif;border-radius:9px;padding:8px 11px;min-height:42px;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--ink);display:inline-flex;align-items:center;justify-content:center;gap:6px;text-decoration:none}
 .btn.pri{background:var(--hv);border-color:var(--hv);color:#fff}.btn.dk,.btn[aria-pressed=true]{background:var(--asf);border-color:var(--asf);color:#fff}
 .btn.red{color:var(--bad);border-color:#e7b9b5}.btn:disabled{opacity:.45;cursor:default}.sp{flex:1}
@@ -89,6 +89,16 @@ body.wiz .fab{display:none}body.wiz .app{padding-bottom:300px}body.wiz .mapS{max
 .ilist{display:grid;gap:6px}.it.wide span{display:flex;flex-direction:column}.it.wide small{font-size:12px;color:var(--mute)}
 body.trace #svg{touch-action:none}body.trace .app{padding-bottom:230px}body.trace .fab{display:none}
 .pl{cursor:pointer;touch-action:none}
+.proj{grid-template-columns:72px minmax(0,1fr) 44px}.more{padding:0;width:44px;font-size:22px;border:0}.arch .proj{opacity:.75}
+.stick{position:sticky;top:0;z-index:4;background:var(--card);box-shadow:0 6px 12px -10px #0006}
+.leg{display:flex;align-items:center;gap:4px 10px;flex-wrap:wrap;padding:7px 10px;border-bottom:1px solid var(--line);font-size:12.5px;color:var(--mute)}
+.lg{display:inline-flex;align-items:center;gap:3px;white-space:nowrap}.lg svg{width:26px;height:23px}
+.ib{margin-left:auto;width:30px;height:30px;border-radius:50%;border:0;background:var(--hv);color:#fff;font:italic 700 16px Georgia,serif;cursor:pointer;flex:none}
+.ib[aria-expanded=true]{background:var(--asf)}
+.info{background:#fff1e6;font-size:14px;padding:10px 12px;border-bottom:1px solid var(--line)}.info b{color:var(--hv2)}
+.nogps{display:flex;gap:12px;align-items:center;text-align:left;width:100%;margin-top:12px;padding:12px 14px;border-radius:12px;border:0;background:#ffb020;color:#1d1300;cursor:pointer;font-family:inherit}
+.nogps .ic{width:34px;height:34px;flex:none;border-radius:50%;background:#1d1300;color:#ffb020;font:700 22px/34px "Barlow Semi Condensed",sans-serif;text-align:center}
+.top .nogps small{color:#3d2b00}.nogps b{display:block;font:700 20px "Barlow Semi Condensed",sans-serif}.nogps small{display:block;font-size:13.5px;line-height:1.3}
 @media print{.noprint,.tool,.top,.fab{display:none!important}.app{max-width:none}.rep{padding:0}body{background:#fff}}
 </style>
 </head>
@@ -126,7 +136,7 @@ const urls={};
 async function url(k){if(!k)return'';if(!urls[k]){const b=await getBlob(k);urls[k]=b?URL.createObjectURL(b):'';}return urls[k];}
 async function shrink(file,max=1600){const img=await loadImg(URL.createObjectURL(file));const sc=Math.min(1,max/Math.max(img.naturalWidth,img.naturalHeight));const c=document.createElement('canvas');c.width=Math.round(img.naturalWidth*sc);c.height=Math.round(img.naturalHeight*sc);c.getContext('2d').drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(img.src);return new Promise(r=>c.toBlob(r,'image/jpeg',.82));}
 const loadImg=src=>new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=src;});
-let saveT=null;const save=()=>{clearTimeout(saveT);saveT=setTimeout(()=>putProj(cur),300);};
+let saveT=null;const save=()=>{clearTimeout(saveT);const c=cur;saveT=setTimeout(()=>{saveT=null;if(c)putProj(c);},300);};
 
 /* ---------- symbolen ---------- */
 function sym(it,cx,cy,s,num){let o='';const I=ITEMS[it],r=10*s;
@@ -179,13 +189,37 @@ async function makeDemo(){try{const b=await (await fetch('voorbeeld-tekening.jpg
  await putProj({id:uid(),name:'Voorbeeld – Opaallaan 372',addr:'Hoofddorp · HFD0388',sid:'SID000892476',draw:k,W:429,H:640,pts,anchors:[],created:Date.now()});}catch(e){}}
 
 /* ---------- home ---------- */
-async function home(){view='home';cur=null;gpsOff();hist=[];
- const all=(await getAll()).sort((a,b)=>b.updated-a.updated);const th=await Promise.all(all.map(p=>url(p.draw)));
+let showArch=false;const fotos=n=>n+(n===1?' foto':" foto's");
+async function home(){view='home';cur=null;gpsOff();hist=[];document.body.classList.remove('wiz','trace');
+ const all=(await getAll()).sort((a,b)=>b.updated-a.updated),act=all.filter(p=>!p.archived),arc=all.filter(p=>p.archived);
+ const th={};await Promise.all(all.map(async p=>th[p.id]=await url(p.draw)));
+ const row=p=>`<div class="proj" data-p="${p.id}"><div class="th">${th[p.id]?`<img src="${th[p.id]}" alt="">`:''}</div><div><b>${esc(p.name)}</b><span>${esc(p.addr)}${p.addr?' · ':''}${p.pts.length} punten · ${fotos(p.pts.filter(q=>q.photo).length)} · ${new Date(p.updated).toLocaleDateString('nl-NL')}</span></div><button class="btn more" data-m="${p.id}" aria-label="Opties voor ${esc(p.name)}">⋯</button></div>`;
  app.innerHTML=`<div class="top"><small>Schouw · veldtest</small><h1>Projecten</h1></div>
  <div class="sec"><button class="btn pri" id="newP" style="width:100%">+ Nieuw project</button>
- ${all.map((p,i)=>`<div class="proj" data-p="${p.id}"><div class="th">${th[i]?`<img src="${th[i]}" alt="">`:''}</div><div><b>${esc(p.name)}</b><span>${esc(p.addr)} · ${p.pts.length} punten · ${p.pts.filter(q=>q.photo).length} foto's · ${new Date(p.updated).toLocaleDateString('nl-NL')}</span></div></div>`).join('')||'<p class="note">Nog geen projecten.</p>'}
- <p class="note" style="margin-top:20px">Alles wordt alleen op deze telefoon bewaard. Tip: zet de app op je beginscherm via Delen → "Zet op beginscherm".</p></div>`;
- $('newP').onclick=newProject;app.querySelectorAll('[data-p]').forEach(e=>e.onclick=()=>openProject(e.dataset.p));}
+ ${act.map(row).join('')||'<p class="note" style="margin-top:14px">Geen actieve projecten.</p>'}
+ ${arc.length?`<button class="btn" id="arcT" style="width:100%;margin-top:16px">${showArch?'▾':'▸'} Archief (${arc.length})</button>${showArch?`<div class="arch">${arc.map(row).join('')}</div>`:''}`:''}
+ <p class="note" style="margin-top:20px">Alles wordt alleen op deze telefoon bewaard, in de opslag van de app. Tip: zet de app op je beginscherm via Delen → "Zet op beginscherm".</p></div>`;
+ $('newP').onclick=newProject;$('arcT')&&($('arcT').onclick=()=>{showArch=!showArch;home();});
+ app.querySelectorAll('[data-p]').forEach(e=>e.onclick=ev=>{if(ev.target.closest('[data-m]'))return;openProject(e.dataset.p);});
+ app.querySelectorAll('[data-m]').forEach(e=>e.onclick=()=>projActions(all.find(p=>p.id===e.dataset.m)));}
+function projActions(p){const n=p.pts.filter(q=>q.photo).length,b=$('sheetBody');
+ b.innerHTML=`<h2 style="font-size:22px">${esc(p.name)}</h2><p class="note">${p.pts.length} punten · ${fotos(n)}${p.archived?' · gearchiveerd':''}</p>
+ <div class="meth" style="margin-top:12px">${n?`<button class="btn" id="aSh"><b>Foto's bewaren op telefoon</b><small>Via delen: kies "Bewaar afbeeldingen" (iPhone) of "Opslaan" (Android).</small></button>`:''}
+ <button class="btn" id="aArc"><b>${p.archived?'Terugzetten uit archief':'Archiveren'}</b><small>${p.archived?'Het project komt weer bij de actieve projecten.':'Het project verdwijnt uit de lijst, maar blijft met alle foto\'s bewaard.'}</small></button>
+ <button class="btn red" id="aDel"><b>Verwijderen</b><small>Tekening, punten en ${fotos(n)} worden uit de app gewist. Foto's die je uit je galerij hebt gekozen, blijven daar gewoon staan.</small></button></div>
+ <p class="note warn" id="conf"></p><div class="row2"><button class="btn dk" id="aClose">Sluiten</button></div>`;
+ $('sheet').hidden=false;$('aClose').onclick=closeSheet;
+ $('aSh')&&($('aSh').onclick=()=>sharePhotos(p));
+ $('aArc').onclick=async()=>{p.archived=!p.archived;await putProj(p);closeSheet();if(p.archived)showArch=false;home();};
+ let armed=false;$('aDel').onclick=async()=>{if(!armed){armed=true;$('aDel').querySelector('b').textContent='Zeker weten? Tik nog een keer';$('conf').textContent=n?'Tip: bewaar eerst de foto\'s of maak het rapport als PDF.':'';return;}
+  await deleteProject(p);closeSheet();home();};}
+async function deleteProject(p){clearTimeout(saveT);saveT=null;for(const q of p.pts)if(q.photo){await delBlob(q.photo).catch(()=>{});if(urls[q.photo]){URL.revokeObjectURL(urls[q.photo]);delete urls[q.photo];}}
+ await delBlob(p.draw).catch(()=>{});await delProj(p.id);}
+async function sharePhotos(p){const N={};let n=0;p.pts.forEach(q=>{if(q.photo)N[q.id]=++n;});const files=[];
+ for(const q of p.pts)if(q.photo){const b=await getBlob(q.photo);if(b)files.push(new File([b],`${(p.sid||p.name).replace(/[^\w-]+/g,'_')}_foto${String(N[q.id]).padStart(2,'0')}.jpg`,{type:'image/jpeg'}));}
+ if(!files.length)return toast('Geen foto\'s gevonden');
+ if(navigator.canShare&&navigator.canShare({files})){try{await navigator.share({files,title:p.name});}catch(e){}return;}
+ for(const f of files){const a=document.createElement('a');a.href=URL.createObjectURL(f);a.download=f.name;document.body.appendChild(a);a.click();a.remove();await sleep(300);}}
 function newProject(){let draw=null;
  const body=$('sheetBody');body.innerHTML=`<h2 style="font-size:22px">Nieuw project</h2>
  <label for="pn">Naam / adres</label><input id="pn" placeholder="bv. Opaallaan 372"><label for="pa">Plaats / gebouw</label><input id="pa" placeholder="bv. Hoofddorp · HFD0388"><label for="ps">Projectnummer (optioneel)</label><input id="ps">
@@ -214,21 +248,22 @@ async function openProject(id){cur=(await getAll()).find(p=>p.id===id);if(!cur)r
  cur.anchors=(cur.anchors||[]).map((a,i)=>{if(a.id){const p=cur.pts.find(q=>q.id===a.id);return p?{k:'AB'[i]||'C',x:p.x,y:p.y,la:a.la,lo:a.lo,acc:a.acc,src:a.src}:null;}return a;}).filter(Boolean).slice(0,2);
  wiz=null;ghost=null;pendingAdd=null;document.body.classList.remove('wiz');solve();buildMask();
  app.innerHTML=`<div class="top" id="head"></div>
- <div class="tool"><button class="btn" id="snapBtn" aria-pressed="true">Magneet</button><button class="btn" id="meBtn">Positie</button><span class="sp"></span><button class="btn" id="zOut" aria-label="Uitzoomen">−</button><button class="btn" id="zIn" aria-label="Inzoomen">+</button><button class="btn" id="undo" aria-label="Ongedaan maken">↶</button></div>
-  <div class="mapS" id="mapS"><div class="mapI" id="mapI"><svg id="svg" viewBox="0 0 ${cur.W} ${cur.H}" style="aspect-ratio:${cur.W}/${cur.H}"><image href="${drawUrl}" width="${cur.W}" height="${cur.H}"/><g id="lay"></g></svg></div></div>
- <div class="sec"><h2 style="font-size:19px;margin-bottom:10px">Wat een punt betekent</h2><div class="legend" id="legend"></div><p class="rule"><b>Oranje = foto</b>, met het fotonummer van het rapport. Vorm en kleur volgen de legenda: bruin met groene rand is nieuw, blauwgroen met gele rand is bestaand.</p></div>
+ <div class="stick"><div class="leg" id="legend"></div><div class="info" id="info" hidden><b>Oranje = foto</b>, met het fotonummer van het rapport. Vorm en kleur van een item volgen de legenda van de tekening: bruin met groene rand is nieuw, blauwgroen met gele rand is bestaand.</div><div class="tool"><button class="btn" id="snapBtn" aria-pressed="true">Magneet</button><button class="btn" id="meBtn">Positie</button><span class="sp"></span><button class="btn" id="zOut" aria-label="Uitzoomen">−</button><button class="btn" id="zIn" aria-label="Inzoomen">+</button><button class="btn" id="undo" aria-label="Ongedaan maken">↶</button></div>
+  </div><div class="mapS" id="mapS"><div class="mapI" id="mapI"><svg id="svg" viewBox="0 0 ${cur.W} ${cur.H}" style="aspect-ratio:${cur.W}/${cur.H}"><image href="${drawUrl}" width="${cur.W}" height="${cur.H}"/><g id="lay"></g></svg></div></div>
  <div class="sec" id="list" style="padding-top:0"></div>
  <div class="sec noprint"><div class="row2"><button class="btn" id="repBtn">Rapport / PDF</button><button class="btn" id="editP">Project</button></div></div>
  <button class="btn pri fab" id="fab" hidden>📷 Foto hier</button><div class="guide" id="guide" hidden></div><div class="bubble" id="bubble" hidden></div><div class="toast" id="toast" hidden></div>`;
- $('legend').innerHTML=[['',0,'Leeg','knik in de route'],['',3,'Leeg + foto','fotopunt'],['kp_n',0,'Item','geen foto'],['hh_n',4,'Item + foto','']].map(([it,n,a,b])=>`<div><svg viewBox="0 0 44 36">${sym(it,it&&n?19:22,it&&n?20:18,1.05,n)}</svg><b style="color:var(--ink)">${a}</b><br>${b}</div>`).join('');
+ $('legend').innerHTML=[['',0,'Leeg'],['',3,'Leeg + foto'],['kp_n',0,'Item'],['hh_n',4,'Item + foto']].map(([it,n,a])=>`<span class="lg"><svg viewBox="0 0 34 30">${sym(it,it&&n?15:17,it&&n?17:15,.8,n)}</svg>${a}</span>`).join('')+`<button class="ib" id="infoBtn" aria-label="Uitleg legenda" aria-expanded="false">i</button>`;
+ $('infoBtn').onclick=()=>{const i=$('info');i.hidden=!i.hidden;$('infoBtn').setAttribute('aria-expanded',!i.hidden);};
  bindProject();drawAll();
  trace=null;document.body.classList.remove('trace');if(!cur.pts.length)startTrace();}
 function drawHead(){const M=meters(),N=nums(),inv=cur.pts.findIndex(p=>p.it==='inv'||p.it==='brw');
  $('head').innerHTML=`<button class="back" id="bk">‹ Projecten</button><br><small>${esc(cur.sid)}${cur.sid&&cur.addr?' · ':''}${esc(cur.addr)}</small><h1>${esc(cur.name)}</h1>
  <div class="stats"><div><b>${M&&cur.pts.length>1?Math.round(M[inv>0?inv:M.length-1])+' m':'?'}</b>${inv>0?'tot invoering':'route'}</div><div><b>${cur.pts.length}</b>punten</div><div><b>${Object.keys(N).length}</b>foto's</div><div><b>${cur.pts.filter(p=>p.it).length}</b>items</div></div>
- <div class="chips"><button class="geo ${T?'on':''}" id="geoBtn"><i></i>${T?'Gekoppeld aan gps':wiz?'Bezig met koppelen…':'Koppel aan gps'}</button>
+ ${!T&&!wiz?`<button class="nogps" id="geoBtn"><span class="ic">!</span><span><b>Niet gekoppeld aan gps</b><small>Meters en je positie op de tekening werken pas na koppelen. Tik om te koppelen.</small></span></button>`:''}
+ <div class="chips">${T||wiz?`<button class="geo ${T?'on':''}" id="geoBtn"><i></i>${T?'Gekoppeld aan gps':'Bezig met koppelen…'}</button>`:''}
  ${watch!==null?`<span class="geo ${gpsErr?'err':gps?'on':''}"><i></i>${gpsErr?'Gps-fout':gps?`Gps ± ${Math.round(gps.acc)} m`:'Gps zoeken…'}</span>`:''}</div>${gpsErr?`<p class="note" style="color:#ffb3ad;margin:8px 0 0">${esc(gpsErr)}</p>`:''}`;
- $('bk').onclick=()=>{save();home();};$('geoBtn').onclick=geoMenu;
+ $('bk').onclick=()=>{save();home();};$('geoBtn').onclick=()=>{if(!wiz)geoMenu();};
  $('fab').hidden=!(T&&gps&&watch!==null);drawGuide();}
 function drawMap(){const s=cur.W/($('svg').getBoundingClientRect().width||cur.W),N=nums();
  let o=cur.pts.length>1?`<polyline points="${cur.pts.map(p=>p.x+','+p.y).join(' ')}" fill="none" stroke="${OR}" stroke-width="${3*s}" stroke-opacity=".55" stroke-linejoin="round"/>`:'';
@@ -351,7 +386,7 @@ function photoToast(p){toast(`Foto ${nums()[p.id]} toegevoegd`,'Bijschrift / ite
 
 /* ---------- gps koppelen: in één keer lopen ---------- */
 let measT=null;
-function startWiz(){closeSheet();cur.anchors=[];T=null;wiz={step:'A'};document.body.classList.add('wiz');gpsOn();save();drawAll();const m=$('mapS'),tb=document.querySelector('.tool');scrollTo({top:m.getBoundingClientRect().top+scrollY-tb.offsetHeight,behavior:'smooth'});}
+function startWiz(){closeSheet();cur.anchors=[];T=null;wiz={step:'A'};document.body.classList.add('wiz');gpsOn();save();drawAll();const m=$('mapS'),tb=document.querySelector('.stick');scrollTo({top:m.getBoundingClientRect().top+scrollY-tb.offsetHeight,behavior:'smooth'});}
 function stopWiz(){clearInterval(measT);wiz=null;document.body.classList.remove('wiz');drawAll();}
 function geoMenu(){if(!T)return startWiz();const A=cur.anchors,dm=gpsDist(A[0],A[1]);
  $('sheetBody').innerHTML=`<h2 style="font-size:22px">Gekoppeld aan gps</h2>
@@ -414,7 +449,7 @@ function pointBubble(p,cx,cy){const b=$('bubble');b.innerHTML=`<button class="bt
 function rdp(P,eps){if(P.length<3)return P.slice();const a=P[0],b=P[P.length-1],dx=b[0]-a[0],dy=b[1]-a[1],L=Math.hypot(dx,dy)||1;let dm=0,ix=0;
  for(let i=1;i<P.length-1;i++){const d=L>1e-6?Math.abs(dy*P[i][0]-dx*P[i][1]+b[0]*a[1]-b[1]*a[0])/L:Math.hypot(P[i][0]-a[0],P[i][1]-a[1]);if(d>dm){dm=d;ix=i;}}
  return dm>eps?rdp(P.slice(0,ix+1),eps).slice(0,-1).concat(rdp(P.slice(ix),eps)):[a,b];}
-function fitTrace(on){const I=$('mapI'),S=$('mapS');if(!I)return;if(on){const tb=document.querySelector('.tool').offsetHeight,gh=($('guide')&&!$('guide').hidden?$('guide').offsetHeight:200)+10,avail=Math.max(240,innerHeight-tb-gh),w=Math.min(S.clientWidth,avail*cur.W/cur.H);I.style.width=w+'px';I.style.margin='0 auto';S.style.maxHeight='none';
+function fitTrace(on){const I=$('mapI'),S=$('mapS');if(!I)return;if(on){const tb=document.querySelector('.stick').offsetHeight,gh=($('guide')&&!$('guide').hidden?$('guide').offsetHeight:200)+10,avail=Math.max(240,innerHeight-tb-gh),w=Math.min(S.clientWidth,avail*cur.W/cur.H);I.style.width=w+'px';I.style.margin='0 auto';S.style.maxHeight='none';
   requestAnimationFrame(()=>scrollTo({top:S.getBoundingClientRect().top+scrollY-tb}));}else{I.style.width=zoom*100+'%';I.style.margin='';S.style.maxHeight='';}}
 function startTrace(){trace={stroke:null};document.body.classList.add('trace');zoom=1;drawAll();fitTrace(true);drawMap();}
 function endTrace(){trace=null;document.body.classList.remove('trace');fitTrace(false);drawAll();if(cur.pts.length)toast('Tik op een plusje om een punt toe te voegen.');}
@@ -438,13 +473,14 @@ function traceGuide(g){g.hidden=false;const n=cur.pts.length;
 function projSheet(){const b=$('sheetBody'),n=cur.pts.filter(p=>p.photo).length;
  b.innerHTML=`<h2 style="font-size:22px">Project</h2><label for="pn">Naam / adres</label><input id="pn" value="${esc(cur.name)}"><label for="pa">Plaats / gebouw</label><input id="pa" value="${esc(cur.addr)}"><label for="ps">Projectnummer</label><input id="ps" value="${esc(cur.sid)}">
  <div class="row2"><button class="btn dk" id="pSave">Opslaan</button></div>
- <span class="lab">Route</span><div class="row2" style="margin-top:0"><button class="btn" id="reTr">Route opnieuw trekken</button></div><span class="lab">Opruimen</span><div class="row2" style="margin-top:0"><button class="btn red" id="wipe" ${n?'':'disabled'}>${n} foto's wissen</button><button class="btn red" id="delP">Project verwijderen</button></div><p class="note" id="conf"></p>`;
+ <span class="lab">Route</span><div class="row2" style="margin-top:0"><button class="btn" id="reTr">Route opnieuw trekken</button></div><span class="lab">Foto's en opruimen</span><div class="row2" style="margin-top:0"><button class="btn" id="shP" ${n?'':'disabled'}>Foto's bewaren op telefoon</button><button class="btn" id="arcP">Archiveren</button></div><div class="row2"><button class="btn red" id="wipe" ${n?'':'disabled'}>${n} foto's wissen</button><button class="btn red" id="delP">Project verwijderen</button></div><p class="note" id="conf"></p>`;
  $('sheet').hidden=false;
  confirmTwice0($('reTr'),cur.pts.some(p=>p.photo||p.it)?'Punten met foto of item gaan verloren.':'',()=>{closeSheet();push();cur.pts.forEach(p=>p.photo&&delBlob(p.photo));cur.pts=[];save();startTrace();});
  $('pSave').onclick=()=>{cur.name=$('pn').value.trim()||cur.name;cur.addr=$('pa').value.trim();cur.sid=$('ps').value.trim();save();closeSheet();drawHead();};
  const confirmTwice=(btn,msg,fn)=>{let armed=false;btn.onclick=()=>{if(!armed){armed=true;btn.textContent='Zeker? Tik nog een keer';$('conf').textContent=msg;return;}fn();};};
  confirmTwice($('wipe'),'Maak eerst het rapport als PDF. Daarna zijn de foto\'s weg.',async()=>{for(const p of cur.pts)if(p.photo){await delBlob(p.photo);p.photo='';}await putProj(cur);closeSheet();drawAll();});
- confirmTwice($('delP'),'Tekening, punten en foto\'s worden verwijderd.',async()=>{for(const p of cur.pts)if(p.photo)await delBlob(p.photo);await delBlob(cur.draw);await delProj(cur.id);closeSheet();home();});}
+ confirmTwice($('delP'),'Tekening, punten en foto\'s worden uit de app gewist. Foto\'s uit je galerij blijven daar staan.',async()=>{await deleteProject(cur);closeSheet();home();});
+ $('shP').onclick=()=>sharePhotos(cur);$('arcP').onclick=async()=>{cur.archived=true;await putProj(cur);closeSheet();toast('Gearchiveerd');home();};}
 
 /* ---------- rapport ---------- */
 function report(){view='rep';gpsOff();const M=meters(),N=nums(),s=cur.W/700;
