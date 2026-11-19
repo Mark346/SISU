@@ -135,6 +135,9 @@ body.editing .mapS{box-shadow:inset 0 0 0 3px var(--hv)}
 textarea{width:100%;font:16px Barlow,system-ui,sans-serif;padding:10px;border-radius:9px;border:1px solid var(--line);background:#f6f7f6;color:var(--ink)}
 .rep .hblk{break-inside:avoid;page-break-inside:avoid;border-top:1px solid #e3e3e3;padding-top:10px;margin-top:14px}.rep .hblk h3{font-size:18px;margin:0 0 8px}
 .rep .dsr{overflow:hidden}.rep .dsr svg{width:100%;height:auto;max-height:240px}.rep .nf{position:relative}.rep .nf img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:4px;display:block}
+.basebar{display:flex;gap:6px;align-items:center;flex-wrap:wrap;padding:6px 10px;border-bottom:1px solid var(--line);font-size:13px}
+.basebar .bl{font-weight:600;color:var(--mute)}.basebar .bb{min-height:34px;padding:4px 10px;font-size:13px}.basebar .bb[aria-pressed=true]{background:var(--asf);color:#fff;border-color:var(--asf)}
+.basebar .op{display:flex;gap:6px;align-items:center;margin:0;color:var(--mute)}.basebar .op input{width:110px;padding:0;accent-color:var(--hv)}.basebar .attr{flex-basis:100%;font-size:11px;color:var(--mute)}
 @media print{.noprint,.tool,.top,.fab{display:none!important}.app{max-width:none}.rep{padding:0}body{background:#fff}}
 </style>
 </head>
@@ -292,7 +295,7 @@ async function openProject(id){cur=(await getAll()).find(p=>p.id===id);if(!cur)r
  wiz=null;ghost=null;pendingAdd=null;editRoute=false;document.body.classList.remove('editing');document.body.classList.remove('wiz');solve();buildMask();
  app.innerHTML=`<div class="top" id="head"></div>
  <div class="stick"><div class="leg" id="legend"></div><div class="info" id="info" hidden><b>Oranje = foto</b>, met het fotonummer van het rapport. Vorm en kleur van een item volgen de legenda van de tekening: bruin met groene rand is nieuw, blauwgroen met gele rand is bestaand.</div><div class="tool"><button class="btn rt" id="rtBtn" aria-pressed="false"><span class="sw2"><i></i></span>Route verleggen</button><button class="btn ic" id="snapBtn" aria-pressed="true" aria-label="Magneet: bolletjes naar de lijn trekken" title="Magneet" hidden>🧲</button><button class="btn ic" id="meBtn" aria-label="Locatie en binnentracé" title="Locatie en binnentracé">📍</button><span class="sp"></span><button class="btn" id="zOut" aria-label="Uitzoomen">−</button><button class="btn" id="zIn" aria-label="Inzoomen">+</button><button class="btn" id="undo" aria-label="Ongedaan maken">↶</button></div>
-  </div><div class="mapS" id="mapS"><div class="mapI" id="mapI"><svg id="svg" viewBox="0 0 ${cur.W} ${cur.H}" style="aspect-ratio:${cur.W}/${cur.H}"><image href="${drawUrl}" width="${cur.W}" height="${cur.H}"/><g id="lay"></g></svg></div></div>
+  <div class="basebar" id="basebar" hidden></div></div><div class="mapS" id="mapS"><div class="mapI" id="mapI"><svg id="svg" viewBox="0 0 ${cur.W} ${cur.H}" style="aspect-ratio:${cur.W}/${cur.H}"><g id="base"></g><image id="drawImg" href="${drawUrl}" width="${cur.W}" height="${cur.H}"/><g id="lay"></g></svg></div></div>
  <div class="sec" id="list" style="padding-top:0"></div>
  <div class="sec noprint"><div class="row2"><button class="btn" id="repBtn">Rapport / PDF</button><button class="btn" id="editP">Project</button></div></div>
  <button class="btn pri fab" id="fab" hidden>📷 Foto hier</button><div class="guide" id="guide" hidden></div><div class="bubble" id="bubble" hidden></div><div class="toast" id="toast" hidden></div>`;
@@ -308,7 +311,7 @@ function drawHead(){const M=meters(),N=nums(),inv=cur.pts.findIndex(p=>p.it==='i
  ${watch!==null?`<span class="geo ${gpsErr?'err':gps?'on':''}"><i></i>${gpsErr?'Gps-fout':gps?`Gps ± ${Math.round(gps.acc)} m`:'Gps zoeken…'}</span>`:''}</div>${gpsErr?`<p class="note" style="color:#ffb3ad;margin:8px 0 0">${esc(gpsErr)}</p>`:''}`;
  $('bk').onclick=()=>{save();home();};$('geoBtn').onclick=()=>{if(!wiz)geoMenu();};
  $('fab').hidden=!(T&&gps&&watch!==null);drawGuide();}
-function drawMap(){const s=cur.W/($('svg').getBoundingClientRect().width||cur.W),N=nums();
+function drawMap(){drawBase();const s=cur.W/($('svg').getBoundingClientRect().width||cur.W),N=nums();
  let o=cur.pts.length>1?`<polyline points="${cur.pts.map(p=>p.x+','+p.y).join(' ')}" fill="none" stroke="${OR}" stroke-width="${3*s}" stroke-opacity=".55" stroke-linejoin="round"/>`:'';
  if(trace&&trace.stroke&&trace.stroke.length>1)o+=`<polyline points="${trace.stroke.map(q=>q[0]+','+q[1]).join(' ')}" fill="none" stroke="${OR}" stroke-width="${5*s}" stroke-linecap="round" stroke-linejoin="round"/>`;
  if(!wiz&&(editRoute||trace))for(let i=0;i<cur.pts.length-1;i++){const a=cur.pts[i],b=cur.pts[i+1];if(len(a,b)/s<46)continue;const mx=(a.x+b.x)/2,my=(a.y+b.y)/2,r=8*s;
@@ -335,7 +338,7 @@ function highlight(id){sel=id;flash=id;clearTimeout(flashT);flashT=setTimeout(()
  const S=$('mapS'),st=document.querySelector('.stick'),p=cur.pts.find(q=>q.id===id);if(!p)return;
  scrollTo({top:S.getBoundingClientRect().top+scrollY-st.offsetHeight,behavior:'smooth'});
  const k=$('svg').getBoundingClientRect().width/cur.W;progScroll=true;S.scrollTo({left:p.x*k-S.clientWidth/2,top:p.y*k-S.clientHeight/2,behavior:'smooth'});setTimeout(()=>progScroll=false,700);}
-function drawAll(){drawHead();drawMap();drawList();$('undo').disabled=!hist.length;}
+function drawAll(){drawHead();drawBaseBar();drawMap();drawList();$('undo').disabled=!hist.length;}
 function buildMask(){mask=null;loadImg(drawUrl).then(im=>{const c=document.createElement('canvas');c.width=cur.W;c.height=cur.H;const g=c.getContext('2d');g.drawImage(im,0,0,cur.W,cur.H);const d=g.getImageData(0,0,cur.W,cur.H).data;mask=new Uint8Array(cur.W*cur.H);for(let i=0;i<mask.length;i++){const r=d[i*4],gg=d[i*4+1],b=d[i*4+2];mask[i]=(r<70&&gg<70&&b<70)||(r>150&&gg<80&&b<80)?1:0;}}).catch(()=>{});}
 function snapTo(x,y){if(!snap||!mask)return[x,y];const R=Math.max(5,Math.round(cur.W/60));let sx=0,sy=0,n=0;for(let j=-R;j<=R;j++)for(let i=-R;i<=R;i++){const X=Math.round(x+i),Y=Math.round(y+j);if(X<0||Y<0||X>=cur.W||Y>=cur.H||i*i+j*j>R*R)continue;if(mask[Y*cur.W+X]){sx+=X;sy+=Y;n++;}}return n>4?[sx/n,sy/n]:[x,y];}
 function insertAt(x,y,extra={}){const P=cur.pts,np={id:uid(),x:Math.round(x),y:Math.round(y),it:'',c:'',photo:'',...extra};
@@ -839,6 +842,31 @@ function indoorReport(){const I=cur.indoor;if(!I||!I.haltes.length)return'';IND=
  <h2>Totaaloverzicht binnen</h2><table><tr><td>Aantal haltes</td><td class="n">${H.length}</td></tr><tr><td>Aantal doorvoeren</td><td class="n">${door.length} (waarvan ${bw} brandwerend)</td></tr>
  <tr><td>Totale kabellengte</td><td class="n">${known.length?`${est?'ca. ':''}${fmtM(tot)} m`:'onbekend'}${unk&&known.length?` · ${unk} stuk${unk===1?'':'ken'} zonder lengte`:''}</td></tr></table>`;}
 
+/* ---------- ondergrond (PDOK) ---------- */
+const BASES={foto:{l:'Luchtfoto',url:(z,x,y)=>`https://service.pdok.nl/hwh/luchtfotorgb/wmts/v1_0/Actueel_orthoHR/EPSG:3857/${String(z).padStart(2,'0')}/${x}/${y}.jpeg`,max:20,attr:'Luchtfoto: Beeldmateriaal.nl / PDOK'},
+ kaart:{l:'Kaart',url:(z,x,y)=>`https://service.pdok.nl/kadaster/brt-achtergrondkaart/wmts/v2_0/standaard/EPSG:3857/${String(z).padStart(2,'0')}/${x}/${y}.png`,max:19,attr:'Kaart: Kadaster / PDOK'}};
+const lon2t=(lo,z)=>(lo+180)/360*2**z,lat2t=(la,z)=>{const r=la*Math.PI/180;return(1-Math.log(Math.tan(r)+1/Math.cos(r))/Math.PI)/2*2**z;};
+const t2lon=(x,z)=>x/2**z*360-180,t2lat=(y,z)=>Math.atan(Math.sinh(Math.PI*(1-2*y/2**z)))*180/Math.PI;
+function baseSvg(screenW){const B=BASES[cur.base];if(!T||!B)return{key:'',html:''};
+ const cs=[[0,0],[cur.W,0],[0,cur.H],[cur.W,cur.H]].map(([x,y])=>img2ll(x,y)),las=cs.map(c=>c[0]),los=cs.map(c=>c[1]),lat=(Math.min(...las)+Math.max(...las))/2;
+ const pxPerM=screenW/(cur.W*T.scale);let z=Math.max(14,Math.min(B.max,Math.round(Math.log2(156543.03*Math.cos(lat*Math.PI/180)*pxPerM*(devicePixelRatio>1?1.5:1)))));
+ let x0,x1,y0,y1;const rng=()=>{x0=Math.floor(lon2t(Math.min(...los),z));x1=Math.floor(lon2t(Math.max(...los),z));y0=Math.floor(lat2t(Math.max(...las),z));y1=Math.floor(lat2t(Math.min(...las),z));};
+ rng();while((x1-x0+1)*(y1-y0+1)>90&&z>14){z--;rng();}
+ const key=[cur.base,z,T.m.map(v=>v.toFixed(7)),T.t.map(v=>v.toFixed(2))].join('|');let h='';
+ for(let x=x0;x<=x1;x++)for(let y=y0;y<=y1;y++){const tl=ll2img(t2lat(y,z),t2lon(x,z)),tr=ll2img(t2lat(y,z),t2lon(x+1,z)),bl=ll2img(t2lat(y+1,z),t2lon(x,z)),k=1.004/256;
+  h+=`<image href="${B.url(z,x,y)}" width="256" height="256" preserveAspectRatio="none" transform="matrix(${((tr[0]-tl[0])*k).toFixed(5)} ${((tr[1]-tl[1])*k).toFixed(5)} ${((bl[0]-tl[0])*k).toFixed(5)} ${((bl[1]-tl[1])*k).toFixed(5)} ${tl[0].toFixed(2)} ${tl[1].toFixed(2)})"/>`;}
+ return{key,html:h};}
+let baseKey='';
+function drawBase(){const g=$('base'),im=$('drawImg');if(!g)return;const on=T&&BASES[cur.base];
+ if(!on){if(baseKey){g.innerHTML='';baseKey='';}if(im)im.style.opacity=1;return;}
+ const r=baseSvg($('svg').getBoundingClientRect().width||400);if(r.key!==baseKey){g.innerHTML=r.html;baseKey=r.key;}
+ if(im)im.style.opacity=cur.drawOp??.55;}
+function drawBaseBar(){const b=$('basebar');if(!b)return;if(!T){b.hidden=true;return;}b.hidden=false;const v=cur.base||'uit';
+ b.innerHTML=`<span class="bl">Ondergrond</span>${['uit','foto','kaart'].map(k=>`<button class="btn bb" data-base="${k}" aria-pressed="${v===k}">${k==='uit'?'Uit':BASES[k].l}</button>`).join('')}
+ ${BASES[v]?`<label class="op"><span>Tekening</span><input type="range" id="opR" min="0" max="100" value="${Math.round((cur.drawOp??.55)*100)}" aria-label="Doorzichtigheid tekening"></label><span class="attr">${BASES[v].attr}</span>`:''}`;
+ b.querySelectorAll('[data-base]').forEach(x=>x.onclick=()=>{cur.base=x.dataset.base==='uit'?'':x.dataset.base;save();drawBaseBar();drawBase();if(cur.base&&!navigator.onLine)toast('Geen internet: alleen eerder bekeken stukken luchtfoto zijn te zien.');});
+ const r=$('opR');if(r)r.oninput=()=>{cur.drawOp=r.value/100;$('drawImg').style.opacity=cur.drawOp;save();};}
+
 /* ---------- project-instellingen ---------- */
 function projSheet(){const b=$('sheetBody'),n=cur.pts.filter(p=>p.photo).length;
  b.innerHTML=`<h2 style="font-size:22px">Project</h2><label for="pn">Naam / adres</label><input id="pn" value="${esc(cur.name)}"><label for="pa">Plaats / gebouw</label><input id="pa" value="${esc(cur.addr)}"><label for="ps">Projectnummer</label><input id="ps" value="${esc(cur.sid)}">
@@ -854,12 +882,12 @@ function projSheet(){const b=$('sheetBody'),n=cur.pts.filter(p=>p.photo).length;
 
 /* ---------- rapport ---------- */
 function report(){view='rep';gpsOff();const M=meters(),N=nums(),s=cur.W/700;
- const mapSvg=`<svg viewBox="0 0 ${cur.W} ${cur.H}"><image href="${drawUrl}" width="${cur.W}" height="${cur.H}"/>${cur.pts.length>1?`<polyline points="${cur.pts.map(p=>p.x+','+p.y).join(' ')}" fill="none" stroke="${OR}" stroke-width="${3*s}" stroke-opacity=".6"/>`:''}${cur.pts.map(p=>sym(p.it,p.x,p.y,s*1.4,N[p.id])).join('')}</svg>`;
+ const bs=T&&BASES[cur.base]?baseSvg(700):null;const mapSvg=`<svg viewBox="0 0 ${cur.W} ${cur.H}">${bs?bs.html:''}<image href="${drawUrl}" width="${cur.W}" height="${cur.H}" opacity="${bs?(cur.drawOp??.55):1}"/>${cur.pts.length>1?`<polyline points="${cur.pts.map(p=>p.x+','+p.y).join(' ')}" fill="none" stroke="${OR}" stroke-width="${3*s}" stroke-opacity=".6"/>`:''}${cur.pts.map(p=>sym(p.it,p.x,p.y,s*1.4,N[p.id])).join('')}</svg>`;
  const inv=cur.pts.findIndex(p=>p.it==='inv'||p.it==='brw');
  app.innerHTML=`<div class="tool noprint"><button class="btn" id="rb">‹ Terug</button><span class="sp"></span><button class="btn pri" id="pr">Afdrukken / PDF</button></div>
  <div class="rep"><h1 style="font-size:28px">${esc(cur.name)}</h1><p class="note">${esc(cur.sid)} · ${esc(cur.addr)} · ${new Date().toLocaleDateString('nl-NL')}</p>
  <table><tr><td>Lengte route</td><td class="n">${M?Math.round(M[M.length-1])+' m':'niet gekoppeld'}</td></tr>${inv>0&&M?`<tr><td>Buitentracé tot invoering</td><td class="n">${Math.round(M[inv])} m</td></tr>`:''}<tr><td>Punten / foto's</td><td class="n">${keyPts().length} / ${Object.keys(N).length}</td></tr><tr><td>Gps-koppeling</td><td class="n">${T?`${cur.anchors.length} ankers${T.err.length?`, afwijking ${T.err.map(e=>e.toFixed(1)).join('/')} m`:''}`:'geen'}</td></tr></table>
- <h2>Tracé</h2><div class="mapc">${mapSvg}</div>
+ <h2>Tracé</h2><div class="mapc">${mapSvg}</div>${bs?`<p class="note">${BASES[cur.base].attr}</p>`:''}
  <h2>Punten</h2><table><tr><th>#</th><th>Item</th><th>Omschrijving</th><th class="n">m</th></tr>${keyPts().map(({p,i},n)=>`<tr><td>${n+1}</td><td>${label(p)}${N[p.id]?` · foto ${N[p.id]}`:''}</td><td>${esc(p.c)}</td><td class="n">${M?Math.round(M[i]):''}</td></tr>`).join('')}</table>
  <h2>Foto's</h2><div class="pgrid">${cur.pts.filter(p=>p.photo&&urls[p.photo]).map(p=>`<figure>${photoHtml(p)}<figcaption><b>Foto ${N[p.id]}</b> · ${esc(p.c||label(p))}</figcaption></figure>`).join('')||'<p class="note">Geen foto\'s.</p>'}</div>${indoorReport()}</div>`;
  $('rb').onclick=()=>openProject(cur.id);$('pr').onclick=()=>window.print();}
