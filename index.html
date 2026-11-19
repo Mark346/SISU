@@ -297,7 +297,7 @@ function drawMap(){const s=cur.W/($('svg').getBoundingClientRect().width||cur.W)
  const last=cur.pts.length-1;
  cur.pts.forEach((p,pi)=>{const isA=false,end=cur.pts.length>1&&(pi===0||pi===last)?(pi===0?'net':'pand'):'';if(!editRoute&&!trace&&!wiz&&!p.photo&&!p.it&&!end&&p.id!==sel)return;
   o+=`<g class="mk" data-id="${p.id}">${p.id===sel?`<circle cx="${p.x}" cy="${p.y}" r="${17*s}" fill="none" stroke="#1d2529" stroke-width="${2*s}" stroke-dasharray="${4*s} ${3*s}"/>`:''}${isA?`<path d="M${p.x} ${p.y-14*s} l${4*s} ${-8*s} h${-8*s}z" fill="#1d2529"/>`:''}${end&&!p.it&&!p.photo?endSym(end,p.x,p.y,s):sym(p.it,p.x,p.y,s,N[p.id])}${end&&!trace?endTag(end,p.x,p.y,s):''}<circle cx="${p.x}" cy="${p.y}" r="${20*s}" fill="transparent"/></g>`;});
- if(wiz||editRoute)cur.anchors.forEach((a,i)=>{const c=a.la!=null?'#1f7a4a':'#1d2529',h=30*s;
+ if(wiz)cur.anchors.forEach((a,i)=>{const c=a.la!=null?'#1f7a4a':'#1d2529',h=30*s;
   o+=`<g class="mk af" data-a="${i}"><circle cx="${a.x}" cy="${a.y}" r="${4*s}" fill="${c}" stroke="#fff" stroke-width="${1.5*s}"/><line x1="${a.x}" y1="${a.y}" x2="${a.x}" y2="${a.y-h}" stroke="${c}" stroke-width="${2.4*s}"/><rect x="${a.x}" y="${a.y-h}" width="${20*s}" height="${15*s}" rx="${2*s}" fill="${c}" stroke="#fff" stroke-width="${1.2*s}"/><text x="${a.x+10*s}" y="${a.y-h+11.5*s}" font-size="${11*s}" font-weight="700" text-anchor="middle" fill="#fff" font-family="Barlow,sans-serif">${a.la!=null?'✓':a.k}</text><circle cx="${a.x+6*s}" cy="${a.y-14*s}" r="${20*s}" fill="transparent"/></g>`;});
  $('lay').innerHTML=o;}
 const thumb=p=>p.photo&&urls[p.photo]?`<img src="${urls[p.photo]}" alt="">`:'geen foto';
@@ -448,7 +448,7 @@ function geoMenu(){if(!T)return startWiz();const A=cur.anchors,dm=gpsDist(A[0],A
  $('sheetBody').innerHTML=`<h2 style="font-size:22px">Gekoppeld aan gps</h2>
  <p>Vlag A en B liggen ${Math.round(dm)} m uit elkaar. Op de tekening is 1 pixel ongeveer ${T.scale.toFixed(3)} m.</p>
  ${A.map(a=>`<div class="anc"><span><b>${a.k}</b> · ${a.src}${a.acc?` · ± ${Math.round(a.acc)} m`:''}</span><span class="note">${a.la.toFixed(5)}, ${a.lo.toFixed(5)}</span></div>`).join('')}
- <p class="note" style="margin-top:10px">Staat een vlag op de tekening niet precies goed? Sleep hem naar de juiste plek. De koppeling past zich meteen aan.</p>
+ <p class="note" style="margin-top:10px">Klopt de blauwe stip niet goed? Kies Opnieuw koppelen.</p>
  <div class="row2"><button class="btn" id="gRe">Opnieuw koppelen</button><button class="btn dk" id="gClose">Klaar</button></div>`;
  $('sheet').hidden=false;$('gRe').onclick=startWiz;$('gClose').onclick=closeSheet;}
 function gpsDist(a,b){const cl=Math.cos(a.la*Math.PI/180);return Math.hypot((b.lo-a.lo)*cl*111320,(b.la-a.la)*110540);}
