@@ -444,12 +444,12 @@ function drawGuide(){const g=$('guide');if(!g)return;if(trace)return traceGuide(
   if(!m.t0)h=`<h3>Vlag ${k} staat. Wachten op gps…</h3><p>Blijf staan. Het meten begint zodra het signaal goed genoeg is.</p>${live}`;
   else{const sec=(Date.now()-m.t0)/1000;h=`<h3>Blijf stilstaan bij ${k}…</h3><p>Nog ${Math.max(0,Math.ceil(10-sec))} seconden. Staat de vlag niet precies goed? Tik opnieuw op de kaart.</p><div class="bar"><i style="width:${Math.min(100,sec*10)}%"></i></div>${live}${sec>10?`<p class="note" style="color:#b8c2c6">Nog niet nauwkeurig genoeg, even geduld…</p>`:''}`;}
   h+=`<div class="row2"><button class="btn" id="wAbort">Afbreken</button></div>`;}
- else if(s==='pA'||s==='pB')h=`<h3>Tik op de kaart de plek van ${s.slice(-1)}</h3><p>Kies plekken die je ook in Google Maps goed ziet, zo ver mogelijk uit elkaar. Daarna plak je de coördinaten.</p><div class="row2"><button class="btn" id="wStop">Stoppen</button></div>`;
+ else if(s==='pA'||s==='pB')h=`<h3>Tik op de kaart de plek van ${s.slice(-1)}</h3><p>Kies plekken die je ook in Google Maps goed ziet, zo ver mogelijk uit elkaar. Daarna plak je de coördinaten.</p><div class="row2"><button class="btn" id="wGpsM">Toch met gps meten</button><button class="btn" id="wStop">Stoppen</button></div>`;
  else if(s==='done'){const dm=gpsDist(A,B);h=`<h3>Gekoppeld ✓</h3><p>De blauwe stip is nu jouw positie op de tekening. <b>Controle:</b> loop een paar stappen. Beweegt de stip mee en staat hij goed?</p>${dm<15?`<p class="gw">A en B liggen maar ${Math.round(dm)} m uit elkaar. De koppeling kan scheef zijn. Kies liever plekken verder uit elkaar.</p>`:''}<div class="row2"><button class="btn" id="wAgain">Opnieuw</button><button class="btn pri" id="wOk">Klopt, klaar</button></div>`;}
  g.innerHTML=dots+h;
  const on=(id,f)=>{const e=$(id);if(e)e.onclick=f;};
  on('wStop',()=>{clearInterval(measT);cur.anchors=[];save();stopWiz();});
- on('wPaste',()=>{wiz.step='pA';drawGuide();});
+ on('wPaste',()=>{wiz.step='pA';drawGuide();});on('wGpsM',()=>{cur.anchors=[];wiz.step='A';save();drawAll();});
  on('wRedoA',()=>{cur.anchors=cur.anchors.filter(a=>a.k!=='A');wiz.step='A';solve();drawAll();});
  on('wAbort',()=>{clearInterval(measT);const k=wiz.meas.k;cur.anchors=cur.anchors.filter(a=>a.k!==k);wiz.step=k;drawAll();});
  on('wAgain',startWiz);on('wOk',()=>{follow=true;$('meBtn').setAttribute('aria-pressed',true);stopWiz();toast('Gekoppeld. Tik op de kaart om een foto toe te voegen.');});}
@@ -464,13 +464,20 @@ function startMeas(k){wiz.step='meas'+k;wiz.meas={k,got:[],good:0,t0:null};clear
    a.la=best.reduce((s,q,j)=>s+q.la*w[j],0)/W;a.lo=best.reduce((s,q,j)=>s+q.lo*w[j],0)/W;a.acc=minAcc;a.src='gps ter plekke';
    wiz.step=k==='A'?'B':'done';solve();save();if(k==='B')follow=true;drawAll();if(navigator.vibrate)navigator.vibrate(k==='A'?120:[120,80,120]);return;}
   drawGuide();},1000);drawAll();}
+function parseLL(s){s=(s||'').replace(/[°NnEeOo]/g,' ').trim();const m=s.match(/(-?\d{1,2}(?:[.,]\d+)?)\s*(?:[,;]\s*|\s+)(-?\d{1,3}(?:[.,]\d+)?)/);if(!m)return null;const la=+m[1].replace(',','.'),lo=+m[2].replace(',','.');return la>-90&&la<90&&lo>-180&&lo<180&&!(la===0&&lo===0)?[la,lo]:null;}
 function pasteSheet(){const b=$('sheetBody');
- b.innerHTML=`<h2 style="font-size:22px">Coördinaten plakken</h2><p class="note">Google Maps: druk lang op de plek van de vlag en kopieer de getallen, bijvoorbeeld 52.29180, 4.68950.</p>
- ${['A','B'].map(k=>`<label for="ll${k}">Vlag ${k}</label><input id="ll${k}" placeholder="52.29180, 4.68950">`).join('')}<p class="note" id="llErr"></p>
- <div class="row2"><button class="btn" id="pc2">Terug</button><button class="btn pri" id="ps2">Koppelen</button></div>`;
- $('sheet').hidden=false;$('pc2').onclick=()=>{closeSheet();cur.anchors=[];wiz.step='pA';drawAll();};
- $('ps2').onclick=()=>{const rx=/(-?\d{1,2}[.,]\d+)\s*[,; ]\s*(-?\d{1,3}[.,]\d+)/,v={};for(const k of['A','B']){const m=$('ll'+k).value.match(rx);if(!m){$('llErr').innerHTML=`<span class="warn">Vlag ${k}: gebruik de vorm 52.29180, 4.68950</span>`;return;}v[k]=[+m[1].replace(',','.'),+m[2].replace(',','.')];}
-  for(const a of cur.anchors){a.la=v[a.k][0];a.lo=v[a.k][1];a.acc=0;a.src='vooraf ingevoerd';}solve();save();closeSheet();wiz.step='done';gpsOn();drawAll();};}
+ b.innerHTML=`<h2 style="font-size:22px">Coördinaten voor A en B</h2><p class="note">Per vlag: tik <b>Ik sta hier</b> als je op die plek staat, of plak de getallen uit Google Maps (druk lang op de plek en kopieer, bijvoorbeeld 52.29180, 4.68950).</p>
+ ${['A','B'].map(k=>`<label for="ll${k}">Vlag ${k}</label><input id="ll${k}" placeholder="52.29180, 4.68950" autocomplete="off"><div class="row2" style="margin-top:6px"><button class="btn" data-here="${k}">📍 Ik sta hier</button><button class="btn" data-paste="${k}">Plakken</button></div>`).join('')}
+ <p class="note" id="llErr"></p>
+ <div class="row2"><button class="btn" id="pc2">Toch met gps meten</button><button class="btn pri" id="ps2">Koppelen</button></div>`;
+ $('sheet').hidden=false;gpsOn();
+ b.querySelectorAll('[data-here]').forEach(x=>x.onclick=()=>{const k=x.dataset.here;if(!gps){$('llErr').innerHTML=`<span class="warn">${esc(gpsErr||'Nog geen gps-signaal. Wacht even en probeer opnieuw.')}</span>`;return;}
+  $('ll'+k).value=gps.la.toFixed(6)+', '+gps.lo.toFixed(6);$('llErr').textContent=`Vlag ${k}: huidige gps-positie ingevuld (± ${Math.round(gps.acc)} m).`;});
+ b.querySelectorAll('[data-paste]').forEach(x=>x.onclick=async()=>{const k=x.dataset.paste;try{const s=await navigator.clipboard.readText();if(parseLL(s)){$('ll'+k).value=s.trim();$('llErr').textContent='';}else $('llErr').innerHTML=`<span class="warn">Op het klembord staan geen coördinaten.</span>`;}catch(e){$('ll'+k).focus();$('llErr').textContent='Houd je vinger in het veld en kies Plakken.';}});
+ $('pc2').onclick=()=>{closeSheet();cur.anchors=[];wiz.step='A';save();drawAll();};
+ $('ps2').onclick=()=>{const v={};for(const k of['A','B']){const raw=$('ll'+k).value;const r=parseLL(raw);if(!r){$('llErr').innerHTML=`<span class="warn">${raw.trim()?`Vlag ${k}: dit herken ik niet. Gebruik de vorm 52.29180, 4.68950.`:`Vlag ${k} is nog leeg. Tik op "Ik sta hier" of plak de coördinaten.`}</span>`;return;}v[k]=r;}
+  if(gpsDist({la:v.A[0],lo:v.A[1]},{la:v.B[0],lo:v.B[1]})<3){$('llErr').innerHTML='<span class="warn">A en B hebben (bijna) dezelfde coördinaten. Vul voor elke vlag zijn eigen plek in.</span>';return;}
+  for(const a of cur.anchors){a.la=v[a.k][0];a.lo=v[a.k][1];a.acc=0;a.src='vooraf ingevoerd';}solve();save();closeSheet();wiz.step='done';drawAll();};}
 
 /* ---------- route trekken & plusjes ---------- */
 function confirmTwice0(btn,msg,fn){let armed=!msg;btn.onclick=()=>{if(!armed){armed=true;btn.textContent='Zeker? Tik nog een keer';$('conf').textContent=msg;return;}fn();};}
