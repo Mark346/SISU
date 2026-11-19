@@ -66,6 +66,16 @@ input[type=file]{display:none}
 .rep table{width:100%;border-collapse:collapse;font-size:14px}.rep td,.rep th{padding:6px 4px;border-bottom:1px solid #e3e3e3;text-align:left;vertical-align:top}.rep td.n{text-align:right;white-space:nowrap}
 .rep .pgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.rep figure{margin:0;break-inside:avoid}.rep figure img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:4px;display:block}.rep figcaption{font-size:13px;margin-top:4px}
 .rep .mapc svg{width:100%;display:block;border:1px solid #ddd}
+.guide{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:min(560px,100%);background:var(--asf);color:#fff;z-index:6;padding:14px 16px calc(14px + env(safe-area-inset-bottom));border-radius:18px 18px 0 0;box-shadow:0 -10px 30px -10px #0008}.guide[hidden]{display:none}
+.guide h3{font-size:20px;margin:2px 0 6px}.guide p{margin:0 0 8px;font-size:15px;color:#dfe5e7}.guide .btn{border-color:#ffffff33;background:#ffffff14;color:#fff}.guide .btn.pri{background:var(--hv);border-color:var(--hv)}
+.steps{display:flex;gap:4px;margin-bottom:8px}.steps i{flex:1;height:4px;border-radius:2px;background:#ffffff2e}.steps i.on{background:var(--hv)}.steps i.done{background:#5fd39a}
+.live{display:flex;gap:10px;align-items:center;font-size:14px;color:#b8c2c6;margin:4px 0 8px}.live b{color:#fff;font:700 22px "Barlow Semi Condensed",sans-serif}
+.bar{height:8px;border-radius:4px;background:#ffffff2e;overflow:hidden;margin:6px 0 10px}.bar i{display:block;height:100%;background:var(--hv);transition:width .25s}
+.gw{color:#ffb3ad}
+.bubble{position:fixed;z-index:7;background:var(--card);border-radius:14px;box-shadow:0 12px 30px -8px #0009;padding:8px;display:grid;gap:6px;width:200px}.bubble[hidden]{display:none}
+.bubble .btn{width:100%;justify-content:flex-start}.bubble .btn.pri{font-size:17px;min-height:52px;justify-content:center}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom));z-index:8;background:var(--asf);color:#fff;border-radius:12px;padding:8px 8px 8px 14px;display:flex;gap:10px;align-items:center;font-size:15px;box-shadow:0 8px 20px -6px #0008;width:max-content;max-width:92vw}.toast[hidden]{display:none}.toast .btn{min-height:36px;background:#ffffff1a;color:#fff;border-color:#ffffff33}
+body.wiz .fab{display:none}body.wiz .app{padding-bottom:300px}body.wiz .mapS{max-height:calc(100vh - 330px)}
 @media print{.noprint,.tool,.top,.fab{display:none!important}.app{max-width:none}.rep{padding:0}body{background:#fff}}
 </style>
 </head>
@@ -122,9 +132,9 @@ const label=p=>ITEMS[p.it]?.l||(p.photo?'Fotopunt':'Routepunt');
 /* ---------- geometrie & gps ---------- */
 const cm=(a,b)=>[a[0]*b[0]-a[1]*b[1],a[0]*b[1]+a[1]*b[0]],cd=(a,b)=>{const q=b[0]**2+b[1]**2;return[(a[0]*b[0]+a[1]*b[1])/q,(a[1]*b[0]-a[0]*b[1])/q];};
 let T=null;
-function solve(){const A=cur.anchors.filter(a=>cur.pts.some(p=>p.id===a.id));if(A.length<2){T=null;return;}
+function solve(){const A=cur.anchors.filter(a=>a.la!=null);if(A.length<2){T=null;return;}
  const la0=A[0].la,lo0=A[0].lo,cl=Math.cos(la0*Math.PI/180),toEN=(la,lo)=>[(lo-lo0)*cl*111320,(la-la0)*110540];
- const Q=A.map(a=>{const p=cur.pts.find(q=>q.id===a.id);return{a:[p.x,-p.y],b:toEN(a.la,a.lo)};});
+ const Q=A.map(a=>({a:[a.x,-a.y],b:toEN(a.la,a.lo)}));
  const m=cd([Q[1].b[0]-Q[0].b[0],Q[1].b[1]-Q[0].b[1]],[Q[1].a[0]-Q[0].a[0],Q[1].a[1]-Q[0].a[1]]);
  if(!isFinite(m[0])){T=null;return;}const z=cm(m,Q[0].a),t=[Q[0].b[0]-z[0],Q[0].b[1]-z[1]];
  T={m,t,scale:Math.hypot(...m),rot:Math.atan2(m[1],m[0])*180/Math.PI,toEN,
@@ -141,7 +151,7 @@ function gpsOn(){if(watch!==null)return;if(!navigator.geolocation){gpsErr='Deze 
 function gpsOff(){if(watch!==null)navigator.geolocation.clearWatch(watch);watch=null;gps=null;}
 
 /* ---------- toestand ---------- */
-let view='home',cur=null,drawUrl='',mask=null,sel=null,addMode=false,snap=true,zoom=1,follow=false,hist=[],placeHere=false;
+let progScroll=false,wiz=null,ghost=null,pendingAdd=null,view='home',cur=null,drawUrl='',mask=null,sel=null,addMode=false,snap=true,zoom=1,follow=false,hist=[],placeHere=false;
 const push=()=>{hist.push(JSON.stringify(cur.pts));hist.length>50&&hist.shift();};
 function nums(){let n=0;const m={};cur.pts.forEach(p=>{if(p.photo)m[p.id]=++n;});return m;}
 
@@ -187,35 +197,40 @@ async function pickPdfPage(file,done){
 
 /* ---------- project ---------- */
 async function openProject(id){cur=(await getAll()).find(p=>p.id===id);if(!cur)return home();view='proj';hist=[];sel=null;zoom=1;follow=false;drawUrl=await url(cur.draw);
- await Promise.all(cur.pts.map(p=>url(p.photo)));solve();buildMask();
+ await Promise.all(cur.pts.map(p=>url(p.photo)));
+ cur.anchors=(cur.anchors||[]).map((a,i)=>{if(a.id){const p=cur.pts.find(q=>q.id===a.id);return p?{k:'AB'[i]||'C',x:p.x,y:p.y,la:a.la,lo:a.lo,acc:a.acc,src:a.src}:null;}return a;}).filter(Boolean).slice(0,2);
+ wiz=null;ghost=null;pendingAdd=null;document.body.classList.remove('wiz');solve();buildMask();
  app.innerHTML=`<div class="top" id="head"></div>
- <div class="tool"><button class="btn" id="addBtn" aria-pressed="false">+ Punt</button><button class="btn" id="snapBtn" aria-pressed="true">Magneet</button><button class="btn" id="meBtn">Positie</button><span class="sp"></span><button class="btn" id="zOut" aria-label="Uitzoomen">−</button><button class="btn" id="zIn" aria-label="Inzoomen">+</button><button class="btn" id="undo" aria-label="Ongedaan maken">↶</button></div>
- <div class="modeTip" id="modeTip" hidden></div>
- <div class="mapS" id="mapS"><div class="mapI" id="mapI"><svg id="svg" viewBox="0 0 ${cur.W} ${cur.H}" style="aspect-ratio:${cur.W}/${cur.H}"><image href="${drawUrl}" width="${cur.W}" height="${cur.H}"/><g id="lay"></g></svg></div></div>
+ <div class="tool"><button class="btn" id="snapBtn" aria-pressed="true">Magneet</button><button class="btn" id="meBtn">Positie</button><span class="sp"></span><button class="btn" id="zOut" aria-label="Uitzoomen">−</button><button class="btn" id="zIn" aria-label="Inzoomen">+</button><button class="btn" id="undo" aria-label="Ongedaan maken">↶</button></div>
+  <div class="mapS" id="mapS"><div class="mapI" id="mapI"><svg id="svg" viewBox="0 0 ${cur.W} ${cur.H}" style="aspect-ratio:${cur.W}/${cur.H}"><image href="${drawUrl}" width="${cur.W}" height="${cur.H}"/><g id="lay"></g></svg></div></div>
  <div class="sec"><h2 style="font-size:19px;margin-bottom:10px">Wat een punt betekent</h2><div class="legend" id="legend"></div><p class="rule"><b>Oranje = foto</b>, met het fotonummer van het rapport. Vorm en kleur volgen de legenda: bruin met groene rand is nieuw, blauwgroen met gele rand is bestaand.</p></div>
  <div class="sec" id="list" style="padding-top:0"></div>
  <div class="sec noprint"><div class="row2"><button class="btn" id="repBtn">Rapport / PDF</button><button class="btn" id="editP">Project</button></div></div>
- <button class="btn pri fab" id="fab" hidden>📷 Foto hier</button>`;
+ <button class="btn pri fab" id="fab" hidden>📷 Foto hier</button><div class="guide" id="guide" hidden></div><div class="bubble" id="bubble" hidden></div><div class="toast" id="toast" hidden></div>`;
  $('legend').innerHTML=[['',0,'Leeg','knik in de route'],['',3,'Leeg + foto','fotopunt'],['kp_n',0,'Item','geen foto'],['hh_n',4,'Item + foto','']].map(([it,n,a,b])=>`<div><svg viewBox="0 0 44 36">${sym(it,it&&n?19:22,it&&n?20:18,1.05,n)}</svg><b style="color:var(--ink)">${a}</b><br>${b}</div>`).join('');
  bindProject();drawAll();
- if(!cur.pts.length)setAdd(true);}
+ if(!cur.pts.length)toast('Tik op de tekening om punten te zetten. Begin bij het startpunt.');}
 function drawHead(){const M=meters(),N=nums(),inv=cur.pts.findIndex(p=>p.it==='inv'||p.it==='brw');
  $('head').innerHTML=`<button class="back" id="bk">‹ Projecten</button><br><small>${esc(cur.sid)}${cur.sid&&cur.addr?' · ':''}${esc(cur.addr)}</small><h1>${esc(cur.name)}</h1>
  <div class="stats"><div><b>${M&&cur.pts.length>1?Math.round(M[inv>0?inv:M.length-1])+' m':'?'}</b>${inv>0?'tot invoering':'route'}</div><div><b>${cur.pts.length}</b>punten</div><div><b>${Object.keys(N).length}</b>foto's</div><div><b>${cur.pts.filter(p=>p.it).length}</b>items</div></div>
- <div class="chips"><button class="geo ${T?'on':''}" id="geoBtn"><i></i>${T?`Gekoppeld · ${cur.anchors.length} ankers${T.err.length?` · afwijking ${T.err.map(e=>e.toFixed(1)).join('/')} m`:''}`:cur.anchors.length?'1 van 2 ankers':'Niet gekoppeld aan gps'}</button>
+ <div class="chips"><button class="geo ${T?'on':''}" id="geoBtn"><i></i>${T?'Gekoppeld aan gps':wiz?'Bezig met koppelen…':'Koppel aan gps'}</button>
  ${watch!==null?`<span class="geo ${gpsErr?'err':gps?'on':''}"><i></i>${gpsErr?'Gps-fout':gps?`Gps ± ${Math.round(gps.acc)} m`:'Gps zoeken…'}</span>`:''}</div>${gpsErr?`<p class="note" style="color:#ffb3ad;margin:8px 0 0">${esc(gpsErr)}</p>`:''}`;
  $('bk').onclick=()=>{save();home();};$('geoBtn').onclick=geoMenu;
- $('fab').hidden=!(T&&gps&&watch!==null);}
+ $('fab').hidden=!(T&&gps&&watch!==null);drawGuide();}
 function drawMap(){const s=cur.W/($('svg').getBoundingClientRect().width||cur.W),N=nums();
  let o=cur.pts.length>1?`<polyline points="${cur.pts.map(p=>p.x+','+p.y).join(' ')}" fill="none" stroke="${OR}" stroke-width="${3*s}" stroke-opacity=".55" stroke-linejoin="round"/>`:'';
  if(T&&gps&&watch!==null){const[x,y]=ll2img(gps.la,gps.lo);o+=`<circle cx="${x}" cy="${y}" r="${gps.acc/T.scale}" fill="#1a73e8" fill-opacity=".14" stroke="#1a73e8" stroke-opacity=".4" stroke-width="${s}"/><circle id="meDot" cx="${x}" cy="${y}" r="${7*s}" fill="#1a73e8" stroke="#fff" stroke-width="${2.2*s}"/>`;
-  if(follow){const S=$('mapS'),r=$('svg').getBoundingClientRect(),k=r.width/cur.W;S.scrollLeft=x*k-S.clientWidth/2;S.scrollTop=y*k-S.clientHeight/2;}}
- cur.pts.forEach(p=>{const isA=cur.anchors.some(a=>a.id===p.id);
+  if(follow){const S=$('mapS'),r=$('svg').getBoundingClientRect(),k=r.width/cur.W,px=x*k-S.scrollLeft,py=y*k-S.scrollTop;
+   if(px<S.clientWidth*.2||px>S.clientWidth*.8||py<S.clientHeight*.2||py>S.clientHeight*.8){progScroll=true;S.scrollLeft=x*k-S.clientWidth/2;S.scrollTop=y*k-S.clientHeight/2;requestAnimationFrame(()=>requestAnimationFrame(()=>progScroll=false));}}}
+ if(ghost)o+=`<circle cx="${ghost.x}" cy="${ghost.y}" r="${9*s}" fill="${OR}" fill-opacity=".35" stroke="${OR}" stroke-width="${2*s}"/>`;
+ cur.pts.forEach(p=>{const isA=false;
   o+=`<g class="mk" data-id="${p.id}">${p.id===sel?`<circle cx="${p.x}" cy="${p.y}" r="${17*s}" fill="none" stroke="#1d2529" stroke-width="${2*s}" stroke-dasharray="${4*s} ${3*s}"/>`:''}${isA?`<path d="M${p.x} ${p.y-14*s} l${4*s} ${-8*s} h${-8*s}z" fill="#1d2529"/>`:''}${sym(p.it,p.x,p.y,s,N[p.id])}<circle cx="${p.x}" cy="${p.y}" r="${20*s}" fill="transparent"/></g>`;});
+ cur.anchors.forEach((a,i)=>{const c=a.la!=null?'#1f7a4a':'#1d2529',h=30*s;
+  o+=`<g class="mk af" data-a="${i}"><circle cx="${a.x}" cy="${a.y}" r="${4*s}" fill="${c}" stroke="#fff" stroke-width="${1.5*s}"/><line x1="${a.x}" y1="${a.y}" x2="${a.x}" y2="${a.y-h}" stroke="${c}" stroke-width="${2.4*s}"/><rect x="${a.x}" y="${a.y-h}" width="${20*s}" height="${15*s}" rx="${2*s}" fill="${c}" stroke="#fff" stroke-width="${1.2*s}"/><text x="${a.x+10*s}" y="${a.y-h+11.5*s}" font-size="${11*s}" font-weight="700" text-anchor="middle" fill="#fff" font-family="Barlow,sans-serif">${a.la!=null?'✓':a.k}</text><circle cx="${a.x+6*s}" cy="${a.y-14*s}" r="${20*s}" fill="transparent"/></g>`;});
  $('lay').innerHTML=o;}
 const thumb=p=>p.photo&&urls[p.photo]?`<img src="${urls[p.photo]}" alt="">`:'geen foto';
 function drawList(){const M=meters(),N=nums();
- $('list').innerHTML=`<h2 style="font-size:19px;margin:4px 0 6px">Punten langs de route</h2>`+(cur.pts.map((p,i)=>`<div class="row" data-open="${p.id}">${icon(p.it,N[p.id])}<div><div class="t">${i+1}. ${label(p)}</div><div class="d">${M?Math.round(M[i])+' m · ':''}${esc(p.c||(p.photo?'':'knik in de route'))}</div></div><div class="th">${thumb(p)}</div></div>`).join('')||'<p class="note">Nog geen punten. Tik met "+ Punt" op de tekening, begin bij het startpunt.</p>');}
+ $('list').innerHTML=`<h2 style="font-size:19px;margin:4px 0 6px">Punten langs de route</h2>`+(cur.pts.map((p,i)=>`<div class="row" data-open="${p.id}">${icon(p.it,N[p.id])}<div><div class="t">${i+1}. ${label(p)}</div><div class="d">${M?Math.round(M[i])+' m · ':''}${esc(p.c||(p.photo?'':'knik in de route'))}</div></div><div class="th">${thumb(p)}</div></div>`).join('')||'<p class="note">Nog geen punten. Tik op de tekening om er een te zetten, begin bij het startpunt.</p>');}
 function drawAll(){drawHead();drawMap();drawList();$('undo').disabled=!hist.length;}
 function buildMask(){mask=null;loadImg(drawUrl).then(im=>{const c=document.createElement('canvas');c.width=cur.W;c.height=cur.H;const g=c.getContext('2d');g.drawImage(im,0,0,cur.W,cur.H);const d=g.getImageData(0,0,cur.W,cur.H).data;mask=new Uint8Array(cur.W*cur.H);for(let i=0;i<mask.length;i++){const r=d[i*4],gg=d[i*4+1],b=d[i*4+2];mask[i]=(r<70&&gg<70&&b<70)||(r>150&&gg<80&&b<80)?1:0;}}).catch(()=>{});}
 function snapTo(x,y){if(!snap||!mask)return[x,y];const R=Math.max(5,Math.round(cur.W/60));let sx=0,sy=0,n=0;for(let j=-R;j<=R;j++)for(let i=-R;i<=R;i++){const X=Math.round(x+i),Y=Math.round(y+j);if(X<0||Y<0||X>=cur.W||Y>=cur.H||i*i+j*j>R*R)continue;if(mask[Y*cur.W+X]){sx+=X;sy+=Y;n++;}}return n>4?[sx/n,sy/n]:[x,y];}
@@ -223,18 +238,22 @@ function insertAt(x,y,extra={}){const P=cur.pts,np={id:uid(),x:Math.round(x),y:M
  if(P.length<2){P.push(np);return np;}let best=0,bd=1e9,bt=0;
  for(let i=0;i<P.length-1;i++){const a=P[i],b=P[i+1],dx=b.x-a.x,dy=b.y-a.y,t=Math.max(0,Math.min(1,((x-a.x)*dx+(y-a.y)*dy)/((dx*dx+dy*dy)||1))),d=Math.hypot(a.x+t*dx-x,a.y+t*dy-y);if(d<bd){bd=d;best=i;bt=t;}}
  if(best===P.length-2&&bt>=1)P.push(np);else if(best===0&&bt<=0)P.unshift(np);else P.splice(best+1,0,np);return np;}
-function setAdd(v){addMode=v;$('addBtn').setAttribute('aria-pressed',v);const t=$('modeTip');t.hidden=!v;t.textContent=cur.pts.length<2?'Tik op de tekening om de route te zetten: begin bij het startpunt.':'Tik op of naast de route. Na het laatste punt tikken = route verlengen.';}
-function bindProject(){const svg=$('svg');let drag=null;
+function bindProject(){const svg=$('svg');let drag=null,bg=null;
  const pt=e=>{const q=svg.createSVGPoint();q.x=e.clientX;q.y=e.clientY;const r=q.matrixTransform(svg.getScreenCTM().inverse());return[Math.max(0,Math.min(cur.W,r.x)),Math.max(0,Math.min(cur.H,r.y))];};
- svg.addEventListener('pointerdown',e=>{const g=e.target.closest('.mk');
-  if(addMode&&!g){const[x,y]=snapTo(...pt(e));push();const np=insertAt(x,y);sel=np.id;save();solve();drawAll();if(cur.pts.length>=2)setAdd(addMode);return;}
-  if(!g){sel=null;drawMap();return;}e.preventDefault();g.setPointerCapture(e.pointerId);drag={id:g.dataset.id,sx:e.clientX,sy:e.clientY,moved:false};});
- svg.addEventListener('pointermove',e=>{if(!drag)return;if(!drag.moved&&Math.hypot(e.clientX-drag.sx,e.clientY-drag.sy)<6)return;
-  if(!drag.moved){push();drag.moved=true;sel=drag.id;}const p=cur.pts.find(q=>q.id===drag.id),[x,y]=pt(e);p.x=x;p.y=y;drawMap();});
- svg.addEventListener('pointerup',()=>{if(!drag)return;const d=drag;drag=null;const p=cur.pts.find(q=>q.id===d.id);
+ svg.addEventListener('pointerdown',e=>{hideBubble();const g=e.target.closest('.mk');
+  if(!g){bg={sx:e.clientX,sy:e.clientY,xy:pt(e)};return;}
+  e.preventDefault();g.setPointerCapture(e.pointerId);drag={id:g.dataset.id,a:g.dataset.a,sx:e.clientX,sy:e.clientY,moved:false};});
+ svg.addEventListener('pointermove',e=>{if(bg&&Math.hypot(e.clientX-bg.sx,e.clientY-bg.sy)>8)bg=null;if(!drag)return;if(!drag.moved&&Math.hypot(e.clientX-drag.sx,e.clientY-drag.sy)<6)return;
+  if(!drag.moved){if(drag.id)push();drag.moved=true;if(drag.id)sel=drag.id;}const[x,y]=pt(e);
+  if(drag.a!=null){const a=cur.anchors[+drag.a];a.x=x;a.y=y;}else{const p=cur.pts.find(q=>q.id===drag.id);p.x=x;p.y=y;}drawMap();});
+ svg.addEventListener('pointerup',e=>{
+  if(bg){const b=bg;bg=null;mapTap(b.xy,e.clientX,e.clientY);return;}
+  if(!drag)return;const d=drag;drag=null;
+  if(d.a!=null){if(d.moved){const a=cur.anchors[+d.a];a.x=Math.round(a.x);a.y=Math.round(a.y);solve();save();drawAll();}return;}
+  const p=cur.pts.find(q=>q.id===d.id);
   if(d.moved){[p.x,p.y]=snapTo(p.x,p.y);p.x=Math.round(p.x);p.y=Math.round(p.y);solve();save();drawAll();}else{sel=d.id;drawMap();pointSheet(d.id);}});
- svg.addEventListener('pointercancel',()=>{drag=null;});
- $('addBtn').onclick=()=>setAdd(!addMode);
+ svg.addEventListener('pointercancel',()=>{drag=null;bg=null;});
+ $('mapS').addEventListener('scroll',()=>{if(!progScroll)hideBubble();},{passive:true});
  $('snapBtn').onclick=()=>{snap=!snap;$('snapBtn').setAttribute('aria-pressed',snap);};
  const z=v=>{zoom=Math.max(1,Math.min(4,v));$('mapI').style.width=zoom*100+'%';drawMap();};$('zIn').onclick=()=>z(zoom+.5);$('zOut').onclick=()=>z(zoom-.5);
  $('undo').onclick=()=>{if(!hist.length)return;cur.pts=JSON.parse(hist.pop());solve();save();drawAll();};
@@ -245,8 +264,9 @@ function bindProject(){const svg=$('svg');let drag=null;
  $('fCam').onchange=e=>photoChosen(e.target.files[0]);$('fPick').onchange=e=>photoChosen(e.target.files[0]);
  new ResizeObserver(()=>view==='proj'&&drawMap()).observe(svg);}
 let photoFor=null;
-async function photoChosen(f){if(!f)return;const b=await shrink(f),k='f_'+uid();await putBlob(k,b);await url(k);push();
- if(placeHere&&T&&gps){const[x,y]=ll2img(gps.la,gps.lo);const np=insertAt(x,y,{photo:k});sel=np.id;placeHere=false;save();solve();drawAll();pointSheet(np.id);return;}
+async function photoChosen(f){if(!f){pendingAdd=null;ghost=null;drawMap();return;}const b=await shrink(f),k='f_'+uid();await putBlob(k,b);await url(k);push();
+ if(placeHere&&T&&gps){const[x,y]=ll2img(gps.la,gps.lo);const np=insertAt(x,y,{photo:k});sel=np.id;placeHere=false;save();solve();drawAll();photoToast(np);return;}
+ if(pendingAdd){const np=insertAt(pendingAdd.x,pendingAdd.y,{photo:k});pendingAdd=null;ghost=null;sel=np.id;save();solve();drawAll();photoToast(np);return;}
  placeHere=false;const p=cur.pts.find(q=>q.id===photoFor);if(!p)return;if(p.photo)delBlob(p.photo);p.photo=k;save();drawAll();pointSheet(p.id);}
 
 /* ---------- puntvenster ---------- */
@@ -266,40 +286,81 @@ function pointSheet(id){const p=cur.pts.find(q=>q.id===id);if(!p)return;const N=
  $('cam').onclick=()=>{keep();photoFor=id;$('fCam').value='';$('fCam').click();};$('gal').onclick=()=>{keep();photoFor=id;$('fPick').value='';$('fPick').click();};
  $('noPh')&&($('noPh').onclick=()=>{keep();push();delBlob(p.photo);p.photo='';save();drawAll();pointSheet(id);});
  $('cap').onchange=()=>{keep();save();drawList();};
- $('del').onclick=()=>{push();if(p.photo)delBlob(p.photo);cur.pts=cur.pts.filter(q=>q!==p);cur.anchors=cur.anchors.filter(a=>a.id!==p.id);sel=null;solve();save();closeSheet();drawAll();};
+ $('del').onclick=()=>{push();if(p.photo)delBlob(p.photo);cur.pts=cur.pts.filter(q=>q!==p);sel=null;solve();save();closeSheet();drawAll();};
  $('ok').onclick=()=>{keep();save();closeSheet();drawAll();};}
 
-/* ---------- koppelen ---------- */
-function geoMenu(){const b=$('sheetBody');gpsListeners=[];
- b.innerHTML=`<h2 style="font-size:22px">Tekening koppelen aan gps</h2><p class="note">Twee ankerpunten leggen schaal, draaiing en positie vast. Kies punten ver uit elkaar. Een derde anker laat de afwijking in meters zien.</p>
- <div class="meth"><button class="btn" data-m="site"><b>Ter plekke: ik sta bij een punt</b><small>Ga op een herkenbaar punt staan (handhole, hoek van het pand) en meet 10 seconden.</small></button>
- <button class="btn" data-m="pre"><b>Vooraf: coördinaten plakken</b><small>Google Maps: druk lang op de plek, kopieer de getallen bovenin en plak ze hier.</small></button></div>
- ${cur.anchors.length?`<span class="lab">Ankers</span>${cur.anchors.map((a,i)=>`<div class="anc"><span>Punt ${cur.pts.findIndex(p=>p.id===a.id)+1} · ${a.src}${a.acc?` ± ${Math.round(a.acc)} m`:''}</span><button class="btn red" data-rm="${i}">Wissen</button></div>`).join('')}`:''}
- ${T?`<p class="ok">Gekoppeld: 1 pixel ≈ ${T.scale.toFixed(3)} m, gedraaid ${T.rot.toFixed(1)}°.${T.err.length?` Afwijking derde anker: ${T.err.map(e=>e.toFixed(1)).join(' / ')} m.`:''}</p>`:''}
- ${cur.pts.length<2?'<p class="warn">Zet eerst minstens twee punten op de tekening.</p>':''}
- <div class="row2"><button class="btn dk" id="gClose">Klaar</button></div>`;
- $('sheet').hidden=false;
- b.querySelectorAll('[data-m]').forEach(x=>x.onclick=()=>{if(cur.pts.length<2)return;pickPoint(x.dataset.m);});
- b.querySelectorAll('[data-rm]').forEach(x=>x.onclick=()=>{cur.anchors.splice(+x.dataset.rm,1);solve();save();drawAll();geoMenu();});
- $('gClose').onclick=closeSheet;}
-function pickPoint(m){const b=$('sheetBody');
- b.innerHTML=`<h2 style="font-size:22px">${m==='site'?'Bij welk punt sta je?':'Welk punt zet je vast?'}</h2><div class="items" style="margin-top:12px">${cur.pts.map((p,i)=>cur.anchors.some(a=>a.id===p.id)?'':`<button class="it" data-p="${p.id}">${icon(p.it,0,30,26)}${i+1}. ${label(p)}</button>`).join('')}</div><div class="row2"><button class="btn" id="gBack">Terug</button></div>`;
- b.querySelectorAll('[data-p]').forEach(x=>x.onclick=()=>m==='site'?measure(x.dataset.p):enter(x.dataset.p));$('gBack').onclick=geoMenu;}
-function measure(id){const i=cur.pts.findIndex(p=>p.id===id),b=$('sheetBody');let got=[],t0=Date.now(),tick=null;
- b.innerHTML=`<h2 style="font-size:22px">Meten bij punt ${i+1}</h2><p class="note">Blijf stilstaan met de telefoon voor je. Na 10 seconden wordt het gemiddelde gebruikt.</p><p class="big" id="mAcc">Gps zoeken…</p><p class="note" id="mInf"></p><div class="row2"><button class="btn" id="gBack">Terug</button><button class="btn pri" id="gSave" disabled>Anker zetten</button></div>`;
- gpsOn();const upd=g=>{if(!$('mAcc'))return;if(!g){$('mAcc').textContent='Geen gps';$('mInf').textContent=gpsErr;return;}if(g.acc<50)got.push(g);
-  const best=got.filter(q=>q.acc<=Math.max(8,Math.min(...got.map(z=>z.acc))*1.5));const sec=Math.round((Date.now()-t0)/1000);
-  $('mAcc').textContent=`± ${Math.round(g.acc)} m`;$('mInf').textContent=`${got.length} metingen · ${sec} s${got.length&&g.acc>15?' · nauwkeurigheid nog matig, wacht nog even':''}`;$('gSave').disabled=!(best.length>=3&&sec>=10);};
- gpsListeners=[upd];if(gps)upd(gps);tick=setInterval(()=>{if(!$('mAcc'))return clearInterval(tick);if(gps)upd(gps);},1000);
- $('gBack').onclick=()=>{clearInterval(tick);pickPoint('site');};
- $('gSave').onclick=()=>{clearInterval(tick);const best=got.filter(q=>q.acc<=Math.max(8,Math.min(...got.map(z=>z.acc))*1.5)),w=best.map(q=>1/(q.acc*q.acc)),W=w.reduce((a,c)=>a+c,0);
-  const la=best.reduce((s,q,j)=>s+q.la*w[j],0)/W,lo=best.reduce((s,q,j)=>s+q.lo*w[j],0)/W,acc=Math.min(...best.map(q=>q.acc));
-  cur.anchors.push({id,la,lo,acc,src:'gps ter plekke'});solve();save();drawAll();geoMenu();};}
-function enter(id){const i=cur.pts.findIndex(p=>p.id===id),b=$('sheetBody');
- b.innerHTML=`<h2 style="font-size:22px">Coördinaten voor punt ${i+1}</h2><label for="ll">Breedte, lengte</label><input id="ll" placeholder="52.29180, 4.68950" inputmode="text"><p class="note" id="llErr">Zoals Google Maps ze geeft, bv. 52.29180, 4.68950</p><div class="row2"><button class="btn" id="gBack">Terug</button><button class="btn pri" id="gSave">Anker zetten</button></div>`;
- $('gBack').onclick=()=>pickPoint('pre');
- $('gSave').onclick=()=>{const m=$('ll').value.match(/(-?\d{1,2}[.,]\d+)\s*[,; ]\s*(-?\d{1,3}[.,]\d+)/);if(!m){$('llErr').innerHTML='<span class="warn">Gebruik de vorm 52.29180, 4.68950</span>';return;}
-  cur.anchors.push({id,la:+m[1].replace(',','.'),lo:+m[2].replace(',','.'),src:'vooraf ingevoerd'});solve();save();drawAll();geoMenu();};}
+/* ---------- tikken op de kaart: foto eerst ---------- */
+function hideBubble(){const b=$('bubble');if(b&&!b.hidden){b.hidden=true;if(!pendingAdd){ghost=null;drawMap();}}}
+function mapTap([x,y],cx,cy){
+ if(wiz&&(wiz.step==='pickA'||wiz.step==='pickB')){const k=wiz.step==='pickA'?'A':'B';
+  cur.anchors=cur.anchors.filter(a=>a.k!==k&&(k==='B'||a.k!=='B'));cur.anchors.push({k,x:Math.round(x),y:Math.round(y)});cur.anchors.sort((a,b)=>a.k<b.k?-1:1);
+  wiz.step=k==='A'?'pickB':'ready';T=null;save();drawAll();return;}
+ if(wiz)return;
+ [x,y]=snapTo(x,y);ghost={x,y};drawMap();
+ const b=$('bubble');b.innerHTML=`<button class="btn pri" id="bFoto">📷 Foto</button><button class="btn" id="bGal">Foto uit galerij</button><button class="btn" id="bPunt">Alleen een punt</button><button class="btn" id="bItem">Punt met item…</button>`;
+ b.hidden=false;const w=200,h=b.offsetHeight;b.style.left=Math.max(8,Math.min(innerWidth-w-8,cx-w/2))+'px';b.style.top=(cy+16+h<innerHeight-8?cy+16:Math.max(8,cy-h-16))+'px';
+ const add=extra=>{push();const np=insertAt(ghost.x,ghost.y,extra);ghost=null;b.hidden=true;sel=np.id;save();solve();drawAll();return np;};
+ $('bFoto').onclick=()=>{pendingAdd={x:ghost.x,y:ghost.y};b.hidden=true;$('fCam').value='';$('fCam').click();};
+ $('bGal').onclick=()=>{pendingAdd={x:ghost.x,y:ghost.y};b.hidden=true;$('fPick').value='';$('fPick').click();};
+ $('bPunt').onclick=()=>{add({});toast('Punt toegevoegd');};
+ $('bItem').onclick=()=>{const np=add({});pointSheet(np.id);};}
+let toastT=null;
+function toast(msg,btn,fn){const t=$('toast');if(!t)return;t.innerHTML=`<span>${msg}</span>${btn?`<button class="btn" id="tBtn">${btn}</button>`:''}`;t.hidden=false;if(btn)$('tBtn').onclick=()=>{t.hidden=true;fn();};clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,4500);}
+function photoToast(p){toast(`Foto ${nums()[p.id]} toegevoegd`,'Bijschrift / item',()=>pointSheet(p.id));}
+
+/* ---------- gps koppelen: begeleid in stappen ---------- */
+const STEPS=['pickA','pickB','ready','goA','measA','goB','measB','done'];
+let measT=null;
+function startWiz(){closeSheet();cur.anchors=[];T=null;wiz={step:'pickA'};document.body.classList.add('wiz');gpsOn();save();drawAll();const m=$('mapS'),tb=document.querySelector('.tool');scrollTo({top:m.getBoundingClientRect().top+scrollY-tb.offsetHeight,behavior:'smooth'});}
+function stopWiz(){clearInterval(measT);wiz=null;document.body.classList.remove('wiz');drawAll();}
+function geoMenu(){if(!T)return startWiz();const A=cur.anchors,dm=gpsDist(A[0],A[1]);
+ $('sheetBody').innerHTML=`<h2 style="font-size:22px">Gekoppeld aan gps</h2>
+ <p>Vlag A en B zijn ${Math.round(dm)} m uit elkaar. Op de tekening is 1 pixel ongeveer ${T.scale.toFixed(3)} m.</p>
+ ${A.map(a=>`<div class="anc"><span><b>${a.k}</b> · ${a.src}${a.acc?` · ± ${Math.round(a.acc)} m`:''}</span><span class="note">${a.la.toFixed(5)}, ${a.lo.toFixed(5)}</span></div>`).join('')}
+ <p class="note" style="margin-top:10px">Ligt een vlag op de tekening niet precies goed? Sleep hem naar de juiste plek. De koppeling past zich direct aan.</p>
+ <div class="row2"><button class="btn" id="gRe">Opnieuw koppelen</button><button class="btn dk" id="gClose">Klaar</button></div>`;
+ $('sheet').hidden=false;$('gRe').onclick=startWiz;$('gClose').onclick=closeSheet;}
+function gpsDist(a,b){const cl=Math.cos(a.la*Math.PI/180);return Math.hypot((b.lo-a.lo)*cl*111320,(b.la-a.la)*110540);}
+function drawGuide(){const g=$('guide');if(!g)return;if(!wiz){g.hidden=true;return;}g.hidden=false;
+ const i=STEPS.indexOf(wiz.step),phase=i<=2?0:i<=4?1:i<=6?2:3;
+ const dots=`<div class="steps">${['Kies A en B','Meet A','Meet B','Controle'].map((_,j)=>`<i class="${j<phase?'done':j===phase?'on':''}"></i>`).join('')}</div>`;
+ const live=gpsErr?`<p class="gw">${esc(gpsErr)}</p>`:gps?`<div class="live"><b>± ${Math.round(gps.acc)} m</b><span>${gps.acc<=10?'Gps is goed':gps.acc<=20?'Gps is redelijk, wacht nog even':'Gps is nog onnauwkeurig, ga onder de open hemel staan'}</span></div>`:`<div class="live"><span>Gps zoeken… Sta je buiten?</span></div>`;
+ const A=cur.anchors.find(a=>a.k==='A'),B=cur.anchors.find(a=>a.k==='B');
+ const far=A&&B?Math.hypot(A.x-B.x,A.y-B.y)/Math.hypot(cur.W,cur.H):1;
+ let h='';
+ switch(wiz.step){
+ case'pickA':h=`<h3>Kies plek A op de kaart</h3><p>Tik op een plek die je buiten makkelijk terugvindt, bijvoorbeeld een putdeksel, een handhole, een lantaarnpaal of de hoek van een stoep.</p><div class="row2"><button class="btn" id="wStop">Stoppen</button></div>`;break;
+ case'pickB':h=`<h3>Kies plek B</h3><p>Tik op een tweede herkenbare plek, <b>zo ver mogelijk van A</b>, het liefst aan de andere kant van de route.</p><div class="row2"><button class="btn" id="wBackA">A opnieuw kiezen</button><button class="btn" id="wStop">Stoppen</button></div>`;break;
+ case'ready':h=`<h3>A en B staan klaar</h3><p>Sleep een vlag als hij niet precies goed staat. Open plekken werken beter dan vlak naast een gebouw of onder bomen.</p>${far<.25?`<p class="gw">A en B liggen dicht bij elkaar. Verder uit elkaar wordt de koppeling nauwkeuriger.</p>`:''}<div class="row2"><button class="btn" id="wPaste">Coördinaten plakken</button><button class="btn pri" id="wGo">Ik loop naar A →</button></div>`;break;
+ case'goA':h=`<h3>Loop naar A</h3><p>Ga precies op de plek van vlag A staan en houd de telefoon recht voor je. Druk dan op Meten.</p>${live}<div class="row2"><button class="btn" id="wBackR">Terug</button><button class="btn pri" id="wMeas" ${gps&&gps.acc<40?'':'disabled'}>Meten bij A</button></div>`;break;
+ case'goB':{const d=A&&gps?gpsDist(A,gps):null;h=`<h3>Loop naar B</h3><p>✓ A is vastgelegd (± ${Math.round(A.acc)} m). Loop nu naar vlag B en ga er precies op staan.</p>${d!=null?`<div class="live"><b>${Math.round(d)} m</b><span>van A gelopen</span></div>`:''}${live}<div class="row2"><button class="btn" id="wRedoA">A opnieuw meten</button><button class="btn pri" id="wMeas" ${gps&&gps.acc<40?'':'disabled'}>Meten bij B</button></div>`;break;}
+ case'measA':case'measB':{const m=wiz.meas,sec=(Date.now()-m.t0)/1000,pct=Math.min(100,sec/10*100);h=`<h3>Blijf stilstaan bij ${m.k}…</h3><p>Niet bewegen. De app meet 10 seconden en neemt het gemiddelde van de beste metingen.</p><div class="bar"><i style="width:${pct}%"></i></div>${live}<p class="note" style="color:#b8c2c6">${m.got.length} metingen${sec>10&&m.good<4?' · nog niet nauwkeurig genoeg, even geduld':''}</p><div class="row2"><button class="btn" id="wAbort">Afbreken</button></div>`;break;}
+ case'done':{const dm=gpsDist(A,B);h=`<h3>Gekoppeld ✓</h3><p>De blauwe stip is nu jouw positie op de tekening. <b>Controle:</b> loop een paar stappen. Beweegt de stip mee en staat hij op de goede plek?</p>${dm<15?`<p class="gw">A en B liggen maar ${Math.round(dm)} m uit elkaar. De koppeling kan scheef zijn, dus kies liever plekken verder uit elkaar.</p>`:''}<div class="row2"><button class="btn" id="wAgain">Opnieuw</button><button class="btn pri" id="wOk">Klopt, klaar</button></div>`;break;}}
+ g.innerHTML=dots+h;
+ const on=(id,f)=>{const e=$(id);if(e)e.onclick=f;};
+ on('wStop',()=>{cur.anchors=[];save();stopWiz();});on('wBackA',()=>{cur.anchors=[];wiz.step='pickA';drawAll();});
+ on('wGo',()=>{wiz.step='goA';gpsOn();drawGuide();});on('wBackR',()=>{wiz.step='ready';drawGuide();});
+ on('wMeas',()=>startMeas(wiz.step==='goA'?'A':'B'));on('wRedoA',()=>{delete A.la;wiz.step='goA';solve();drawAll();});
+ on('wAbort',()=>{clearInterval(measT);wiz.step=wiz.meas.k==='A'?'goA':'goB';drawGuide();});
+ on('wAgain',startWiz);on('wOk',()=>{follow=true;$('meBtn').setAttribute('aria-pressed',true);stopWiz();toast('Gekoppeld. Tik op de kaart om een foto toe te voegen.');});
+ on('wPaste',pasteSheet);}
+function startMeas(k){wiz.step='meas'+k;wiz.meas={k,got:[],good:0,t0:Date.now()};clearInterval(measT);
+ measT=setInterval(()=>{const m=wiz&&wiz.meas;if(!m)return clearInterval(measT);
+  navigator.geolocation.getCurrentPosition(q=>{gps={la:q.coords.latitude,lo:q.coords.longitude,acc:q.coords.accuracy,t:Date.now()};},()=>{},{enableHighAccuracy:true,maximumAge:1000,timeout:3000});
+  if(gps&&Date.now()-gps.t<10000&&gps.acc<40)m.got.push({...gps});
+  const minAcc=Math.min(...m.got.map(q=>q.acc),99),best=m.got.filter(q=>q.acc<=Math.max(8,minAcc*1.5));m.good=best.length;const sec=(Date.now()-m.t0)/1000;
+  if((sec>=10&&best.length>=4&&minAcc<=20)||(sec>=40&&best.length>=2)){clearInterval(measT);
+   const w=best.map(q=>1/(q.acc*q.acc)),W=w.reduce((a,c)=>a+c,0),a=cur.anchors.find(x=>x.k===k);
+   a.la=best.reduce((s,q,j)=>s+q.la*w[j],0)/W;a.lo=best.reduce((s,q,j)=>s+q.lo*w[j],0)/W;a.acc=minAcc;a.src='gps ter plekke';
+   wiz.step=k==='A'?'goB':'done';solve();save();if(k==='B')follow=true;drawAll();if(navigator.vibrate)navigator.vibrate(120);return;}
+  drawGuide();},1000);drawGuide();}
+function pasteSheet(){const b=$('sheetBody');
+ b.innerHTML=`<h2 style="font-size:22px">Coördinaten plakken</h2><p class="note">Google Maps: druk lang op de plek van de vlag en kopieer de getallen, bijvoorbeeld 52.29180, 4.68950.</p>
+ ${['A','B'].map(k=>`<label for="ll${k}">Vlag ${k}</label><input id="ll${k}" placeholder="52.29180, 4.68950">`).join('')}<p class="note" id="llErr"></p>
+ <div class="row2"><button class="btn" id="pc2">Terug</button><button class="btn pri" id="ps2">Koppelen</button></div>`;
+ $('sheet').hidden=false;$('pc2').onclick=closeSheet;
+ $('ps2').onclick=()=>{const rx=/(-?\d{1,2}[.,]\d+)\s*[,; ]\s*(-?\d{1,3}[.,]\d+)/,v={};for(const k of['A','B']){const m=$('ll'+k).value.match(rx);if(!m){$('llErr').innerHTML=`<span class="warn">Vlag ${k}: gebruik de vorm 52.29180, 4.68950</span>`;return;}v[k]=[+m[1].replace(',','.'),+m[2].replace(',','.')];}
+  for(const a of cur.anchors){a.la=v[a.k][0];a.lo=v[a.k][1];a.acc=0;a.src='vooraf ingevoerd';}solve();save();closeSheet();wiz.step='done';gpsOn();drawAll();};}
 
 /* ---------- project-instellingen ---------- */
 function projSheet(){const b=$('sheetBody'),n=cur.pts.filter(p=>p.photo).length;
