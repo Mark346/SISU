@@ -156,6 +156,7 @@ body.contrast{--hv:#c24400;--hv2:#8a3000;--mute:#1b1b1b;--line:#9aa0a2}body.cont
 .kv{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:15px;margin:8px 0}.kv span{color:var(--mute)}.kv b{font-weight:600}.kv b.ok{color:var(--ok)}.kv b.warn{color:var(--bad)}
 .fitb .btn{flex:1;min-width:44px;padding:6px 4px}
 body.bigmap .top,body.bigmap .leg,body.bigmap #info,body.bigmap .basebar,body.bigmap .sec,body.bigmap #list{display:none!important}body.bigmap .mapS{max-height:none}body.bigmap .app{padding-bottom:0!important}
+body.maplock .mapS{box-shadow:inset 0 0 0 3px #1a73e8}body.maplock .ov{display:none}
 @media print{.noprint,.tool,.top,.fab{display:none!important}.app{max-width:none}.rep{padding:0}body{background:#fff}}
 </style>
 </head>
@@ -374,8 +375,9 @@ function bindProject(){const svg=$('svg'),S=$('mapS'),P=new Map();let g=null;
  const endDrag=()=>{if(g.kind==='anc'){const a=cur.anchors[+g.a];a.x=Math.round(a.x);a.y=Math.round(a.y);}else{const p=cur.pts.find(q=>q.id===g.id);if(p){[p.x,p.y]=snapTo(p.x,p.y);p.x=Math.round(p.x);p.y=Math.round(p.y);}}solve();save();drawAll();};
  const activate=()=>{clearTimeout(g.timer);g.mode='drag';if(g.kind==='plus'){const np=splitSeg(g.seg);g.kind='pt';g.id=np.id;}else if(g.kind==='pt'){push();sel=g.id;}
   if(navigator.vibrate)navigator.vibrate(25);document.body.classList.add('dragging');drawMap();};
- S.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'&&e.button!==0)return;if(addrManual){e.preventDefault();fitPtr(e,'down');return;}hideBubble();try{S.setPointerCapture(e.pointerId);}catch(_){}
+ S.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'&&e.button!==0)return;if(addrManual&&addrLocked){e.preventDefault();fitPtr(e,'down');return;}hideBubble();try{S.setPointerCapture(e.pointerId);}catch(_){}
   P.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(P.size===2&&addrPick&&addrLocked){g={mode:'frozen'};return;}
   if(P.size===2){if(g){clearTimeout(g.timer);if(g.mode==='drag')endDrag();if(g.mode==='stroke'&&trace)trace.stroke=null;}document.body.classList.remove('dragging');const t=two();g={mode:'pinch',d0:t.d,z0:zoom,lx:t.x,ly:t.y};userPanned();drawMap();return;}
   if(P.size>2)return;
   const mk=!(wiz||addrPick)&&e.target.closest&&e.target.closest('.mk'),pl=!(wiz||addrPick)&&e.target.closest&&e.target.closest('.pl'),mouse=e.pointerType==='mouse';
@@ -385,7 +387,8 @@ function bindProject(){const svg=$('svg'),S=$('mapS'),P=new Map();let g=null;
   else if(trace){g.mode='stroke';trace.stroke=[pt(e.clientX,e.clientY)];return;}
   else g.kind='bg';
   if(g.kind!=='bg'&&!mouse&&!g.locked)g.timer=setTimeout(()=>{if(g&&g.mode==='pending')activate();},300);});
- S.addEventListener('pointermove',e=>{if(addrManual){fitPtr(e,'move');return;}if(!P.has(e.pointerId))return;P.set(e.pointerId,{x:e.clientX,y:e.clientY});if(!g)return;
+ S.addEventListener('pointermove',e=>{if(addrManual&&addrLocked){fitPtr(e,'move');return;}if(!P.has(e.pointerId))return;P.set(e.pointerId,{x:e.clientX,y:e.clientY});if(!g)return;
+  if(addrPick&&addrLocked){if(g.mode==='pending'&&Math.hypot(e.clientX-g.sx,e.clientY-g.sy)>8)g.mode='frozen';return;}
   if(g.mode==='pinch'){if(P.size<2)return;const t=two();setZoomAt(g.z0*t.d/g.d0,t.x,t.y);panBy(t.x-g.lx,t.y-g.ly);g.lx=t.x;g.ly=t.y;return;}
   const dx=e.clientX-g.lx,dy=e.clientY-g.ly;g.lx=e.clientX;g.ly=e.clientY;
   if(g.mode==='stroke'){const q=pt(e.clientX,e.clientY),l=trace.stroke[trace.stroke.length-1];if(Math.hypot(q[0]-l[0],q[1]-l[1])>1.5*cur.W/svg.getBoundingClientRect().width){trace.stroke.push(q);drawMap();}return;}
@@ -393,7 +396,7 @@ function bindProject(){const svg=$('svg'),S=$('mapS'),P=new Map();let g=null;
    if(g.mouse&&g.kind!=='bg'&&!g.locked)activate();else{clearTimeout(g.timer);g.mode='pan';userPanned();panBy(e.clientX-g.sx,e.clientY-g.sy);return;}}
   if(g.mode==='pan'){panBy(dx,dy);return;}
   if(g.mode==='drag'){const[x,y]=pt(e.clientX,e.clientY);if(g.kind==='anc'){const a=cur.anchors[+g.a];a.x=x;a.y=y;}else{const p=cur.pts.find(q=>q.id===g.id);if(p){p.x=x;p.y=y;}}drawMap();}});
- const up=e=>{if(addrManual){fitPtr(e,'up');P.delete(e.pointerId);g=null;return;}if(!P.has(e.pointerId))return;P.delete(e.pointerId);if(!g)return;const cancel=e.type==='pointercancel';
+ const up=e=>{if(addrManual&&addrLocked){fitPtr(e,'up');P.delete(e.pointerId);g=null;return;}if(!P.has(e.pointerId))return;P.delete(e.pointerId);if(!g)return;const cancel=e.type==='pointercancel';
   if(g.mode==='pinch'){if(!P.size)g=null;return;}
   if(P.size)return;const d=g;g=null;clearTimeout(d.timer);document.body.classList.remove('dragging');
   if(d.mode==='stroke'){if(cancel){trace.stroke=null;drawMap();}else finishStroke();return;}
@@ -411,7 +414,7 @@ function bindProject(){const svg=$('svg'),S=$('mapS'),P=new Map();let g=null;
  $('mapS').addEventListener('scroll',()=>{if(!progScroll)hideBubble();requestAnimationFrame(miniRect);},{passive:true});
  $('rtBtn').onclick=()=>{setEdit(!editRoute);toast(editRoute?'Route verleggen aan: sleep bolletjes of gebruik de plusjes':'Route vast. Tik op de lijn voor een foto of item.');};
  $('snapBtn').onclick=()=>{snap=!snap;$('snapBtn').setAttribute('aria-pressed',snap);};
- const zc=f=>{const[cx,cy]=curCenter(),z=Math.max(1,Math.min(14,zoom*f)),k=B0()*z/cur.W;viewTo({cx,cy,w:S.clientWidth/k,h:S.clientHeight/k});};$('zIn').onclick=()=>zc(1.5);$('zOut').onclick=()=>zc(1/1.5);
+ const zc=f=>{if(addrPick&&addrLocked){toast('De kaart staat vast');return;}const[cx,cy]=curCenter(),z=Math.max(1,Math.min(14,zoom*f)),k=B0()*z/cur.W;viewTo({cx,cy,w:S.clientWidth/k,h:S.clientHeight/k});};$('zIn').onclick=()=>zc(1.5);$('zOut').onclick=()=>zc(1/1.5);
  $('undo').onclick=()=>{if(!hist.length)return;cur.pts=JSON.parse(hist.pop());solve();save();drawAll();};
  $('meBtn').onclick=locMenu;
  $('list').onclick=e=>{const d=e.target.closest('[data-open]');if(d){sel=d.dataset.open;drawMap();pointSheet(sel);return;}const r=e.target.closest('[data-hl]');if(r)highlight(r.dataset.hl);};
@@ -475,7 +478,7 @@ const isEntry=p=>endKind(p)==='pand'||p.it==='inv'||p.it==='brw';
 /* ---------- tikken op de kaart: foto eerst ---------- */
 function hideBubble(){const b=$('bubble');if(b&&!b.hidden){b.hidden=true;if(!pendingAdd){ghost=null;drawMap();}}}
 function mapTap([x,y],cx,cy){
- if(addrPick){pickAt(x,y);return;}
+ if(addrPick){if(!addrLocked){toast('Zet eerst de kaart vast');return;}if(addrManual)return;pickAt(x,y);return;}
  if(wiz){wizTap(x,y);return;}
  if(!editRoute&&cur.pts.length>1){const s=cur.W/$('svg').getBoundingClientRect().width;let bd=1e9,bp=null;
   for(let i=0;i<cur.pts.length-1;i++){const a=cur.pts[i],q=cur.pts[i+1],dx=q.x-a.x,dy=q.y-a.y,tt=Math.max(0,Math.min(1,((x-a.x)*dx+(y-a.y)*dy)/((dx*dx+dy*dy)||1))),px=a.x+tt*dx,py=a.y+tt*dy,d=Math.hypot(px-x,py-y);if(d<bd){bd=d;bp=[px,py];}}
@@ -1114,20 +1117,20 @@ function regionAt(G,sx,sy,dilOverride){const{W,H}=G,dil=dilOverride||G.dil;sx=Ma
 function regionOverlay(R,col=[26,115,232]){const c=document.createElement('canvas');c.width=R.w;c.height=R.h;const g=c.getContext('2d'),id=g.createImageData(R.w,R.h);
  for(let k=0;k<R.w*R.h;k++)if(R.m[k]){id.data[k*4]=col[0];id.data[k*4+1]=col[1];id.data[k*4+2]=col[2];id.data[k*4+3]=150;}g.putImageData(id,0,0);return{x:R.x0/R.f,y:R.y0/R.f,w:R.w/R.f,h:R.h/R.f,url:c.toDataURL()};}
 let addrManual=false;
-let pausedTrace=false;
+let pausedTrace=false,addrLocked=false;
 function setBig(on){document.body.classList.toggle('bigmap',on);if(!on){const S=$('mapS');if(S)S.style.height='';applyZoom();drawMap();return;}
  const fit=()=>{const S=$('mapS'),st=document.querySelector('.stick'),g=$('guide');if(!S||!st)return;const h=Math.max(220,innerHeight-st.offsetHeight-(g&&!g.hidden?g.offsetHeight:0)-6);S.style.height=h+'px';scrollTo({top:0});applyZoom();drawMap();};
  fit();requestAnimationFrame(fit);}
-function endAddrMode(){addrPick=false;addrManual=false;addrOverlay=null;document.body.classList.remove('wiz');setBig(false);drawAll();if(pausedTrace){pausedTrace=false;if(!cur.pts.length)startTrace();}}
+function endAddrMode(){addrLocked=false;document.body.classList.remove('maplock');addrPick=false;addrManual=false;addrOverlay=null;document.body.classList.remove('wiz');setBig(false);drawAll();if(pausedTrace){pausedTrace=false;if(!cur.pts.length)startTrace();}}
 async function startPick(){if(trace){pausedTrace=true;trace=null;document.body.classList.remove('trace');fitTrace(false);}
- addrPick=true;addrManual=false;document.body.classList.add('wiz');AD.region=null;addrOverlay=null;drawAll();setBig(true);setNav('alles');
+ addrPick=true;addrManual=false;addrLocked=false;document.body.classList.remove('maplock');document.body.classList.add('wiz');AD.region=null;addrOverlay=null;drawAll();setBig(true);setNav('alles');
  const d=cur.doc||{},code=(AD.form&&AD.form.code)||'';if(d.codePos&&(!code||code===d.gebouwnaam)){try{await greenMask();const R=regionAt(gMask,d.codePos.x,d.codePos.y);if(R){showRegion(R);return;}}catch(e){}}
  drawGuide();}
 function colorRegion(xi,yi){const G=gMask,{W,H,px}=G,x=Math.round(xi*G.f),y=Math.round(yi*G.f);if(x<0||y<0||x>=W||y>=H)return null;
  let r=0,g=0,b=0,n=0;for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++){const xx=x+dx,yy=y+dy;if(xx<0||yy<0||xx>=W||yy>=H)continue;const i=(yy*W+xx)*4;r+=px[i];g+=px[i+1];b+=px[i+2];n++;}r/=n;g/=n;b/=n;
  if(r>235&&g>235&&b>235)return null;const m=new Uint8Array(W*H);for(let i=0;i<W*H;i++){const dr=px[i*4]-r,dg=px[i*4+1]-g,db=px[i*4+2]-b;m[i]=dr*dr+dg*dg+db*db<30*30?1:0;}
  return regionAt(G,xi,yi,morph(m,W,H,1,1));}
-function showRegion(R){AD.region=R;addrOverlay=regionOverlay(R);const o=addrOverlay,pad=Math.max(o.w,o.h)*.6;viewTo({cx:o.x+o.w/2,cy:o.y+o.h/2,w:o.w+pad*2,h:o.h+pad*2});drawMap();drawGuide();}
+function showRegion(R){AD.region=R;addrOverlay=regionOverlay(R);const o=addrOverlay,pad=Math.max(o.w,o.h)*.6;if(!addrLocked)viewTo({cx:o.x+o.w/2,cy:o.y+o.h/2,w:o.w+pad*2,h:o.h+pad*2});drawMap();drawGuide();}
 function pandExt(){const E=AD.pand.en,xs=E.map(p=>p[0]),ys=E.map(p=>p[1]);return Math.max(Math.max(...xs)-Math.min(...xs),Math.max(...ys)-Math.min(...ys));}
 async function pickAt(x,y){if(addrManual){AD.man.cx=x;AD.man.cy=y;drawMap();return;}
  if(!gMask||gMask.url!==drawUrl){const g=$('guide');if(g)g.querySelector('p')&&(g.querySelector('p').textContent='Tekening bekijken…');try{await greenMask();}catch(e){startManual(x,y,null);return;}}
@@ -1137,8 +1140,9 @@ function pickRegion(x,y){
  const ok=R&&R.N>60&&R.N/(R.w*R.h)>.4&&Math.max(R.w,R.h)*Math.sqrt(AD.pand.area/R.N)<pandExt()*2.2;
  return ok?R:null;}
 function startManual(x,y,R){addrManual=true;if(R)AD.region=R;addrOverlay=null;const ext=pandExt();
- const s=R?Math.sqrt(AD.pand.area/R.N)*R.f:(T?T.scale:ext/(cur.W*.12));AD.man={cx:x,cy:y,s,th:0};
- const v=ext/s;viewTo({cx:x,cy:y,w:v*4,h:v*4});drawMap();drawGuide();}
+ const visW=$('mapS').clientWidth*cur.W/($('svg').getBoundingClientRect().width||1);
+ const s=R?Math.sqrt(AD.pand.area/R.N)*R.f:(T?T.scale:ext/(visW*.35));AD.man={cx:x,cy:y,s,th:0};
+ if(!addrLocked){const v=ext/s;viewTo({cx:x,cy:y,w:v*4,h:v*4});}drawMap();drawGuide();}
 function manToImg(e,n){const M=AD.man,C=AD.pand.c,c=Math.cos(M.th),s=Math.sin(M.th),E=e-C[0],N=n-C[1];return[M.cx+(c*E+s*N)/M.s,M.cy+(s*E-c*N)/M.s];}
 function manLayer(s){if(!addrManual||!AD||!AD.man)return'';const poly=(en,st)=>`<polygon points="${en.map(([e,n])=>manToImg(e,n).map(v=>v.toFixed(1)).join(',')).join(' ')}" ${st}/>`;
  let o='';AD.nbs.slice(0,6).forEach(q=>{o+=poly(q.en,`fill="none" stroke="#1a73e8" stroke-width="${1.4*s}" stroke-dasharray="${4*s} ${3*s}"`);});
@@ -1152,18 +1156,21 @@ function fitPtr(e,type){const k=cur.W/$('svg').getBoundingClientRect().width;
    AD.man.s=fitG.s0*fitG.d0/d;AD.man.th=fitG.th0+(a-fitG.a0);AD.man.cx+=(mx-fitG.mx)*k;AD.man.cy+=(my-fitG.my)*k;fitG.mx=mx;fitG.my=my;drawMap();return;}
   if(!fitG.two){AD.man.cx+=(e.clientX-fitG.lx)*k;AD.man.cy+=(e.clientY-fitG.ly)*k;fitG.lx=e.clientX;fitG.ly=e.clientY;drawMap();}return;}
  fitP.delete(e.pointerId);if(!fitP.size)fitG=null;else{const P=[...fitP.values()];fitG={two:false,lx:P[0].x,ly:P[0].y};}}
-function addrGuide(g){g.hidden=false;const R=AD&&AD.region,a=esc(AD.form.adres);
- if(addrManual){g.innerHTML=`<div class="steps"><i class="done"></i><i class="on"></i><i></i></div><h3>Leg de blauwe omtrek over het pand</h3><p>Sleep met één vinger om te schuiven. Met twee vingers draai en schaal je. De knoppen geven kleine stapjes.</p>
-  <div class="row2 fitb" style="margin-top:0"><button class="btn" data-f="r-5" aria-label="5 graden linksom">⟲5°</button><button class="btn" data-f="r-1" aria-label="1 graad linksom">⟲</button><button class="btn" data-f="r1" aria-label="1 graad rechtsom">⟳</button><button class="btn" data-f="r5" aria-label="5 graden rechtsom">⟳5°</button><button class="btn" data-f="s-" aria-label="Kleiner">−</button><button class="btn" data-f="s+" aria-label="Groter">+</button></div>
-  <div class="row2"><button class="btn" id="apX">Annuleren</button><button class="btn pri" id="apOk">Klopt, koppelen</button></div>`;
-  g.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{const f=b.dataset.f,M=AD.man;if(f[0]==='r')M.th+=(+f.slice(1))*Math.PI/180;else M.s*=f==='s-'?1.03:1/1.03;drawMap();});}
- else g.innerHTML=`<div class="steps"><i class="done"></i><i class="on"></i><i></i></div>${R?`<h3>Is dit het pand van ${a}?</h3><p>Het blauwe vlak is het gevonden pand. Tik anders op het juiste pand, of leg de omtrek zelf.</p>`
-  :`<h3>Tik op het adrespunt van ${a}</h3><p>Tik op de tekening waar het pand staat. Herkent de app het pand niet vanzelf, dan leg je daarna de blauwe omtrek zelf over het pand.</p>`}
- <div class="row2"><button class="btn" id="apX">Annuleren</button>${R?'<button class="btn" id="apM">Zelf passen</button>':''}<button class="btn pri" id="apOk" ${R?'':'disabled'}>Klopt, koppelen</button></div>`;
- $('apX').onclick=endAddrMode;
- requestAnimationFrame(()=>{if(document.body.classList.contains('bigmap'))setBig(true);});
- const m=$('apM');if(m)m.onclick=()=>startManual(R.cx/R.f,R.cy/R.f,R);
- $('apOk').onclick=()=>{if(addrManual){manualFit();return;}g.innerHTML=`<h3>Passen…</h3><p>De omtrek uit de BAG wordt over het pand gelegd.</p>`;setTimeout(runFit,30);};}
+function setLock(v){addrLocked=v;document.body.classList.toggle('maplock',v);drawGuide();}
+function addrGuide(g){g.hidden=false;const R=AD&&AD.region,a=esc(AD.form.adres),L=addrLocked;const dots=`<div class="steps"><i class="done"></i><i class="on"></i><i></i></div>`;
+ const lockB=L?'<button class="btn" id="apU">🔓 Kaart losmaken</button>':'<button class="btn pri" id="apL">🔒 Kaart vastzetten</button>';
+ if(!L&&!addrManual&&!R)g.innerHTML=`${dots}<h3>Zoom naar het pand van ${a}</h3><p>Knijp en schuif tot het pand groot in beeld staat. Zet de kaart daarna vast.</p><div class="row2"><button class="btn" id="apX">Annuleren</button>${lockB}</div>`;
+ else if(addrManual)g.innerHTML=`${dots}<h3>${L?'Leg de blauwe omtrek over het pand':'Kaart is los: zoom of schuif'}</h3><p>${L?'Sleep met één vinger om de omtrek te schuiven. Met twee vingers draai en schaal je.':'Zet de kaart weer vast om de omtrek verder te verplaatsen.'}</p>
+  ${L?`<div class="row2 fitb" style="margin-top:0"><button class="btn" data-f="r-5" aria-label="5 graden linksom">⟲5°</button><button class="btn" data-f="r-1" aria-label="1 graad linksom">⟲</button><button class="btn" data-f="r1" aria-label="1 graad rechtsom">⟳</button><button class="btn" data-f="r5" aria-label="5 graden rechtsom">⟳5°</button><button class="btn" data-f="s-" aria-label="Kleiner">−</button><button class="btn" data-f="s+" aria-label="Groter">+</button></div>`:''}
+  <div class="row2">${lockB}</div><div class="row2" style="margin-top:6px"><button class="btn" id="apX">Annuleren</button><button class="btn pri" id="apOk">Klopt, koppelen</button></div>`;
+ else g.innerHTML=`${dots}${R?`<h3>Is dit het pand van ${a}?</h3><p>Het blauwe vlak is het gevonden pand. Tik anders op het juiste pand, of leg de omtrek zelf.</p>`
+  :`<h3>Tik op het adrespunt van ${a}</h3><p>Tik op het pand. Herkent de app het niet vanzelf, dan leg je daarna de blauwe omtrek zelf over het pand.</p>`}
+  <div class="row2">${lockB}${R?'<button class="btn" id="apM">Zelf passen</button>':''}</div><div class="row2" style="margin-top:6px"><button class="btn" id="apX">Annuleren</button><button class="btn pri" id="apOk" ${R?'':'disabled'}>Klopt, koppelen</button></div>`;
+ g.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{const f=b.dataset.f,M=AD.man;if(f[0]==='r')M.th+=(+f.slice(1))*Math.PI/180;else M.s*=f==='s-'?1.03:1/1.03;drawMap();});
+ const on=(id,f)=>{const e=$(id);if(e)e.onclick=f;};
+ on('apX',endAddrMode);on('apL',()=>setLock(true));on('apU',()=>setLock(false));on('apM',()=>startManual(R.cx/R.f,R.cy/R.f,R));
+ on('apOk',()=>{if(addrManual){manualFit();return;}g.innerHTML=`<h3>Passen…</h3><p>De omtrek uit de BAG wordt over het pand gelegd.</p>`;setTimeout(runFit,30);});
+ requestAnimationFrame(()=>{if(document.body.classList.contains('bigmap'))setBig(true);});}
 function manualFit(){const M=AD.man,pd=AD.pand;let iou=null;
  if(AD.region){const ring=pd.en.map(([e,n])=>manToImg(e,n));iou=imgIou(ring,AD.region);}
  finishFit({p:{th:M.th,s:M.s},C:pd.c,toImg:manToImg},iou,true);}
