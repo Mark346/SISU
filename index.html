@@ -30,7 +30,7 @@ h1,h2,h3{font-family:"Barlow Semi Condensed",Barlow,sans-serif;line-height:1.1;m
 button:focus-visible,input:focus-visible,select:focus-visible,label.btn:focus-within{outline:3px solid var(--hv);outline-offset:2px}
 .modeTip{background:var(--asf);color:#fff;font-size:14px;padding:8px 12px}
 .mapS{touch-action:none;overflow:auto;max-height:62vh;background:#cfd3d1;overscroll-behavior:contain}
-.mapI{width:100%}
+.mapI{width:100%;box-sizing:content-box}.mapS{scrollbar-width:none}.mapS::-webkit-scrollbar{display:none}
 #svg{display:block;width:100%;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 .mk{cursor:grab;touch-action:none}
 .fab{position:absolute;right:10px;bottom:76px;z-index:3;width:56px;height:56px;border-radius:50%;border:0;background:var(--hv);color:#fff;font-size:24px;box-shadow:0 6px 16px -4px #0008;cursor:pointer}
@@ -404,12 +404,14 @@ function insertAt(x,y,extra={}){const P=cur.pts,np={id:uid(),x:Math.round(x),y:M
  if(best===P.length-2&&bt>=1)P.push(np);else if(best===0&&bt<=0)P.unshift(np);else P.splice(best+1,0,np);return np;}
 let traceBase=null;
 const ZMAX=14,zPos=()=>Math.round(Math.log(Math.max(1,zoom))/Math.log(ZMAX)*100);
-function applyZoom(){const I=$('mapI'),S=$('mapS');if(!I)return;const base=trace&&traceBase?traceBase:S.clientWidth;I.style.width=Math.round(base*zoom)+'px';const zr=$('zR');if(zr&&document.activeElement!==zr)zr.value=zPos();}
-function setZoomAt(z,cx,cy){const S=$('mapS'),I=$('mapI');z=Math.max(1,Math.min(6,z));if(Math.abs(z-zoom)<1e-3)return;const r=S.getBoundingClientRect(),rx=cx-r.left,ry=cy-r.top,W0=I.offsetWidth||1,fx=(S.scrollLeft+rx)/W0,fy=(S.scrollTop+ry)/W0;
- zoom=z;applyZoom();const W1=I.offsetWidth;S.scrollLeft=fx*W1-rx;S.scrollTop=fy*W1-ry;drawMap();}
+let padX=0,padY=0;
+function applyZoom(){const I=$('mapI'),S=$('mapS');if(!I)return;const tr=trace&&traceBase,base=tr?traceBase:S.clientWidth;I.style.width=Math.round(base*zoom)+'px';
+ padX=tr?0:Math.round(S.clientWidth*.5);padY=tr?0:Math.round(S.clientHeight*.5);I.style.padding=`${padY}px ${padX}px`;const zr=$('zR');if(zr&&document.activeElement!==zr)zr.value=zPos();}
+function setZoomAt(z,cx,cy){const S=$('mapS'),sv=$('svg');z=Math.max(1,Math.min(6,z));if(Math.abs(z-zoom)<1e-3)return;const r=S.getBoundingClientRect(),rx=cx-r.left,ry=cy-r.top,W0=sv.clientWidth||1,fx=(S.scrollLeft-padX+rx)/W0,fy=(S.scrollTop-padY+ry)/W0;
+ zoom=z;applyZoom();const W1=sv.clientWidth;S.scrollLeft=fx*W1+padX-rx;S.scrollTop=fy*W1+padY-ry;drawMap();}
 function bindProject(){const svg=$('svg'),S=$('mapS'),P=new Map();let g=null;
  const pt=(cx,cy)=>{const q=svg.createSVGPoint();q.x=cx;q.y=cy;const r=q.matrixTransform(svg.getScreenCTM().inverse());return[Math.max(0,Math.min(cur.W,r.x)),Math.max(0,Math.min(cur.H,r.y))];};
- const panBy=(dx,dy)=>{const t0=S.scrollTop;S.scrollLeft-=dx;S.scrollTop-=dy;const rest=-dy-(S.scrollTop-t0);if(Math.abs(rest)>.5)scrollBy(0,rest);};
+ const panBy=(dx,dy)=>{S.scrollLeft-=dx;S.scrollTop-=dy;};
  const two=()=>{const[a,b]=[...P.values()];return{d:Math.hypot(a.x-b.x,a.y-b.y)||1,x:(a.x+b.x)/2,y:(a.y+b.y)/2};};
  const endDrag=()=>{if(g.kind==='anc'){const a=cur.anchors[+g.a];a.x=Math.round(a.x);a.y=Math.round(a.y);}else{const p=cur.pts.find(q=>q.id===g.id);if(p){[p.x,p.y]=snapTo(p.x,p.y);p.x=Math.round(p.x);p.y=Math.round(p.y);}}solve();save();drawAll();};
  const activate=()=>{clearTimeout(g.timer);g.mode='drag';if(g.kind==='plus'){const np=splitSeg(g.seg);g.kind='pt';g.id=np.id;}else if(g.kind==='pt'){push();sel=g.id;}
@@ -441,7 +443,7 @@ function bindProject(){const svg=$('svg'),S=$('mapS'),P=new Map();let g=null;
   if(d.mode==='stroke'){if(cancel){trace.stroke=null;drawMap();}else finishStroke();return;}
   if(d.mode==='drag'){g=d;endDrag();g=null;return;}
   if(d.mode!=='pending'||cancel)return;lastTap=Date.now();
-  if(d.kind==='bg'){const xy=pt(e.clientX,e.clientY),cx=e.clientX,cy=e.clientY,now=Date.now();if(wiz||trace||addrPick){mapTap(xy,cx,cy);return;}
+  if(d.kind==='bg'){const xy=pt(e.clientX,e.clientY),cx=e.clientX,cy=e.clientY,now=Date.now();{const sr=svg.getBoundingClientRect();if(cx<sr.left||cx>sr.right||cy<sr.top||cy>sr.bottom)return;}if(wiz||trace||addrPick){mapTap(xy,cx,cy);return;}
    if(lastBgTap&&now-lastBgTap.t<320&&Math.hypot(cx-lastBgTap.x,cy-lastBgTap.y)<40){clearTimeout(tapT);lastBgTap=null;hideBubble();zoomCloser(cx,cy);return;}
    lastBgTap={t:now,x:cx,y:cy};clearTimeout(tapT);tapT=setTimeout(()=>{lastBgTap=null;mapTap(xy,cx,cy);},300);}
   else if(d.kind==='pt'){if((cur.nav||'alles')==='alles'&&!editRoute&&!trace)focusPoint(d.id);else{sel=d.id;drawMap();pointSheet(d.id);}}
@@ -942,8 +944,8 @@ function toggleContrast(){contrast=!contrast;ls.set('contrast',contrast);applyCo
 /* ---------- buiten ---------- */
 let anim=null,navIdx=-1,compassUp=false,heading=null,userMoved=false,tapT=null,lastBgTap=null,askFor=null,lastStuk='';
 const B0=()=>$('mapS').clientWidth;
-function curCenter(){const S=$('mapS'),k=B0()*zoom/cur.W;return[(S.scrollLeft+S.clientWidth/2)/k,(S.scrollTop+S.clientHeight/2)/k];}
-function setView(z,cx,cy){const S=$('mapS');zoom=Math.max(1,Math.min(14,z));applyZoom();const k=B0()*zoom/cur.W;progScroll=true;S.scrollLeft=cx*k-S.clientWidth/2;S.scrollTop=cy*k-S.clientHeight/2;requestAnimationFrame(()=>requestAnimationFrame(()=>progScroll=false));applyRot();}
+function curCenter(){const S=$('mapS'),k=B0()*zoom/cur.W;return[(S.scrollLeft-padX+S.clientWidth/2)/k,(S.scrollTop-padY+S.clientHeight/2)/k];}
+function setView(z,cx,cy){const S=$('mapS');zoom=Math.max(1,Math.min(14,z));applyZoom();const k=B0()*zoom/cur.W;progScroll=true;S.scrollLeft=cx*k-S.clientWidth/2+padX;S.scrollTop=cy*k-S.clientHeight/2+padY;requestAnimationFrame(()=>requestAnimationFrame(()=>progScroll=false));applyRot();}
 function viewTo(r,animate=true){const S=$('mapS');if(!S||trace)return;const Sw=S.clientWidth,Sh=S.clientHeight||Sw;
  const z1=Math.max(1,Math.min(14,Math.min((Sw-16)/r.w,Math.max(80,Sh-76)/r.h)*cur.W/B0())),[cx0,cy0]=curCenter(),z0=zoom;cancelAnimationFrame(anim);
  if(!animate||RED()){setView(z1,r.cx,r.cy);drawMap();drawNav();return;}
@@ -991,7 +993,7 @@ function drawNav(){const o=$('ov');if(!o||view!=='proj')return;const lv=cur.nav|
  on('inB',goInside);
  on('askF',()=>{photoFor=askFor;askFor=null;drawNav();$('fCam').value='';$('fCam').click();});on('askL',()=>{askFor=null;drawNav();});
  miniRect();}
-function miniRect(){const r=$('miniR'),S=$('mapS');if(!r||!S)return;const k=B0()*zoom/cur.W;r.setAttribute('x',S.scrollLeft/k);r.setAttribute('y',S.scrollTop/k);r.setAttribute('width',S.clientWidth/k);r.setAttribute('height',S.clientHeight/k);}
+function miniRect(){const r=$('miniR'),S=$('mapS');if(!r||!S)return;const k=B0()*zoom/cur.W;r.setAttribute('x',(S.scrollLeft-padX)/k);r.setAttribute('y',(S.scrollTop-padY)/k);r.setAttribute('width',S.clientWidth/k);r.setAttribute('height',S.clientHeight/k);}
 function goInside(){const ip=inPt();if(!ip)return;if(cur.indoor)return openIndoor(cur.indoor.modus,ip.id);
  $('sheetBody').innerHTML=`<h2 style="font-size:22px">Naar binnen</h2><p class="note">Kies hoe je het binnentracé wilt vastleggen.</p>${indoorItems()}<div class="row2"><button class="btn" id="giX">Annuleren</button></div>`;$('sheet').hidden=false;bindIndoorItems(ip.id);$('giX').onclick=closeSheet;}
 function northAng(){if(!T)return 0;const c=img2ll(cur.W/2,cur.H/2),a=ll2img(c[0],c[1]),b=ll2img(c[0]+.0005,c[1]);return Math.atan2(b[0]-a[0],-(b[1]-a[1]))*180/Math.PI;}
@@ -1002,7 +1004,7 @@ async function toggleCompass(){if(compassUp){compassUp=false;applyRot();drawNav(
  try{if(typeof DeviceOrientationEvent!=='undefined'&&typeof DeviceOrientationEvent.requestPermission==='function'&&await DeviceOrientationEvent.requestPermission()!=='granted'){toast('Geen toestemming voor het kompas.');return;}}catch(e){toast('Het kompas kon niet worden gestart.');return;}
  removeEventListener(ORI,onHead);addEventListener(ORI,onHead);compassUp=true;toast('Looprichting boven');setTimeout(()=>{if(compassUp&&heading==null){compassUp=false;applyRot();drawNav();toast('Deze telefoon geeft geen kompasrichting door.');}},3000);applyRot();drawNav();}
 function applyRot(){const s=$('svg'),S=$('mapS');if(!s||!S)return;if(!compassUp||heading==null){s.style.transform='';return;}
- s.style.transformOrigin=`${S.scrollLeft+S.clientWidth/2}px ${S.scrollTop+S.clientHeight/2}px`;s.style.transform=`rotate(${-(northAng()+heading)}deg)`;const c=$('cmpB');if(c)c.innerHTML=NI.comp(-(northAng()+heading)+northAng());}
+ s.style.transformOrigin=`${S.scrollLeft-padX+S.clientWidth/2}px ${S.scrollTop-padY+S.clientHeight/2}px`;s.style.transform=`rotate(${-(northAng()+heading)}deg)`;const c=$('cmpB');if(c)c.innerHTML=NI.comp(-(northAng()+heading)+northAng());}
 
 /* ---------- binnen ---------- */
 let dzi=1,dsAnim=null,dsFollow=true,dsMoved=false,dsFloor=null,dsFocus=null;
