@@ -154,6 +154,7 @@ body.trace .ov{display:none}body.wiz .ov .pn,body.wiz .ov .askc{display:none}
 body.contrast{--hv:#c24400;--hv2:#8a3000;--mute:#1b1b1b;--line:#9aa0a2}body.contrast .leg,body.contrast .note,body.contrast .row .d{color:#000}body.contrast .seg button,body.contrast .pn{color:#000;font-weight:700}
 .pandsvg{display:block;width:100%;max-height:170px;margin:6px 0}
 .kv{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:15px;margin:8px 0}.kv span{color:var(--mute)}.kv b{font-weight:600}.kv b.ok{color:var(--ok)}.kv b.warn{color:var(--bad)}
+.fitb .btn{flex:1;min-width:44px;padding:6px 4px}
 @media print{.noprint,.tool,.top,.fab{display:none!important}.app{max-width:none}.rep{padding:0}body{background:#fff}}
 </style>
 </head>
@@ -308,7 +309,7 @@ async function pickPdfPage(file,done){
 async function openProject(id){cur=(await getAll()).find(p=>p.id===id);if(!cur)return home();view='proj';hist=[];sel=null;zoom=1;follow=false;drawUrl=await url(cur.draw);
  await Promise.all(cur.pts.map(p=>url(p.photo)));if(cur.indoor)await Promise.all(cur.indoor.haltes.flatMap(h=>h.fotos).map(url));document.body.classList.remove('indoor');
  cur.anchors=(cur.anchors||[]).map((a,i)=>{if(a.id){const p=cur.pts.find(q=>q.id===a.id);return p?{k:'AB'[i]||'C',x:p.x,y:p.y,la:a.la,lo:a.lo,acc:a.acc,src:a.src}:null;}return a;}).filter(Boolean).slice(0,2);
- addrPick=false;addrOverlay=null;wiz=null;ghost=null;pendingAdd=null;editRoute=false;navIdx=-1;userMoved=false;askFor=null;compassUp=false;follow=false;document.body.classList.remove('editing');document.body.classList.remove('wiz');solve();buildMask();
+ addrPick=false;addrManual=false;addrOverlay=null;wiz=null;ghost=null;pendingAdd=null;editRoute=false;navIdx=-1;userMoved=false;askFor=null;compassUp=false;follow=false;document.body.classList.remove('editing');document.body.classList.remove('wiz');solve();buildMask();
  app.innerHTML=`<div class="top" id="head"></div>
  <div class="stick"><div class="leg" id="legend"></div><div class="info" id="info" hidden><b>Oranje = foto</b>, met het fotonummer van het rapport. Vorm en kleur van een item volgen de legenda van de tekening: bruin met groene rand is nieuw, blauwgroen met gele rand is bestaand.</div><div class="tool"><button class="btn rt" id="rtBtn" aria-pressed="false"><span class="sw2"><i></i></span>Route verleggen</button><button class="btn ic" id="snapBtn" aria-pressed="true" aria-label="Magneet: bolletjes naar de lijn trekken" title="Magneet" hidden>🧲</button><button class="btn ic" id="meBtn" aria-label="Locatie en binnentracé" title="Locatie en binnentracé">📍</button><span class="sp"></span><button class="btn" id="zOut" aria-label="Uitzoomen">−</button><button class="btn" id="zIn" aria-label="Inzoomen">+</button><button class="btn" id="undo" aria-label="Ongedaan maken">↶</button></div>
   <div class="basebar" id="basebar" hidden></div></div><div class="mapWrap"><div class="mapS" id="mapS"><div class="mapI" id="mapI"><svg id="svg" viewBox="0 0 ${cur.W} ${cur.H}" style="aspect-ratio:${cur.W}/${cur.H}"><g id="base"></g><image id="drawImg" href="${drawUrl}" width="${cur.W}" height="${cur.H}"/><g id="lay"></g></svg></div></div><div class="ov" id="ov"></div><button class="fab" id="fab" hidden aria-label="Foto op mijn positie">📷</button></div>
@@ -323,7 +324,7 @@ function drawHead(){const M=meters(),N=nums(),inv=cur.pts.findIndex(p=>p.it==='i
  $('head').innerHTML=`<button class="back" id="bk">‹ Projecten</button><br><small>${esc(cur.sid)}${cur.sid&&cur.addr?' · ':''}${esc(cur.addr)}</small><h1>${esc(cur.name)}</h1>
  <div class="stats"><div><b>${M&&cur.pts.length>1?Math.round(M[inv>0?inv:M.length-1])+' m':'?'}</b>${inv>0?'tot invoering':'route'}</div><div><b>${keyPts().length}</b>punten</div><div><b>${Object.keys(N).length}</b>foto's</div><div><b>${cur.pts.filter(p=>p.it).length}</b>items</div></div>
  ${!T&&!wiz?`<button class="nogps" id="geoBtn"><span class="ic">!</span><span><b>Niet gekoppeld aan gps</b><small>Meters en je positie op de tekening werken pas na koppelen. Tik om te koppelen.</small></span></button>`:''}
- <div class="chips">${T||wiz?`<button class="geo ${T?'on':''}" id="geoBtn"><i></i>${T?(T.via==='adres'?`Gekoppeld · via adres, overlap ${pct(cur.addrFit.iou)}`:'Gekoppeld aan gps'):'Bezig met koppelen…'}</button>`:''}
+ <div class="chips">${T||wiz?`<button class="geo ${T?'on':''}" id="geoBtn"><i></i>${T?(T.via==='adres'?(cur.addrFit.iou==null?'Gekoppeld · via adres, zelf gepast':`Gekoppeld · via adres, overlap ${pct(cur.addrFit.iou)}`):'Gekoppeld aan gps'):'Bezig met koppelen…'}</button>`:''}
  ${watch!==null?`<span class="geo ${gpsErr?'err':gps?'on':''}"><i></i>${gpsErr?'Gps-fout':gps?`Gps ± ${Math.round(gps.acc)} m`:'Gps zoeken…'}</span>`:''}</div>${gpsErr?`<p class="note" style="color:#ffb3ad;margin:8px 0 0">${esc(gpsErr)}</p>`:''}`;
  $('bk').onclick=()=>{save();home();};$('geoBtn').onclick=()=>{if(!wiz)geoMenu();};
  $('fab').hidden=!(T&&gps&&watch!==null);drawGuide();}
@@ -334,6 +335,7 @@ function drawMap(){drawBase();const s=cur.W/($('svg').getBoundingClientRect().wi
   o+=`<g class="pl" data-seg="${i}"><circle cx="${mx}" cy="${my}" r="${r}" fill="#fff" fill-opacity=".92" stroke="#1d2529" stroke-width="${1.6*s}"/><path d="M${mx-r*.55} ${my}H${mx+r*.55}M${mx} ${my-r*.55}V${my+r*.55}" stroke="#1d2529" stroke-width="${2*s}" stroke-linecap="round"/><circle cx="${mx}" cy="${my}" r="${18*s}" fill="transparent"/></g>`;}
  if(T&&gps&&watch!==null){const[x,y]=ll2img(gps.la,gps.lo);o+=`<circle cx="${x}" cy="${y}" r="${gps.acc/T.scale}" fill="#1a73e8" fill-opacity=".14" stroke="#1a73e8" stroke-opacity=".4" stroke-width="${s}"/><circle id="meDot" cx="${x}" cy="${y}" r="${7*s}" fill="#1a73e8" stroke="#fff" stroke-width="${2.2*s}"/>`;
 }
+ o+=manLayer(s);
  if(addrOverlay)o+=`<image href="${addrOverlay.url}" x="${addrOverlay.x}" y="${addrOverlay.y}" width="${addrOverlay.w}" height="${addrOverlay.h}" style="image-rendering:pixelated"/>`;
  if(T&&cur.addrFit&&!addrPick){const rp=(r,w,d)=>`<polygon points="${r.map(([lo,la])=>ll2img(la,lo).map(v=>v.toFixed(1)).join(',')).join(' ')}" fill="none" stroke="#1a73e8" stroke-width="${w*s}" stroke-dasharray="${d*s} ${d*s*.8}"/>`;if(cur.addrFit.nbRing)o+=rp(cur.addrFit.nbRing,1.2,3);o+=rp(cur.addrFit.ring,2.4,6);}
  if(ghost)o+=`<circle cx="${ghost.x}" cy="${ghost.y}" r="${9*s}" fill="${OR}" fill-opacity=".35" stroke="${OR}" stroke-width="${2*s}"/>`;
@@ -371,7 +373,7 @@ function bindProject(){const svg=$('svg'),S=$('mapS'),P=new Map();let g=null;
  const endDrag=()=>{if(g.kind==='anc'){const a=cur.anchors[+g.a];a.x=Math.round(a.x);a.y=Math.round(a.y);}else{const p=cur.pts.find(q=>q.id===g.id);if(p){[p.x,p.y]=snapTo(p.x,p.y);p.x=Math.round(p.x);p.y=Math.round(p.y);}}solve();save();drawAll();};
  const activate=()=>{clearTimeout(g.timer);g.mode='drag';if(g.kind==='plus'){const np=splitSeg(g.seg);g.kind='pt';g.id=np.id;}else if(g.kind==='pt'){push();sel=g.id;}
   if(navigator.vibrate)navigator.vibrate(25);document.body.classList.add('dragging');drawMap();};
- S.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'&&e.button!==0)return;hideBubble();try{S.setPointerCapture(e.pointerId);}catch(_){}
+ S.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'&&e.button!==0)return;if(addrManual){e.preventDefault();fitPtr(e,'down');return;}hideBubble();try{S.setPointerCapture(e.pointerId);}catch(_){}
   P.set(e.pointerId,{x:e.clientX,y:e.clientY});
   if(P.size===2){if(g){clearTimeout(g.timer);if(g.mode==='drag')endDrag();if(g.mode==='stroke'&&trace)trace.stroke=null;}document.body.classList.remove('dragging');const t=two();g={mode:'pinch',d0:t.d,z0:zoom,lx:t.x,ly:t.y};userPanned();drawMap();return;}
   if(P.size>2)return;
@@ -382,7 +384,7 @@ function bindProject(){const svg=$('svg'),S=$('mapS'),P=new Map();let g=null;
   else if(trace){g.mode='stroke';trace.stroke=[pt(e.clientX,e.clientY)];return;}
   else g.kind='bg';
   if(g.kind!=='bg'&&!mouse&&!g.locked)g.timer=setTimeout(()=>{if(g&&g.mode==='pending')activate();},300);});
- S.addEventListener('pointermove',e=>{if(!P.has(e.pointerId))return;P.set(e.pointerId,{x:e.clientX,y:e.clientY});if(!g)return;
+ S.addEventListener('pointermove',e=>{if(addrManual){fitPtr(e,'move');return;}if(!P.has(e.pointerId))return;P.set(e.pointerId,{x:e.clientX,y:e.clientY});if(!g)return;
   if(g.mode==='pinch'){if(P.size<2)return;const t=two();setZoomAt(g.z0*t.d/g.d0,t.x,t.y);panBy(t.x-g.lx,t.y-g.ly);g.lx=t.x;g.ly=t.y;return;}
   const dx=e.clientX-g.lx,dy=e.clientY-g.ly;g.lx=e.clientX;g.ly=e.clientY;
   if(g.mode==='stroke'){const q=pt(e.clientX,e.clientY),l=trace.stroke[trace.stroke.length-1];if(Math.hypot(q[0]-l[0],q[1]-l[1])>1.5*cur.W/svg.getBoundingClientRect().width){trace.stroke.push(q);drawMap();}return;}
@@ -390,7 +392,7 @@ function bindProject(){const svg=$('svg'),S=$('mapS'),P=new Map();let g=null;
    if(g.mouse&&g.kind!=='bg'&&!g.locked)activate();else{clearTimeout(g.timer);g.mode='pan';userPanned();panBy(e.clientX-g.sx,e.clientY-g.sy);return;}}
   if(g.mode==='pan'){panBy(dx,dy);return;}
   if(g.mode==='drag'){const[x,y]=pt(e.clientX,e.clientY);if(g.kind==='anc'){const a=cur.anchors[+g.a];a.x=x;a.y=y;}else{const p=cur.pts.find(q=>q.id===g.id);if(p){p.x=x;p.y=y;}}drawMap();}});
- const up=e=>{if(!P.has(e.pointerId))return;P.delete(e.pointerId);if(!g)return;const cancel=e.type==='pointercancel';
+ const up=e=>{if(addrManual){fitPtr(e,'up');P.delete(e.pointerId);g=null;return;}if(!P.has(e.pointerId))return;P.delete(e.pointerId);if(!g)return;const cancel=e.type==='pointercancel';
   if(g.mode==='pinch'){if(!P.size)g=null;return;}
   if(P.size)return;const d=g;g=null;clearTimeout(d.timer);document.body.classList.remove('dragging');
   if(d.mode==='stroke'){if(cancel){trace.stroke=null;drawMap();}else finishStroke();return;}
@@ -1087,17 +1089,17 @@ async function addrSearch(){const f=AD.form;$('sheetBody').innerHTML=`<h2 style=
  const E=pand.en,xs=E.map(p=>p[0]),ys=E.map(p=>p[1]),x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys),sc=Math.min(200/(x1-x0||1),130/(y1-y0||1));
  const svg=`<svg viewBox="-10 -10 ${(x1-x0)*sc+20} ${(y1-y0)*sc+20}" class="pandsvg"><polygon points="${E.map(([x,y])=>`${((x-x0)*sc).toFixed(1)},${((y1-y)*sc).toFixed(1)}`).join(' ')}" fill="#cfe0ff" stroke="#1a73e8" stroke-width="2.5"/><circle cx="${((-x0)*sc).toFixed(1)}" cy="${((y1)*sc).toFixed(1)}" r="4" fill="#ff6a13"/></svg>`;
  $('sheetBody').innerHTML=`<h2 style="font-size:22px">Pand gevonden</h2><p><b>${esc(AD.label)}</b><br>Oppervlak ${Math.round(pand.area)} m²${pand.bouwjaar?` · bouwjaar ${pand.bouwjaar}`:''}</p>${svg}<p class="note">Noord is boven. De oranje stip is het adrespunt.</p>
- <div class="row2"><button class="btn" id="pgB">Terug</button><button class="btn pri" id="pgG">Op de tekening zoeken</button></div>`;
+ <div class="row2"><button class="btn" id="pgB">Terug</button><button class="btn pri" id="pgG">Op de tekening aanwijzen</button></div>`;
  $('pgB').onclick=()=>addrForm();$('pgG').onclick=()=>{closeSheet();startPick();};}
 
 /* ---------- pand op de tekening ---------- */
 async function greenMask(){if(gMask&&gMask.url===drawUrl)return gMask;const im=await loadImg(drawUrl),W=cur.W,H=cur.H,c=document.createElement('canvas');c.width=W;c.height=H;const g=c.getContext('2d');g.drawImage(im,0,0,W,H);
  const d=g.getImageData(0,0,W,H).data,m=new Uint8Array(W*H);for(let i=0;i<W*H;i++){const r=d[i*4],gg=d[i*4+1],b=d[i*4+2];m[i]=gg>r+25&&gg>b+25?1:0;}
- gMask={url:drawUrl,W,H,raw:m,dil:morph(m,W,H,2,1)};return gMask;}
+ gMask={url:drawUrl,W,H,raw:m,px:d,dil:morph(m,W,H,2,1)};return gMask;}
 function morph(m,W,H,r,isMax){const t=new Uint8Array(W*H),o=new Uint8Array(W*H);
  for(let y=0;y<H;y++)for(let x=0;x<W;x++){let v=isMax?0:1;for(let k=-r;k<=r;k++){const xx=x+k;const p=xx<0||xx>=W?0:m[y*W+xx];if(isMax?p:!p){v=isMax?1:0;break;}}t[y*W+x]=v;}
  for(let y=0;y<H;y++)for(let x=0;x<W;x++){let v=isMax?0:1;for(let k=-r;k<=r;k++){const yy=y+k;const p=yy<0||yy>=H?0:t[yy*W+x];if(isMax?p:!p){v=isMax?1:0;break;}}o[y*W+x]=v;}return o;}
-function regionAt(G,sx,sy){const{W,H,dil}=G;sx=Math.round(sx);sy=Math.round(sy);let s=-1;
+function regionAt(G,sx,sy,dilOverride){const{W,H}=G,dil=dilOverride||G.dil;sx=Math.round(sx);sy=Math.round(sy);let s=-1;
  for(let r=0;r<=30&&s<0;r++)for(let dy=-r;dy<=r&&s<0;dy++)for(let dx=-r;dx<=r;dx++){if(Math.max(Math.abs(dx),Math.abs(dy))!==r)continue;const x=sx+dx,y=sy+dy;if(x>=0&&y>=0&&x<W&&y<H&&dil[y*W+x]){s=y*W+x;break;}}
  if(s<0)return null;const reg=new Uint8Array(W*H),st=[s];reg[s]=1;let n=0,x0=W,x1=0,y0=H,y1=0;
  while(st.length){const i=st.pop(),x=i%W,y=(i-x)/W;n++;if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y;for(const j of[x>0?i-1:-1,x<W-1?i+1:-1,y>0?i-W:-1,y<H-1?i+W:-1])if(j>=0&&!reg[j]&&dil[j]){reg[j]=1;st.push(j);}}
@@ -1110,20 +1112,51 @@ function regionAt(G,sx,sy){const{W,H,dil}=G;sx=Math.round(sx);sy=Math.round(sy);
  if(N<30)return null;return{x0:bx0,y0:by0,w:bw,h:bh,m:er,N,cx:bx0+cx/N,cy:by0+cy/N};}
 function regionOverlay(R,col=[26,115,232]){const c=document.createElement('canvas');c.width=R.w;c.height=R.h;const g=c.getContext('2d'),id=g.createImageData(R.w,R.h);
  for(let k=0;k<R.w*R.h;k++)if(R.m[k]){id.data[k*4]=col[0];id.data[k*4+1]=col[1];id.data[k*4+2]=col[2];id.data[k*4+3]=150;}g.putImageData(id,0,0);return{x:R.x0,y:R.y0,w:R.w,h:R.h,url:c.toDataURL()};}
-async function startPick(){addrPick=true;document.body.classList.add('wiz');AD.region=null;addrOverlay=null;drawAll();
- let G;try{G=await greenMask();}catch(e){return addrFail('De tekening kon niet worden gelezen.');}
- const d=cur.doc||{},code=(AD.form&&AD.form.code)||'';let seed=null;
- if(d.codePos&&(!code||code===d.gebouwnaam))seed=[d.codePos.x,d.codePos.y];else{const ip=inPt();seed=ip?[ip.x,ip.y]:[cur.W/2,cur.H/2];}
- pickAt(seed[0],seed[1],true);}
-function pickAt(x,y,auto){const R=regionAt(gMask,x,y);AD.region=R;addrOverlay=R?regionOverlay(R):null;
- if(R){const pad=Math.max(R.w,R.h)*.6;viewTo({cx:R.x0+R.w/2,cy:R.y0+R.h/2,w:R.w+pad*2,h:R.h+pad*2});}
- drawMap();drawGuide();if(!R&&!auto)toast('Daar staat geen groen pand. Tik op een groen vlak.');}
-function addrGuide(g){g.hidden=false;const R=AD&&AD.region;
- g.innerHTML=`<div class="steps"><i class="done"></i><i class="on"></i><i></i></div>${R?`<h3>Is dit het pand van ${esc(AD.form.adres)}?</h3><p>Het blauwe vlak is het gevonden pand. Tik anders op het juiste pand.</p>`
-  :`<h3>Tik op het pand van ${esc(AD.form.adres)}</h3><p>Tik op het groene vlak van het pand op de tekening.</p>`}
- <div class="row2"><button class="btn" id="apX">Annuleren</button><button class="btn pri" id="apOk" ${R?'':'disabled'}>Klopt, koppelen</button></div>`;
- $('apX').onclick=()=>{addrPick=false;addrOverlay=null;document.body.classList.remove('wiz');drawAll();};
- $('apOk').onclick=()=>{g.innerHTML=`<h3>Passen…</h3><p>De omtrek uit de BAG wordt over het pand gelegd.</p>`;setTimeout(runFit,30);};}
+let addrManual=false;
+async function startPick(){addrPick=true;addrManual=false;document.body.classList.add('wiz');AD.region=null;addrOverlay=null;drawAll();
+ try{await greenMask();}catch(e){return addrFail('De tekening kon niet worden gelezen.');}
+ const d=cur.doc||{},code=(AD.form&&AD.form.code)||'';if(d.codePos&&(!code||code===d.gebouwnaam)){const R=regionAt(gMask,d.codePos.x,d.codePos.y);if(R){showRegion(R);return;}}
+ drawGuide();}
+function colorRegion(x,y){const G=gMask,{W,H,px}=G;x=Math.round(x);y=Math.round(y);if(x<0||y<0||x>=W||y>=H)return null;
+ let r=0,g=0,b=0,n=0;for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++){const xx=x+dx,yy=y+dy;if(xx<0||yy<0||xx>=W||yy>=H)continue;const i=(yy*W+xx)*4;r+=px[i];g+=px[i+1];b+=px[i+2];n++;}r/=n;g/=n;b/=n;
+ if(r>235&&g>235&&b>235)return null;const m=new Uint8Array(W*H);for(let i=0;i<W*H;i++){const dr=px[i*4]-r,dg=px[i*4+1]-g,db=px[i*4+2]-b;m[i]=dr*dr+dg*dg+db*db<30*30?1:0;}
+ return regionAt(G,x,y,morph(m,W,H,1,1));}
+function showRegion(R){AD.region=R;addrOverlay=regionOverlay(R);const pad=Math.max(R.w,R.h)*.6;viewTo({cx:R.x0+R.w/2,cy:R.y0+R.h/2,w:R.w+pad*2,h:R.h+pad*2});drawMap();drawGuide();}
+function pandExt(){const E=AD.pand.en,xs=E.map(p=>p[0]),ys=E.map(p=>p[1]);return Math.max(Math.max(...xs)-Math.min(...xs),Math.max(...ys)-Math.min(...ys));}
+function pickAt(x,y){if(addrManual){AD.man.cx=x;AD.man.cy=y;drawMap();return;}
+ const G=gMask,i=Math.round(y)*G.W+Math.round(x);let R=(G.raw[i]||G.dil[i])?regionAt(G,x,y):null;if(!R)R=colorRegion(x,y);
+ const ok=R&&R.N>60&&R.N/(R.w*R.h)>.4&&Math.max(R.w,R.h)*Math.sqrt(AD.pand.area/R.N)<pandExt()*2.2;
+ if(ok)showRegion(R);else startManual(x,y,null);}
+function startManual(x,y,R){addrManual=true;if(R)AD.region=R;addrOverlay=null;const ext=pandExt();
+ const s=R?Math.sqrt(AD.pand.area/R.N):(T?T.scale:ext/(cur.W*.12));AD.man={cx:x,cy:y,s,th:0};
+ const v=ext/s;viewTo({cx:x,cy:y,w:v*4,h:v*4});drawMap();drawGuide();}
+function manToImg(e,n){const M=AD.man,C=AD.pand.c,c=Math.cos(M.th),s=Math.sin(M.th),E=e-C[0],N=n-C[1];return[M.cx+(c*E+s*N)/M.s,M.cy+(s*E-c*N)/M.s];}
+function manLayer(s){if(!addrManual||!AD||!AD.man)return'';const poly=(en,st)=>`<polygon points="${en.map(([e,n])=>manToImg(e,n).map(v=>v.toFixed(1)).join(',')).join(' ')}" ${st}/>`;
+ let o='';AD.nbs.slice(0,6).forEach(q=>{o+=poly(q.en,`fill="none" stroke="#1a73e8" stroke-width="${1.4*s}" stroke-dasharray="${4*s} ${3*s}"`);});
+ o+=poly(AD.pand.en,`fill="#1a73e8" fill-opacity=".25" stroke="#1a73e8" stroke-width="${2.6*s}"`);const M=AD.man;o+=`<path d="M${M.cx-8*s} ${M.cy}H${M.cx+8*s}M${M.cx} ${M.cy-8*s}V${M.cy+8*s}" stroke="#1a73e8" stroke-width="${2*s}"/>`;return o;}
+let fitP=new Map(),fitG=null;
+function fitPtr(e,type){const k=cur.W/$('svg').getBoundingClientRect().width;
+ if(type==='down'){try{$('mapS').setPointerCapture(e.pointerId);}catch(_){}fitP.set(e.pointerId,{x:e.clientX,y:e.clientY});const P=[...fitP.values()];
+  fitG=P.length>=2?{two:true,d0:Math.hypot(P[0].x-P[1].x,P[0].y-P[1].y)||1,a0:Math.atan2(P[1].y-P[0].y,P[1].x-P[0].x),s0:AD.man.s,th0:AD.man.th,mx:(P[0].x+P[1].x)/2,my:(P[0].y+P[1].y)/2}:{two:false,lx:e.clientX,ly:e.clientY};return;}
+ if(type==='move'){if(!fitP.has(e.pointerId)||!fitG)return;fitP.set(e.pointerId,{x:e.clientX,y:e.clientY});const P=[...fitP.values()];
+  if(fitG.two&&P.length>=2){const d=Math.hypot(P[0].x-P[1].x,P[0].y-P[1].y)||1,a=Math.atan2(P[1].y-P[0].y,P[1].x-P[0].x),mx=(P[0].x+P[1].x)/2,my=(P[0].y+P[1].y)/2;
+   AD.man.s=fitG.s0*fitG.d0/d;AD.man.th=fitG.th0+(a-fitG.a0);AD.man.cx+=(mx-fitG.mx)*k;AD.man.cy+=(my-fitG.my)*k;fitG.mx=mx;fitG.my=my;drawMap();return;}
+  if(!fitG.two){AD.man.cx+=(e.clientX-fitG.lx)*k;AD.man.cy+=(e.clientY-fitG.ly)*k;fitG.lx=e.clientX;fitG.ly=e.clientY;drawMap();}return;}
+ fitP.delete(e.pointerId);if(!fitP.size)fitG=null;else{const P=[...fitP.values()];fitG={two:false,lx:P[0].x,ly:P[0].y};}}
+function addrGuide(g){g.hidden=false;const R=AD&&AD.region,a=esc(AD.form.adres);
+ if(addrManual){g.innerHTML=`<div class="steps"><i class="done"></i><i class="on"></i><i></i></div><h3>Leg de blauwe omtrek over het pand</h3><p>Sleep met één vinger om te schuiven. Met twee vingers draai en schaal je. De knoppen geven kleine stapjes.</p>
+  <div class="row2 fitb" style="margin-top:0"><button class="btn" data-f="r-5" aria-label="5 graden linksom">⟲5°</button><button class="btn" data-f="r-1" aria-label="1 graad linksom">⟲</button><button class="btn" data-f="r1" aria-label="1 graad rechtsom">⟳</button><button class="btn" data-f="r5" aria-label="5 graden rechtsom">⟳5°</button><button class="btn" data-f="s-" aria-label="Kleiner">−</button><button class="btn" data-f="s+" aria-label="Groter">+</button></div>
+  <div class="row2"><button class="btn" id="apX">Annuleren</button><button class="btn pri" id="apOk">Klopt, koppelen</button></div>`;
+  g.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{const f=b.dataset.f,M=AD.man;if(f[0]==='r')M.th+=(+f.slice(1))*Math.PI/180;else M.s*=f==='s-'?1.03:1/1.03;drawMap();});}
+ else g.innerHTML=`<div class="steps"><i class="done"></i><i class="on"></i><i></i></div>${R?`<h3>Is dit het pand van ${a}?</h3><p>Het blauwe vlak is het gevonden pand. Tik anders op het juiste pand, of leg de omtrek zelf.</p>`
+  :`<h3>Tik op het adrespunt van ${a}</h3><p>Tik op de tekening waar het pand staat. Herkent de app het pand niet vanzelf, dan leg je daarna de blauwe omtrek zelf over het pand.</p>`}
+ <div class="row2"><button class="btn" id="apX">Annuleren</button>${R?'<button class="btn" id="apM">Zelf passen</button>':''}<button class="btn pri" id="apOk" ${R?'':'disabled'}>Klopt, koppelen</button></div>`;
+ $('apX').onclick=()=>{addrPick=false;addrManual=false;addrOverlay=null;document.body.classList.remove('wiz');drawAll();};
+ const m=$('apM');if(m)m.onclick=()=>startManual(R.cx,R.cy,R);
+ $('apOk').onclick=()=>{if(addrManual){manualFit();return;}g.innerHTML=`<h3>Passen…</h3><p>De omtrek uit de BAG wordt over het pand gelegd.</p>`;setTimeout(runFit,30);};}
+function manualFit(){const M=AD.man,pd=AD.pand;let iou=null;
+ if(AD.region){const ring=pd.en.map(([e,n])=>manToImg(e,n));iou=imgIou(ring,AD.region);}
+ finishFit({p:{th:M.th,s:M.s},C:pd.c,toImg:manToImg},iou,true);}
 
 /* ---------- omtrek passen ---------- */
 function fitPoly(EN,R,area){const C=polyCentroid(EN),P0=EN.map(([e,n])=>[e-C[0],n-C[1]]);
@@ -1136,13 +1169,14 @@ function fitPoly(EN,R,area){const C=polyCentroid(EN),P0=EN.map(([e,n])=>[e-C[0],
  const D=Math.PI/180,steps=[['th',D],['th',.25*D],['s',.01],['dx',2],['dy',2],['dx',.5],['dy',.5]];let it=0,imp=true;
  while(imp&&it++<80){imp=false;for(const[k,st]of steps)for(const sg of[1,-1]){const p={...best};if(k==='s')p.s*=1+sg*st;else p[k]+=sg*st;const v=iou(p);if(v>bi+1e-5){bi=v;best=p;imp=true;}}}
  return{p:best,iou:bi,C,toImg:(e,n)=>toImg(best,e-C[0],n-C[1])};}
-function runFit(){const R=AD.region,pd=AD.pand;if(!R)return;const F=fitPoly(pd.en,R,pd.area),la0=AD.lat,lo0=AD.lon,cl=Math.cos(la0*Math.PI/180),toLL=(e,n)=>[la0+n/110540,lo0+e/(cl*111320)];
+function runFit(){const R=AD.region,pd=AD.pand;if(!R)return;const F=fitPoly(pd.en,R,pd.area);finishFit(F,F.iou,false);}
+function finishFit(F,iou,manual){const pd=AD.pand,la0=AD.lat,lo0=AD.lon,cl=Math.cos(la0*Math.PI/180),toLL=(e,n)=>[la0+n/110540,lo0+e/(cl*111320)];
  const vA=[F.C[0],F.C[1]],vB=[F.C[0]+50,F.C[1]],v=[vA,vB].map(([e,n])=>{const[x,y]=F.toImg(e,n),[la,lo]=toLL(e,n);return{x,y,la,lo};});
  let nb=null;const N1=AD.nbs.find(q=>Math.hypot(q.c[0]-pd.c[0],q.c[1]-pd.c[1])<120);
- if(N1){const pc=F.toImg(N1.c[0],N1.c[1]),RN=regionAt(gMask,pc[0],pc[1]);if(RN){const ring=N1.en.map(([e,n])=>F.toImg(e,n));nb={iou:imgIou(ring,RN),id:N1.id};}else nb={iou:null,id:N1.id};}
+ if(N1){const pc=F.toImg(N1.c[0],N1.c[1]),RN=manual?null:regionAt(gMask,pc[0],pc[1]);if(RN){const ring=N1.en.map(([e,n])=>F.toImg(e,n));nb={iou:imgIou(ring,RN),id:N1.id};}else nb={iou:null,id:N1.id};}
  let deg=(F.p.th*180/Math.PI)%360;if(deg<0)deg+=360;
- AD.result={v,iou:F.iou,scale:F.p.s,rot:deg,nb,nbRing:N1?N1.ring:null};addrPick=false;addrOverlay=null;document.body.classList.remove('wiz');
- cur.addrFit={v,iou:F.iou,scale:F.p.s,rot:deg,nbIou:nb?nb.iou:null,ring:pd.ring,nbRing:N1?N1.ring:null,label:AD.label,area:Math.round(pd.area),pandId:pd.id,at:Date.now()};
+ addrPick=false;addrManual=false;addrOverlay=null;document.body.classList.remove('wiz');
+ cur.addrFit={v,iou,manual,scale:F.p.s,rot:deg,nbIou:nb?nb.iou:null,ring:pd.ring,nbRing:N1?N1.ring:null,label:AD.label,area:Math.round(pd.area),pandId:pd.id,at:Date.now()};
  solve();drawAll();addrResult();}
 function imgIou(ring,R){const mg=10,W2=R.w+2*mg,H2=R.h+2*mg,cv=document.createElement('canvas');cv.width=W2;cv.height=H2;const g=cv.getContext('2d');g.beginPath();ring.forEach(([x,y],i)=>{i?g.lineTo(x-R.x0+mg,y-R.y0+mg):g.moveTo(x-R.x0+mg,y-R.y0+mg);});g.closePath();g.fill();
  const d=g.getImageData(0,0,W2,H2).data;let I=0,U=0,out=0;ring.forEach(([x,y])=>{if(x<R.x0-mg||y<R.y0-mg||x>R.x0+R.w+mg||y>R.y0+R.h+mg)out++;});
@@ -1150,11 +1184,11 @@ function imgIou(ring,R){const mg=10,W2=R.w+2*mg,H2=R.h+2*mg,cv=document.createEl
 const pct=v=>v==null?'–':Math.round(v*100)+'%';
 function addrResult(){const A=cur.addrFit;if(!A)return;
  $('sheetBody').innerHTML=`<h2 style="font-size:22px">Gekoppeld via adres</h2><p class="note">${esc(A.label)}</p>
- <div class="kv"><span>Overlap met de BAG-omtrek</span><b class="${A.iou<.85?'warn':'ok'}">${pct(A.iou)}</b><span>Schaal</span><b>1 px ≈ ${A.scale.toFixed(3).replace('.',',')} m</b><span>Draaiing</span><b>${Math.round(A.rot)}°</b><span>Controle buurpand</span><b>${A.nbIou==null?(A.nbRing?'niet gevonden op de tekening':'geen buurpand'):'overlap '+pct(A.nbIou)}</b></div>
- ${A.iou<.85?`<p class="warn">Heb je het juiste pand aangewezen?</p>`:''}<p class="note">De BAG-omtrek staat blauw gestippeld op de tekening, het buurpand dunner gestippeld.</p>
+ <div class="kv"><span>Overlap met de BAG-omtrek</span><b class="${A.iou!=null&&A.iou<.85?'warn':'ok'}">${A.manual&&A.iou==null?'zelf gepast':pct(A.iou)}</b><span>Schaal</span><b>1 px ≈ ${A.scale.toFixed(3).replace('.',',')} m</b><span>Draaiing</span><b>${Math.round(A.rot)}°</b><span>Controle buurpand</span><b>${A.nbIou==null?(A.manual?'zelf te controleren (stippellijn)':A.nbRing?'niet gevonden op de tekening':'geen buurpand'):'overlap '+pct(A.nbIou)}</b></div>
+ ${A.iou!=null&&A.iou<.85?`<p class="warn">Heb je het juiste pand aangewezen?</p>`:''}${A.manual?'<p class="note">Zelf gepast: controleer de koppeling ter plekke met één gps-anker (Ter plekke met gps → Alleen dit anker).</p>':''}<p class="note">De BAG-omtrek staat blauw gestippeld op de tekening, het buurpand dunner gestippeld.</p>
  <div class="row2"><button class="btn" id="arRe">Opnieuw aanwijzen</button><button class="btn pri" id="arOk">Klopt</button></div>`;$('sheet').hidden=false;
  $('arRe').onclick=()=>{if(!AD||!AD.pand){closeSheet();addrForm();return;}cur.addrFit=null;solve();closeSheet();startPick();};
- $('arOk').onclick=()=>{save();closeSheet();drawAll();setNav('alles');toast(`Gekoppeld via adres · overlap ${pct(A.iou)}`);};}
+ $('arOk').onclick=()=>{save();closeSheet();drawAll();setNav('alles');toast(A.iou==null?'Gekoppeld via adres (zelf gepast)':`Gekoppeld via adres · overlap ${pct(A.iou)}`);};}
 function addrDev(){const a=cur.anchors.find(q=>q.la!=null);if(!a||!cur.addrFit)return null;const V=cur.addrFit.v,la0=V[0].la,lo0=V[0].lo,cl=Math.cos(la0*Math.PI/180),toEN=(la,lo)=>[(lo-lo0)*cl*111320,(la-la0)*110540];
  const Q=V.map(q=>({a:[q.x,-q.y],b:toEN(q.la,q.lo)})),m=cd([Q[1].b[0]-Q[0].b[0],Q[1].b[1]-Q[0].b[1]],[Q[1].a[0]-Q[0].a[0],Q[1].a[1]-Q[0].a[1]]),z=cm(m,Q[0].a),t=[Q[0].b[0]-z[0],Q[0].b[1]-z[1]],p=cm(m,[a.x,-a.y]),e=[p[0]+t[0],p[1]+t[1]],g=toEN(a.la,a.lo);
  return Math.hypot(e[0]-g[0],e[1]-g[1]);}
