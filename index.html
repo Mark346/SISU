@@ -191,8 +191,8 @@ body.editing #lfBtn{display:none!important}.btn.lf svg{width:22px;height:22px}.b
 .lscroll #list{padding-top:2px}.lscroll #list .row:first-child{border-top:0}
 .pn2{display:flex;align-items:center;background:var(--bg);border-radius:22px;padding:2px;font:600 14px Barlow,sans-serif;white-space:nowrap;flex:none}
 .pn2 button{width:40px;height:40px;border:0;background:none;color:var(--ink);font:600 22px/1 Barlow,sans-serif;cursor:pointer;border-radius:50%}.pn2 span{padding:0 2px}
-.zsl{top:8px;left:50%;transform:translateX(-50%);width:min(210px,58%);background:#fff;border-radius:16px;padding:4px 12px 2px;box-shadow:0 4px 14px -4px #0006}
-.zsl input{display:block;width:100%;margin:2px 0 0;accent-color:var(--asf);height:26px}
+.zsl{top:8px;left:50%;transform:translateX(-50%);width:min(210px,52%);background:#fff;border-radius:20px;padding:6px 14px;box-shadow:0 4px 14px -4px #0006}
+.zsl input{display:block;width:100%;margin:0;accent-color:var(--asf);height:26px}
 .zl{display:flex;justify-content:space-between}.zl button{border:0;background:none;padding:2px 0 4px;min-height:28px;min-width:44px;font:600 12.5px Barlow,sans-serif;color:var(--mute);cursor:pointer}
 .zl button:nth-child(2){text-align:center}.zl button:first-child{text-align:left}.zl button:last-child{text-align:right}.zl button[aria-pressed=true]{color:var(--ink)}
 .chipb{bottom:14px}.askc{bottom:12px}
@@ -403,7 +403,8 @@ function insertAt(x,y,extra={}){const P=cur.pts,np={id:uid(),x:Math.round(x),y:M
  for(let i=0;i<P.length-1;i++){const a=P[i],b=P[i+1],dx=b.x-a.x,dy=b.y-a.y,t=Math.max(0,Math.min(1,((x-a.x)*dx+(y-a.y)*dy)/((dx*dx+dy*dy)||1))),d=Math.hypot(a.x+t*dx-x,a.y+t*dy-y);if(d<bd){bd=d;best=i;bt=t;}}
  if(best===P.length-2&&bt>=1)P.push(np);else if(best===0&&bt<=0)P.unshift(np);else P.splice(best+1,0,np);return np;}
 let traceBase=null;
-function applyZoom(){const I=$('mapI'),S=$('mapS');if(!I)return;const base=trace&&traceBase?traceBase:S.clientWidth;I.style.width=Math.round(base*zoom)+'px';}
+const ZMAX=14,zPos=()=>Math.round(Math.log(Math.max(1,zoom))/Math.log(ZMAX)*100);
+function applyZoom(){const I=$('mapI'),S=$('mapS');if(!I)return;const base=trace&&traceBase?traceBase:S.clientWidth;I.style.width=Math.round(base*zoom)+'px';const zr=$('zR');if(zr&&document.activeElement!==zr)zr.value=zPos();}
 function setZoomAt(z,cx,cy){const S=$('mapS'),I=$('mapI');z=Math.max(1,Math.min(6,z));if(Math.abs(z-zoom)<1e-3)return;const r=S.getBoundingClientRect(),rx=cx-r.left,ry=cy-r.top,W0=I.offsetWidth||1,fx=(S.scrollLeft+rx)/W0,fy=(S.scrollTop+ry)/W0;
  zoom=z;applyZoom();const W1=I.offsetWidth;S.scrollLeft=fx*W1-rx;S.scrollTop=fy*W1-ry;drawMap();}
 function bindProject(){const svg=$('svg'),S=$('mapS'),P=new Map();let g=null;
@@ -974,7 +975,7 @@ function navOnGps(){if(view!=='proj'||!T||!gps)return;
 function drawNav(){const o=$('ov');if(!o||view!=='proj')return;const lv=cur.nav||'alles',K=keyPts(),ip=inPt(),near=ip&&distM(ip)<=10;
  const ask=askFor&&cur.pts.find(p=>p.id===askFor);
  const LV=['hier','stuk','alles'],li=Math.max(0,LV.indexOf(lv));
- o.innerHTML=`<div class="zsl"><input type="range" id="zR" min="0" max="2" step="1" value="${li}" aria-label="Zoomniveau: ${['Hier','Stuk','Alles'][li]}" aria-valuetext="${['Hier','Stuk','Alles'][li]}"><div class="zl">${['Hier','Stuk','Alles'].map((l,i)=>`<button data-lv="${LV[i]}" aria-pressed="${i===li}" tabindex="-1">${l}</button>`).join('')}</div></div>
+ o.innerHTML=`<div class="zsl"><input type="range" id="zR" min="0" max="100" step="1" value="${zPos()}" aria-label="Zoom: kleiner of groter"></div>
  ${lv!=='alles'?`<button class="mini" id="mini" aria-label="Hele route tonen"><svg viewBox="0 0 ${cur.W} ${cur.H}"><image href="${drawUrl}" width="${cur.W}" height="${cur.H}" opacity=".7"/>${cur.pts.length>1?`<polyline points="${cur.pts.map(p=>p.x+','+p.y).join(' ')}" fill="none" stroke="${OR}" stroke-width="${cur.W/40}"/>`:''}<rect id="miniR" fill="none" stroke="#1d2529" stroke-width="${cur.W/50}"/></svg></button>`:''}
  ${near&&!wiz&&!trace?`<button class="inb" id="inB">Naar binnen</button>`:''}
  ${userMoved&&T?`<button class="chipb" id="backB">Terug naar mij</button>`:''}
@@ -982,8 +983,7 @@ function drawNav(){const o=$('ov');if(!o||view!=='proj')return;const lv=cur.nav|
  <button class="one" id="oneB" aria-label="${lv==='alles'?'Volg mij':'Hele route'}">${lv==='alles'?NI.focus:NI.max}</button>`;
  const pb=$('pnBox');if(pb)pb.innerHTML=K.length?`<div class="pn2"><button id="pvB" aria-label="Vorig punt">‹</button><span>${navIdx>=0?`${navIdx+1} van ${K.length}`:`${K.length} punten`}</span><button id="nxB" aria-label="Volgend punt">›</button></div>`:'';
  const pick=v=>{if(v==='hier'&&T&&gps){follow=true;userMoved=false;}setNav(v);};
- o.querySelectorAll('[data-lv]').forEach(b=>b.onclick=()=>pick(b.dataset.lv));
- const zr=$('zR');if(zr){zr.oninput=()=>{const v=LV[+zr.value];o.querySelectorAll('[data-lv]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.lv===v));};zr.onchange=()=>pick(LV[+zr.value]);}
+ const zr=$('zR');if(zr){zr.oninput=()=>{cancelAnimationFrame(anim);if(follow)userPanned();const[cx,cy]=curCenter();setView(Math.pow(ZMAX,zr.value/100),cx,cy);drawMap();miniRect();};zr.onchange=()=>drawNav();}
  const on=(id,f)=>{const e=$(id);if(e)e.onclick=f;};
  on('mini',()=>setNav('alles'));on('oneB',()=>{if((cur.nav||'alles')==='alles'){if(T){gpsOn();follow=true;userMoved=false;$('meBtn').setAttribute('aria-pressed',true);}setNav('hier');}else setNav('alles');});
  on('pvB',()=>goPoint(navIdx<0?K.length-1:navIdx-1));on('nxB',()=>goPoint(navIdx+1));
