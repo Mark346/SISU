@@ -155,6 +155,7 @@ body.contrast{--hv:#c24400;--hv2:#8a3000;--mute:#1b1b1b;--line:#9aa0a2}body.cont
 .pandsvg{display:block;width:100%;max-height:170px;margin:6px 0}
 .kv{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:15px;margin:8px 0}.kv span{color:var(--mute)}.kv b{font-weight:600}.kv b.ok{color:var(--ok)}.kv b.warn{color:var(--bad)}
 .fitb .btn{flex:1;min-width:44px;padding:6px 4px}
+body.bigmap .top,body.bigmap .leg,body.bigmap #info,body.bigmap .basebar,body.bigmap .sec,body.bigmap #list{display:none!important}body.bigmap .mapS{max-height:none}body.bigmap .app{padding-bottom:0!important}
 @media print{.noprint,.tool,.top,.fab{display:none!important}.app{max-width:none}.rep{padding:0}body{background:#fff}}
 </style>
 </head>
@@ -309,7 +310,7 @@ async function pickPdfPage(file,done){
 async function openProject(id){cur=(await getAll()).find(p=>p.id===id);if(!cur)return home();view='proj';hist=[];sel=null;zoom=1;follow=false;drawUrl=await url(cur.draw);
  await Promise.all(cur.pts.map(p=>url(p.photo)));if(cur.indoor)await Promise.all(cur.indoor.haltes.flatMap(h=>h.fotos).map(url));document.body.classList.remove('indoor');
  cur.anchors=(cur.anchors||[]).map((a,i)=>{if(a.id){const p=cur.pts.find(q=>q.id===a.id);return p?{k:'AB'[i]||'C',x:p.x,y:p.y,la:a.la,lo:a.lo,acc:a.acc,src:a.src}:null;}return a;}).filter(Boolean).slice(0,2);
- addrPick=false;addrManual=false;addrOverlay=null;wiz=null;ghost=null;pendingAdd=null;editRoute=false;navIdx=-1;userMoved=false;askFor=null;compassUp=false;follow=false;document.body.classList.remove('editing');document.body.classList.remove('wiz');solve();buildMask();
+ addrPick=false;addrManual=false;addrOverlay=null;pausedTrace=false;document.body.classList.remove('bigmap');wiz=null;ghost=null;pendingAdd=null;editRoute=false;navIdx=-1;userMoved=false;askFor=null;compassUp=false;follow=false;document.body.classList.remove('editing');document.body.classList.remove('wiz');solve();buildMask();
  app.innerHTML=`<div class="top" id="head"></div>
  <div class="stick"><div class="leg" id="legend"></div><div class="info" id="info" hidden><b>Oranje = foto</b>, met het fotonummer van het rapport. Vorm en kleur van een item volgen de legenda van de tekening: bruin met groene rand is nieuw, blauwgroen met gele rand is bestaand.</div><div class="tool"><button class="btn rt" id="rtBtn" aria-pressed="false"><span class="sw2"><i></i></span>Route verleggen</button><button class="btn ic" id="snapBtn" aria-pressed="true" aria-label="Magneet: bolletjes naar de lijn trekken" title="Magneet" hidden>🧲</button><button class="btn ic" id="meBtn" aria-label="Locatie en binnentracé" title="Locatie en binnentracé">📍</button><span class="sp"></span><button class="btn" id="zOut" aria-label="Uitzoomen">−</button><button class="btn" id="zIn" aria-label="Inzoomen">+</button><button class="btn" id="undo" aria-label="Ongedaan maken">↶</button></div>
   <div class="basebar" id="basebar" hidden></div></div><div class="mapWrap"><div class="mapS" id="mapS"><div class="mapI" id="mapI"><svg id="svg" viewBox="0 0 ${cur.W} ${cur.H}" style="aspect-ratio:${cur.W}/${cur.H}"><g id="base"></g><image id="drawImg" href="${drawUrl}" width="${cur.W}" height="${cur.H}"/><g id="lay"></g></svg></div></div><div class="ov" id="ov"></div><button class="fab" id="fab" hidden aria-label="Foto op mijn positie">📷</button></div>
@@ -1058,7 +1059,7 @@ function addrForm(msg){const g=AD&&AD.form||guessAddr();
  $('aBack').onclick=koppelMenu;
  $('aDoc').onchange=async e=>{const f=e.target.files[0];if(!f)return;$('aNote').textContent='Document lezen…';try{const d=await readSisu(f);applyDoc(cur,Object.assign({},cur.doc||{},d,{codePos:(cur.doc||{}).codePos}));save();AD={form:null};addrForm();}catch(err){$('aNote').innerHTML='<span class="warn">Het document kon niet worden gelezen'+(navigator.onLine?'':' (geen internet)')+'.</span>';}};
  $('aGo').onclick=()=>{const f=form();if(!f.adres){$('aNote').innerHTML='<span class="warn">Vul eerst het adres in.</span>';return;}AD={form:f};addrSearch();};}
-function addrFail(msg){addrPick=false;addrOverlay=null;document.body.classList.remove('wiz');drawAll();
+function addrFail(msg){endAddrMode();
  $('sheetBody').innerHTML=`<h2 style="font-size:22px">Koppelen via adres lukt niet</h2><p>${esc(msg)}</p><p class="note">Je kunt het adres aanpassen of ter plekke koppelen met gps.</p><div class="row2"><button class="btn" id="afA">Adres aanpassen</button><button class="btn pri" id="afG">Ter plekke met gps</button></div>`;
  $('sheet').hidden=false;$('afA').onclick=()=>addrForm();$('afG').onclick=startWiz;}
 async function fetchJSON(u,ms=12000){const c=new AbortController(),t=setTimeout(()=>c.abort(),ms);try{const r=await fetch(u,{signal:c.signal});if(!r.ok)throw new Error('http '+r.status);return await r.json();}finally{clearTimeout(t);}}
@@ -1113,7 +1114,13 @@ function regionAt(G,sx,sy,dilOverride){const{W,H}=G,dil=dilOverride||G.dil;sx=Ma
 function regionOverlay(R,col=[26,115,232]){const c=document.createElement('canvas');c.width=R.w;c.height=R.h;const g=c.getContext('2d'),id=g.createImageData(R.w,R.h);
  for(let k=0;k<R.w*R.h;k++)if(R.m[k]){id.data[k*4]=col[0];id.data[k*4+1]=col[1];id.data[k*4+2]=col[2];id.data[k*4+3]=150;}g.putImageData(id,0,0);return{x:R.x0/R.f,y:R.y0/R.f,w:R.w/R.f,h:R.h/R.f,url:c.toDataURL()};}
 let addrManual=false;
-async function startPick(){addrPick=true;addrManual=false;document.body.classList.add('wiz');AD.region=null;addrOverlay=null;drawAll();
+let pausedTrace=false;
+function setBig(on){document.body.classList.toggle('bigmap',on);if(!on){const S=$('mapS');if(S)S.style.height='';applyZoom();drawMap();return;}
+ const fit=()=>{const S=$('mapS'),st=document.querySelector('.stick'),g=$('guide');if(!S||!st)return;const h=Math.max(220,innerHeight-st.offsetHeight-(g&&!g.hidden?g.offsetHeight:0)-6);S.style.height=h+'px';scrollTo({top:0});applyZoom();drawMap();};
+ fit();requestAnimationFrame(fit);}
+function endAddrMode(){addrPick=false;addrManual=false;addrOverlay=null;document.body.classList.remove('wiz');setBig(false);drawAll();if(pausedTrace){pausedTrace=false;if(!cur.pts.length)startTrace();}}
+async function startPick(){if(trace){pausedTrace=true;trace=null;document.body.classList.remove('trace');fitTrace(false);}
+ addrPick=true;addrManual=false;document.body.classList.add('wiz');AD.region=null;addrOverlay=null;drawAll();setBig(true);setNav('alles');
  const d=cur.doc||{},code=(AD.form&&AD.form.code)||'';if(d.codePos&&(!code||code===d.gebouwnaam)){try{await greenMask();const R=regionAt(gMask,d.codePos.x,d.codePos.y);if(R){showRegion(R);return;}}catch(e){}}
  drawGuide();}
 function colorRegion(xi,yi){const G=gMask,{W,H,px}=G,x=Math.round(xi*G.f),y=Math.round(yi*G.f);if(x<0||y<0||x>=W||y>=H)return null;
@@ -1153,7 +1160,8 @@ function addrGuide(g){g.hidden=false;const R=AD&&AD.region,a=esc(AD.form.adres);
  else g.innerHTML=`<div class="steps"><i class="done"></i><i class="on"></i><i></i></div>${R?`<h3>Is dit het pand van ${a}?</h3><p>Het blauwe vlak is het gevonden pand. Tik anders op het juiste pand, of leg de omtrek zelf.</p>`
   :`<h3>Tik op het adrespunt van ${a}</h3><p>Tik op de tekening waar het pand staat. Herkent de app het pand niet vanzelf, dan leg je daarna de blauwe omtrek zelf over het pand.</p>`}
  <div class="row2"><button class="btn" id="apX">Annuleren</button>${R?'<button class="btn" id="apM">Zelf passen</button>':''}<button class="btn pri" id="apOk" ${R?'':'disabled'}>Klopt, koppelen</button></div>`;
- $('apX').onclick=()=>{addrPick=false;addrManual=false;addrOverlay=null;document.body.classList.remove('wiz');drawAll();};
+ $('apX').onclick=endAddrMode;
+ requestAnimationFrame(()=>{if(document.body.classList.contains('bigmap'))setBig(true);});
  const m=$('apM');if(m)m.onclick=()=>startManual(R.cx/R.f,R.cy/R.f,R);
  $('apOk').onclick=()=>{if(addrManual){manualFit();return;}g.innerHTML=`<h3>Passen…</h3><p>De omtrek uit de BAG wordt over het pand gelegd.</p>`;setTimeout(runFit,30);};}
 function manualFit(){const M=AD.man,pd=AD.pand;let iou=null;
@@ -1177,7 +1185,7 @@ function finishFit(F,iou,manual){const pd=AD.pand,la0=AD.lat,lo0=AD.lon,cl=Math.
  let nb=null;const N1=AD.nbs.find(q=>Math.hypot(q.c[0]-pd.c[0],q.c[1]-pd.c[1])<120);
  if(N1){const pc=F.toImg(N1.c[0],N1.c[1]),RN=manual?null:regionAt(gMask,pc[0],pc[1]);if(RN){const ring=N1.en.map(([e,n])=>F.toImg(e,n));nb={iou:imgIou(ring,RN),id:N1.id};}else nb={iou:null,id:N1.id};}
  let deg=(F.p.th*180/Math.PI)%360;if(deg<0)deg+=360;
- addrPick=false;addrManual=false;addrOverlay=null;document.body.classList.remove('wiz');
+ addrPick=false;addrManual=false;addrOverlay=null;document.body.classList.remove('wiz');setBig(false);if(pausedTrace){pausedTrace=false;}
  cur.addrFit={v,iou,manual,scale:F.p.s,rot:deg,nbIou:nb?nb.iou:null,ring:pd.ring,nbRing:N1?N1.ring:null,label:AD.label,area:Math.round(pd.area),pandId:pd.id,at:Date.now()};
  solve();drawAll();addrResult();}
 function imgIou(ring,R){ring=ring.map(([x,y])=>[x*(R.f||1),y*(R.f||1)]);const mg=10,W2=R.w+2*mg,H2=R.h+2*mg,cv=document.createElement('canvas');cv.width=W2;cv.height=H2;const g=cv.getContext('2d');g.beginPath();ring.forEach(([x,y],i)=>{i?g.lineTo(x-R.x0+mg,y-R.y0+mg):g.moveTo(x-R.x0+mg,y-R.y0+mg);});g.closePath();g.fill();
@@ -1190,7 +1198,7 @@ function addrResult(){const A=cur.addrFit;if(!A)return;
  ${A.iou!=null&&A.iou<.85?`<p class="warn">Heb je het juiste pand aangewezen?</p>`:''}${A.manual?'<p class="note">Zelf gepast: controleer de koppeling ter plekke met één gps-anker (Ter plekke met gps → Alleen dit anker).</p>':''}<p class="note">De BAG-omtrek staat blauw gestippeld op de tekening, het buurpand dunner gestippeld.</p>
  <div class="row2"><button class="btn" id="arRe">Opnieuw aanwijzen</button><button class="btn pri" id="arOk">Klopt</button></div>`;$('sheet').hidden=false;
  $('arRe').onclick=()=>{if(!AD||!AD.pand){closeSheet();addrForm();return;}cur.addrFit=null;solve();closeSheet();startPick();};
- $('arOk').onclick=()=>{save();closeSheet();drawAll();setNav('alles');toast(A.iou==null?'Gekoppeld via adres (zelf gepast)':`Gekoppeld via adres · overlap ${pct(A.iou)}`);};}
+ $('arOk').onclick=()=>{save();closeSheet();drawAll();setNav('alles');if(!cur.pts.length)startTrace();toast(A.iou==null?'Gekoppeld via adres (zelf gepast)':`Gekoppeld via adres · overlap ${pct(A.iou)}`);};}
 function addrDev(){const a=cur.anchors.find(q=>q.la!=null);if(!a||!cur.addrFit)return null;const V=cur.addrFit.v,la0=V[0].la,lo0=V[0].lo,cl=Math.cos(la0*Math.PI/180),toEN=(la,lo)=>[(lo-lo0)*cl*111320,(la-la0)*110540];
  const Q=V.map(q=>({a:[q.x,-q.y],b:toEN(q.la,q.lo)})),m=cd([Q[1].b[0]-Q[0].b[0],Q[1].b[1]-Q[0].b[1]],[Q[1].a[0]-Q[0].a[0],Q[1].a[1]-Q[0].a[1]]),z=cm(m,Q[0].a),t=[Q[0].b[0]-z[0],Q[0].b[1]-z[1]],p=cm(m,[a.x,-a.y]),e=[p[0]+t[0],p[1]+t[1]],g=toEN(a.la,a.lo);
  return Math.hypot(e[0]-g[0],e[1]-g[1]);}
