@@ -183,6 +183,19 @@ body.editing #lfBtn{display:none!important}.btn.lf svg{width:22px;height:22px}.b
 .info .legend2{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:13px;color:var(--mute);margin-bottom:8px}
 .info .op{display:flex;gap:8px;align-items:center;margin:8px 0 0;font-size:13px;color:var(--mute)}.info .op input{flex:1;padding:0;accent-color:var(--hv)}
 .info .attr{display:block;font-size:11px;color:var(--mute);margin-top:6px}
+/* lijstkop vast onder de kaart, zoom-schuifbalk */
+.lower{display:flex;flex-direction:column;max-height:28dvh;overflow:hidden}
+.lhead{flex:none;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 10px 6px 16px;border-bottom:1px solid var(--line);background:var(--card)}
+.lhead h2{font-size:18px;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lscroll{flex:1 1 auto;min-height:0;overflow:auto;overscroll-behavior:contain}
+.lscroll #list{padding-top:2px}.lscroll #list .row:first-child{border-top:0}
+.pn2{display:flex;align-items:center;background:var(--bg);border-radius:22px;padding:2px;font:600 14px Barlow,sans-serif;white-space:nowrap;flex:none}
+.pn2 button{width:40px;height:40px;border:0;background:none;color:var(--ink);font:600 22px/1 Barlow,sans-serif;cursor:pointer;border-radius:50%}.pn2 span{padding:0 2px}
+.zsl{top:8px;left:50%;transform:translateX(-50%);width:min(210px,58%);background:#fff;border-radius:16px;padding:4px 12px 2px;box-shadow:0 4px 14px -4px #0006}
+.zsl input{display:block;width:100%;margin:2px 0 0;accent-color:var(--asf);height:26px}
+.zl{display:flex;justify-content:space-between}.zl button{border:0;background:none;padding:2px 0 4px;min-height:28px;min-width:44px;font:600 12.5px Barlow,sans-serif;color:var(--mute);cursor:pointer}
+.zl button:nth-child(2){text-align:center}.zl button:first-child{text-align:left}.zl button:last-child{text-align:right}.zl button[aria-pressed=true]{color:var(--ink)}
+.chipb{bottom:14px}.askc{bottom:12px}
 </style>
 </head>
 <body>
@@ -340,8 +353,8 @@ async function openProject(id){cur=(await getAll()).find(p=>p.id===id);if(!cur)r
  app.innerHTML=`<div class="top" id="head"></div>
  <div class="stick"><div class="tool one1"><button class="btn rt" id="rtBtn" aria-pressed="false" aria-label="Route verleggen"><span class="sw2"><i></i></span>Route</button><button class="btn ic" id="snapBtn" aria-pressed="true" aria-label="Magneet: bolletjes naar de lijn trekken" title="Magneet" hidden>🧲</button><button class="btn ic" id="meBtn" aria-label="Locatie en binnentracé" title="Locatie en binnentracé">📍</button><button class="btn ic lf" id="lfBtn" aria-pressed="false" aria-label="Luchtfoto aan of uit" title="Luchtfoto" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8l9-5 9 5-9 5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M3 12.5l9 5 9-5M3 16.5l9 5 9-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="sp"></span><button class="btn ic" id="zOut" aria-label="Uitzoomen">−</button><button class="btn ic" id="zIn" aria-label="Inzoomen">+</button><button class="btn ic" id="undo" aria-label="Ongedaan maken">↶</button><button class="ib" id="infoBtn" aria-label="Legenda en uitleg" aria-expanded="false">i</button></div>
   <div class="info" id="info" hidden></div></div><div class="mapWrap"><div class="mapS" id="mapS"><div class="mapI" id="mapI"><svg id="svg" viewBox="0 0 ${cur.W} ${cur.H}" style="aspect-ratio:${cur.W}/${cur.H}"><g id="base"></g><image id="drawImg" href="${drawUrl}" width="${cur.W}" height="${cur.H}"/><g id="lay"></g></svg></div></div><div class="ov" id="ov"></div><button class="fab" id="fab" hidden aria-label="Foto op mijn positie">📷</button></div>
- <div class="lower" id="lower"><div class="sec" id="list"></div>
- <div class="sec noprint"><div class="row2" style="margin-top:4px"><button class="btn" id="repBtn">Rapport / PDF</button><button class="btn" id="editP">Project</button></div></div></div>
+ <div class="lower" id="lower"><div class="lhead"><h2>Punten langs de route</h2><div id="pnBox"></div></div><div class="lscroll"><div class="sec" id="list"></div>
+ <div class="sec noprint"><div class="row2" style="margin-top:4px"><button class="btn" id="repBtn">Rapport / PDF</button><button class="btn" id="editP">Project</button></div></div></div></div>
  <div class="guide" id="guide" hidden></div><div class="bubble" id="bubble" hidden></div><div class="toast" id="toast" hidden></div>`;
  $('infoBtn').onclick=()=>{const i=$('info');i.hidden=!i.hidden;$('infoBtn').setAttribute('aria-expanded',!i.hidden);if(!i.hidden)drawInfo();applyZoom();drawMap();};
  bindProject();drawAll();
@@ -376,7 +389,7 @@ function drawMap(){drawBase();const s=cur.W/($('svg').getBoundingClientRect().wi
 const thumb=p=>p.photo&&urls[p.photo]?`<img src="${urls[p.photo]}" alt="">`:'geen foto';
 const keyPts=()=>cur.pts.map((p,i)=>({p,i})).filter(({p,i})=>i===0||i===cur.pts.length-1||p.photo||p.it);
 function drawList(){const M=meters(),N=nums(),K=keyPts(),knik=cur.pts.length-K.length;
- $('list').innerHTML=`<h2 style="font-size:19px;margin:4px 0 6px">Punten langs de route</h2>`+(K.map(({p,i},n)=>{const e=endKind(p);
+ $('list').innerHTML=(K.map(({p,i},n)=>{const e=endKind(p);
   return`<div class="row${p.id===sel?' on':''}" data-hl="${p.id}">${e&&!p.it&&!p.photo?`<svg viewBox="0 0 40 34" aria-hidden="true">${endSym(e,20,18,1.15)}</svg>`:icon(p.it,N[p.id])}<div><div class="t">${n+1}. ${label(p)}</div><div class="d">${M?Math.round(M[i])+' m · ':''}${esc(p.c||(e==='net'?'begin van de route':e==='pand'?'eind van de route':p.photo?'':''))}</div></div><div class="th">${thumb(p)}</div><button class="btn det" data-open="${p.id}" aria-label="Details van ${esc(label(p))}">›</button></div>`;}).join('')
  ||'<p class="note">Nog geen route. Trek de lijn over de tekening.</p>')+(knik>0?`<p class="note" style="margin-top:8px">+ ${knik} knikpunt${knik===1?'':'en'} in de lijn. Die zie je met de knop Route aan.</p>`:'');}
 let flash=null,flashT=null;
@@ -912,6 +925,7 @@ function drawInfo(){const i=$('info');if(!i)return;const eb=effBase();
  i.innerHTML=`<div class="legend2">${[['',0,'Leeg'],['',3,'Leeg + foto'],['kp_n',0,'Item'],['hh_n',4,'Item + foto']].map(([it,n,a])=>`<span class="lg"><svg viewBox="0 0 34 30">${sym(it,it&&n?15:17,it&&n?17:15,.8,n)}</svg>${a}</span>`).join('')}</div>
  <b>Oranje = foto</b>, met het fotonummer van het rapport. Vorm en kleur van een item volgen de legenda van de tekening: bruin met groene rand is nieuw, blauwgroen met gele rand is bestaand.
  ${T&&BASES[eb]?`<label class="op"><span>Tekening over luchtfoto</span><input type="range" id="opR" min="0" max="100" value="${Math.round((cur.drawOp??.55)*100)}" aria-label="Doorzichtigheid tekening"></label><span class="attr">${BASES[eb].attr}</span>`:''}`;
+ i.insertAdjacentHTML('beforeend',`<div class="row2" style="margin-top:10px"><button class="btn" id="conX" aria-pressed="${contrast}">Contrastmodus ${contrast?'uit':'aan'}</button></div>`);$('conX').onclick=()=>{toggleContrast();drawInfo();};
  const r=$('opR');if(r)r.oninput=()=>{cur.drawOp=r.value/100;$('drawImg').style.opacity=cur.drawOp;save();};}
 
 /* ---------- zoomen en navigeren: gedeeld ---------- */
@@ -930,7 +944,7 @@ const B0=()=>$('mapS').clientWidth;
 function curCenter(){const S=$('mapS'),k=B0()*zoom/cur.W;return[(S.scrollLeft+S.clientWidth/2)/k,(S.scrollTop+S.clientHeight/2)/k];}
 function setView(z,cx,cy){const S=$('mapS');zoom=Math.max(1,Math.min(14,z));applyZoom();const k=B0()*zoom/cur.W;progScroll=true;S.scrollLeft=cx*k-S.clientWidth/2;S.scrollTop=cy*k-S.clientHeight/2;requestAnimationFrame(()=>requestAnimationFrame(()=>progScroll=false));applyRot();}
 function viewTo(r,animate=true){const S=$('mapS');if(!S||trace)return;const Sw=S.clientWidth,Sh=S.clientHeight||Sw;
- const z1=Math.max(1,Math.min(14,Math.min((Sw-16)/r.w,Math.max(80,Sh-128)/r.h)*cur.W/B0())),[cx0,cy0]=curCenter(),z0=zoom;cancelAnimationFrame(anim);
+ const z1=Math.max(1,Math.min(14,Math.min((Sw-16)/r.w,Math.max(80,Sh-76)/r.h)*cur.W/B0())),[cx0,cy0]=curCenter(),z0=zoom;cancelAnimationFrame(anim);
  if(!animate||RED()){setView(z1,r.cx,r.cy);drawMap();drawNav();return;}
  const t0=performance.now();const step=t=>{const f=ease(Math.min(1,(t-t0)/330));setView(z0*Math.pow(z1/z0,f),cx0+(r.cx-cx0)*f,cy0+(r.cy-cy0)*f);drawMap();miniRect();if(f<1)anim=requestAnimationFrame(step);else drawNav();};anim=requestAnimationFrame(step);}
 const gpsImg=()=>T&&gps&&watch!==null?ll2img(gps.la,gps.lo):null;
@@ -959,20 +973,22 @@ function navOnGps(){if(view!=='proj'||!T||!gps)return;
  drawNav();}
 function drawNav(){const o=$('ov');if(!o||view!=='proj')return;const lv=cur.nav||'alles',K=keyPts(),ip=inPt(),near=ip&&distM(ip)<=10;
  const ask=askFor&&cur.pts.find(p=>p.id===askFor);
- o.innerHTML=`<div class="seg" role="group" aria-label="Zoomniveau">${[['hier','Hier'],['stuk','Stuk'],['alles','Alles']].map(([k,l])=>`<button data-lv="${k}" aria-pressed="${lv===k}">${l}</button>`).join('')}</div>
+ const LV=['hier','stuk','alles'],li=Math.max(0,LV.indexOf(lv));
+ o.innerHTML=`<div class="zsl"><input type="range" id="zR" min="0" max="2" step="1" value="${li}" aria-label="Zoomniveau: ${['Hier','Stuk','Alles'][li]}" aria-valuetext="${['Hier','Stuk','Alles'][li]}"><div class="zl">${['Hier','Stuk','Alles'].map((l,i)=>`<button data-lv="${LV[i]}" aria-pressed="${i===li}" tabindex="-1">${l}</button>`).join('')}</div></div>
  ${lv!=='alles'?`<button class="mini" id="mini" aria-label="Hele route tonen"><svg viewBox="0 0 ${cur.W} ${cur.H}"><image href="${drawUrl}" width="${cur.W}" height="${cur.H}" opacity=".7"/>${cur.pts.length>1?`<polyline points="${cur.pts.map(p=>p.x+','+p.y).join(' ')}" fill="none" stroke="${OR}" stroke-width="${cur.W/40}"/>`:''}<rect id="miniR" fill="none" stroke="#1d2529" stroke-width="${cur.W/50}"/></svg></button>`:''}
- <div class="rtc"><button class="rb" id="cmpB" aria-label="${compassUp?'Tekening boven':'Looprichting boven'}" aria-pressed="${compassUp}">${NI.comp(compassUp&&heading!=null?-(northAng()+heading)+northAng():northAng())}</button><button class="rb" id="conB" aria-label="Contrastmodus" aria-pressed="${contrast}">${NI.con}</button></div>
  ${near&&!wiz&&!trace?`<button class="inb" id="inB">Naar binnen</button>`:''}
  ${userMoved&&T?`<button class="chipb" id="backB">Terug naar mij</button>`:''}
  ${ask&&!wiz?`<div class="askc"><span><b>Foto van dit punt?</b><br>${esc(label(ask))}</span><button class="btn pri" id="askF">Foto</button><button class="btn" id="askL">Later</button></div>`:''}
- ${K.length&&!wiz&&!trace?`<div class="pn"><button id="pvB" aria-label="Vorig punt">‹</button><span>${navIdx>=0?`Punt ${navIdx+1} van ${K.length}`:`${K.length} punten`}</span><button id="nxB" aria-label="Volgend punt">›</button></div>`:''}
  <button class="one" id="oneB" aria-label="${lv==='alles'?'Volg mij':'Hele route'}">${lv==='alles'?NI.focus:NI.max}</button>`;
- o.querySelectorAll('[data-lv]').forEach(b=>b.onclick=()=>{const v=b.dataset.lv;if(v==='hier'&&T&&gps){follow=true;userMoved=false;}setNav(v);});
+ const pb=$('pnBox');if(pb)pb.innerHTML=K.length?`<div class="pn2"><button id="pvB" aria-label="Vorig punt">‹</button><span>${navIdx>=0?`${navIdx+1} van ${K.length}`:`${K.length} punten`}</span><button id="nxB" aria-label="Volgend punt">›</button></div>`:'';
+ const pick=v=>{if(v==='hier'&&T&&gps){follow=true;userMoved=false;}setNav(v);};
+ o.querySelectorAll('[data-lv]').forEach(b=>b.onclick=()=>pick(b.dataset.lv));
+ const zr=$('zR');if(zr){zr.oninput=()=>{const v=LV[+zr.value];o.querySelectorAll('[data-lv]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.lv===v));};zr.onchange=()=>pick(LV[+zr.value]);}
  const on=(id,f)=>{const e=$(id);if(e)e.onclick=f;};
  on('mini',()=>setNav('alles'));on('oneB',()=>{if((cur.nav||'alles')==='alles'){if(T){gpsOn();follow=true;userMoved=false;$('meBtn').setAttribute('aria-pressed',true);}setNav('hier');}else setNav('alles');});
  on('pvB',()=>goPoint(navIdx<0?K.length-1:navIdx-1));on('nxB',()=>goPoint(navIdx+1));
  on('backB',()=>{follow=true;userMoved=false;gpsOn();setNav(cur.nav==='alles'?'hier':cur.nav||'hier');});
- on('cmpB',toggleCompass);on('conB',toggleContrast);on('inB',goInside);
+ on('inB',goInside);
  on('askF',()=>{photoFor=askFor;askFor=null;drawNav();$('fCam').value='';$('fCam').click();});on('askL',()=>{askFor=null;drawNav();});
  miniRect();}
 function miniRect(){const r=$('miniR'),S=$('mapS');if(!r||!S)return;const k=B0()*zoom/cur.W;r.setAttribute('x',S.scrollLeft/k);r.setAttribute('y',S.scrollTop/k);r.setAttribute('width',S.clientWidth/k);r.setAttribute('height',S.clientHeight/k);}
