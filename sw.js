@@ -1,6 +1,6 @@
 // Bewaart de app zelf, zodat hij ook werkt met slecht bereik. Projecten en foto's staan los hiervan in de opslag van de browser.
 // Bekeken stukken luchtfoto en kaart (PDOK) worden ook bewaard, zodat ze later zonder internet te zien zijn.
-const C='schouw-v8',TILES='schouw-tiles-v1',FILES=['./','index.html','manifest.webmanifest','voorbeeld-tekening.jpg','icon-192.png'];
+const C='schouw-v9',TILES='schouw-tiles-v1',FILES=['./','index.html','manifest.webmanifest','voorbeeld-tekening.jpg','icon-192.png'];
 self.addEventListener('install',e=>e.waitUntil(caches.open(C).then(c=>c.addAll(FILES)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==C&&x!==TILES).map(x=>caches.delete(x)))).then(()=>self.clients.claim())));
 self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;const u=new URL(e.request.url);
