@@ -525,7 +525,15 @@ function mapTap([x,y],cx,cy){
   for(let i=0;i<cur.pts.length-1;i++){const a=cur.pts[i],q=cur.pts[i+1],dx=q.x-a.x,dy=q.y-a.y,tt=Math.max(0,Math.min(1,((x-a.x)*dx+(y-a.y)*dy)/((dx*dx+dy*dy)||1))),px=a.x+tt*dx,py=a.y+tt*dy,d=Math.hypot(px-x,py-y);if(d<bd){bd=d;bp=[px,py];}}
   if(bd/s>32){toast('Tik op de lijn om daar een punt te zetten');return;}
   ghost={x:bp[0],y:bp[1]};drawMap();lockedBubble(cx,cy);return;}
- hideBubble();}
+ if(editRoute){hideBubble();return;}
+ [x,y]=snapTo(x,y);ghost={x,y};drawMap();
+ const b=$('bubble');b.innerHTML=`<button class="btn pri" id="bFoto">📷 Foto</button><button class="btn" id="bGal">Foto uit galerij</button><button class="btn" id="bPunt">Alleen een punt</button><button class="btn" id="bItem">Punt met item…</button><button class="btn red" id="bX">✕ Annuleren</button>`;
+ b.hidden=false;const w=200,h=b.offsetHeight;b.style.left=Math.max(8,Math.min(innerWidth-w-8,cx-w/2))+'px';b.style.top=(cy+16+h<innerHeight-8?cy+16:Math.max(8,cy-h-16))+'px';
+ const add=extra=>{push();const np=insertAt(ghost.x,ghost.y,extra);ghost=null;b.hidden=true;sel=np.id;save();solve();drawAll();return np;};
+ $('bFoto').onclick=()=>{pendingAdd={x:ghost.x,y:ghost.y};b.hidden=true;$('fCam').value='';$('fCam').click();};
+ $('bGal').onclick=()=>{pendingAdd={x:ghost.x,y:ghost.y};b.hidden=true;$('fPick').value='';$('fPick').click();};
+ $('bPunt').onclick=()=>{add({});toast('Punt toegevoegd');};
+ $('bItem').onclick=()=>{const np=add({});pointSheet(np.id,'items');};$('bX').onclick=()=>{b.hidden=true;ghost=null;drawMap();};}
 function lockedBubble(cx,cy){const b=$('bubble');b.innerHTML=`<button class="btn pri" id="bFoto">📷 Foto</button><button class="btn" id="bGal">Foto uit galerij</button><button class="btn" id="bItem">Item kiezen…</button><button class="btn red" id="bX">✕ Annuleren</button>`;
  b.hidden=false;const w=200,h=b.offsetHeight;b.style.left=Math.max(8,Math.min(innerWidth-w-8,cx-w/2))+'px';b.style.top=(cy+16+h<innerHeight-8?cy+16:Math.max(8,cy-h-16))+'px';
  $('bFoto').onclick=()=>{pendingAdd={x:ghost.x,y:ghost.y};b.hidden=true;$('fCam').value='';$('fCam').click();};
