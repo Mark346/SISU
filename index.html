@@ -196,6 +196,46 @@ body.editing #lfBtn{display:none!important}.btn.lf svg{width:22px;height:22px}.b
 .zl{display:flex;justify-content:space-between}.zl button{border:0;background:none;padding:2px 0 4px;min-height:28px;min-width:44px;font:600 12.5px Barlow,sans-serif;color:var(--mute);cursor:pointer}
 .zl button:nth-child(2){text-align:center}.zl button:first-child{text-align:left}.zl button:last-child{text-align:right}.zl button[aria-pressed=true]{color:var(--ink)}
 .chipb{bottom:14px}.askc{bottom:12px}
+/* ---------- nieuw ontwerp (proef) ---------- */
+body.v2{--bg:#f3f1ec;--card:#fff;--ink:#16181d;--mute:#6b6f76;--line:#e6e3dc;--asf:#16181d;--hv:#2f4fe0;--hv2:#2338b8;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",Inter,system-ui,sans-serif}
+body.v2 h1,body.v2 h2,body.v2 h3,body.v2 .btn,body.v2 .guide,body.v2 .pn2{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display",Inter,system-ui,sans-serif;letter-spacing:-.01em}
+body.v2 .app{background:var(--bg)}
+body.v2 .h2top{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;padding:calc(22px + env(safe-area-inset-top)) 18px 6px}
+body.v2 .h2top h1{font-size:32px;font-weight:800;margin:4px 0 0}
+body.v2 .tag{display:inline-block;font-size:12px;font-weight:700;color:var(--hv);background:#2f4fe01a;border-radius:20px;padding:3px 10px}
+body.v2 .pill{min-height:40px;padding:0 16px;border-radius:20px;border:0;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;background:var(--ink);color:#fff}.pill.ghost{background:#16181d0d;color:var(--ink)}
+body.v2 .sec2{padding:12px 18px calc(24px + env(safe-area-inset-bottom))}
+body.v2 .big2{width:100%;display:flex;align-items:center;gap:12px;min-height:64px;padding:0 18px;border:0;border-radius:20px;background:var(--hv);color:#fff;font-size:18px;font-weight:700;font-family:inherit;cursor:pointer;box-shadow:0 10px 24px -12px #2f4fe0}
+body.v2 .big2 span{width:36px;height:36px;border-radius:50%;background:#ffffff2e;display:grid;place-items:center;font-size:22px}
+body.v2 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+body.v2 .card2{position:relative;background:#fff;border-radius:18px;overflow:hidden;cursor:pointer;box-shadow:0 1px 0 #0000000d,0 8px 20px -14px #0006}
+body.v2 .th2{aspect-ratio:4/3;background:#e9e6df}.th2 img{width:100%;height:100%;object-fit:cover;display:block}
+body.v2 .cb{padding:10px 12px 12px}.cb b{display:block;font-size:15px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.cb span{display:block;font-size:12px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+body.v2 .more2{position:absolute;top:8px;right:8px;width:36px;height:36px;border-radius:50%;border:0;background:#ffffffe6;font-size:18px;cursor:pointer;box-shadow:0 2px 8px -2px #0004}
+body.v2 .note{margin-top:18px}
+/* projectscherm */
+body.v2 .top.slim{background:#fff;color:var(--ink);border-bottom:1px solid var(--line)}
+body.v2 .home{color:var(--ink);background:#16181d0d;border-radius:50%;width:40px;height:40px;margin:2px 4px}
+body.v2 .hrow h1{font-size:18px;font-weight:700}
+body.v2 #geoBtn,body.v2 .krow,body.v2 #meBtn,body.v2 #lfBtn,body.v2 #fab,body.v2 #oneB,body.v2 #backB,body.v2 #inB,body.v2 .askc{display:none!important}
+body.v2 .stick{box-shadow:none;background:var(--bg)}
+body.v2 .tool{background:var(--bg);border-bottom:0}
+body.v2 .tool .btn{border-radius:22px;border:0;background:#fff;box-shadow:0 1px 3px #0000001a}
+body.v2 .rt[aria-pressed=true]{background:var(--hv);color:#fff}.v2 .rt[aria-pressed=true] .sw2{background:#ffffff55}
+body.v2 .ib{background:var(--ink);font:700 15px -apple-system,system-ui,sans-serif;font-style:normal}
+body.v2 .lower{background:#fff;border-top:0;border-radius:22px 22px 0 0;box-shadow:0 -8px 24px -16px #0007;margin-top:-14px;position:relative;z-index:3}
+body.v2 .lhead{background:transparent;border-bottom:0;padding-top:14px;position:relative}
+body.v2 .lhead::before{content:"";position:absolute;top:6px;left:50%;width:36px;height:4px;margin-left:-18px;border-radius:2px;background:#d6d3cc}
+body.v2 .lhead h2{font-size:17px;font-weight:700}
+body.v2 .pn2{background:var(--bg)}
+body.v2 .guide{background:#fff;color:var(--ink);border-radius:24px 24px 0 0;box-shadow:0 -12px 32px -12px #0005}
+body.v2 .guide h3{font-size:21px;font-weight:800}body.v2 .guide p{color:#43474e}
+body.v2 .guide .btn{background:#16181d0d;border:0;color:var(--ink);border-radius:14px;min-height:48px}body.v2 .guide .btn.pri{background:var(--hv);color:#fff}
+body.v2 .stp{display:flex;align-items:baseline;gap:4px;font-size:13px;color:var(--mute);margin-bottom:2px}.stp b{color:var(--hv);font-size:15px}
+body.v2 .lnk{display:block;margin:10px auto 0;border:0;background:none;color:var(--hv);font-size:14px;font-weight:600;font-family:inherit;min-height:36px;cursor:pointer}
+body.ends .app{padding-bottom:var(--gh,200px)}body.ends .ov>*:not(.zsl){display:none}
+body.v2 .zsl{box-shadow:0 4px 14px -6px #0005}body.v2 .zsl input{accent-color:var(--hv)}
+body.v2 .bubble .btn{border-radius:14px}body.v2 .bubble .btn.pri{background:var(--hv);border-color:var(--hv)}
 </style>
 </head>
 <body>
@@ -292,15 +332,24 @@ async function makeDemo(){try{const b=await (await fetch('voorbeeld-tekening.jpg
 
 /* ---------- home ---------- */
 let showArch=false;const fotos=n=>n+(n===1?' foto':" foto's");
-async function home(){view='home';stopSensors();document.body.classList.remove('indoor');cur=null;gpsOff();hist=[];document.body.classList.remove('wiz','trace');
- const all=(await getAll()).sort((a,b)=>b.updated-a.updated),act=all.filter(p=>!p.archived),arc=all.filter(p=>p.archived);
+async function home(){view='home';stopSensors();document.body.classList.remove('indoor');cur=null;gpsOff();hist=[];ends=null;document.body.classList.remove('wiz','trace','ends');
+ const V2=ls.get('v2',false);document.body.classList.toggle('v2',V2);
+ const all=(await getAll()).filter(p=>!!p.v2===V2).sort((a,b)=>b.updated-a.updated),act=all.filter(p=>!p.archived),arc=all.filter(p=>p.archived);
  const th={};await Promise.all(all.map(async p=>th[p.id]=await url(p.draw)));
  const row=p=>`<div class="proj" data-p="${p.id}"><div class="th">${th[p.id]?`<img src="${th[p.id]}" alt="">`:''}</div><div><b>${esc(p.name)}</b><span>${esc(p.addr)}${p.addr?' · ':''}${p.pts.length} punten · ${fotos(p.pts.filter(q=>q.photo).length)} · ${new Date(p.updated).toLocaleDateString('nl-NL')}</span></div><button class="btn more" data-m="${p.id}" aria-label="Opties voor ${esc(p.name)}">⋯</button></div>`;
- app.innerHTML=`<div class="top"><small>Schouw · veldtest</small><h1>Projecten</h1></div>
+ const row2=p=>`<div class="card2" data-p="${p.id}"><div class="th2">${th[p.id]?`<img src="${th[p.id]}" alt="">`:''}</div><div class="cb"><b>${esc(p.name)}</b><span>${esc(p.addr)||'&nbsp;'}</span><span>${p.pts.length?p.pts.length+' punten · '+fotos(p.pts.filter(q=>q.photo).length):'Nog geen route'}</span></div><button class="more2" data-m="${p.id}" aria-label="Opties voor ${esc(p.name)}">⋯</button></div>`;
+ if(V2){app.innerHTML=`<div class="h2top"><div><span class="tag">Nieuw ontwerp · proef</span><h1>Buitentracé</h1></div><button class="pill ghost" id="v1B">Oud ontwerp</button></div>
+ <div class="sec2"><button class="big2" id="newP"><span>＋</span>Nieuwe tekening</button>
+ <div class="grid2">${act.map(row2).join('')}</div>${act.length?'':'<p class="note">Nog geen projecten in het nieuwe ontwerp. Begin met een foto of PDF van de tekening.</p>'}
+ ${arc.length?`<button class="pill ghost" id="arcT" style="margin-top:16px">${showArch?'▾':'▸'} Archief (${arc.length})</button>${showArch?`<div class="grid2">${arc.map(row2).join('')}</div>`:''}`:''}
+ <p class="note">Proefversie: alleen het buitentracé, zonder gps. Projecten hier staan los van het oude ontwerp.</p></div>`;
+  $('v1B').onclick=()=>{ls.set('v2',false);home();};}
+ else{ app.innerHTML=`<div class="top"><small>Schouw · veldtest</small><h1>Projecten</h1></div>
  <div class="sec"><button class="btn pri" id="newP" style="width:100%">+ Nieuw project</button>
  ${act.map(row).join('')||'<p class="note" style="margin-top:14px">Geen actieve projecten.</p>'}
  ${arc.length?`<button class="btn" id="arcT" style="width:100%;margin-top:16px">${showArch?'▾':'▸'} Archief (${arc.length})</button>${showArch?`<div class="arch">${arc.map(row).join('')}</div>`:''}`:''}
- <p class="note" style="margin-top:20px">Alles wordt alleen op deze telefoon bewaard, in de opslag van de app. Tip: zet de app op je beginscherm via Delen → "Zet op beginscherm".</p></div>`;
+ <p class="note" style="margin-top:20px">Alles wordt alleen op deze telefoon bewaard, in de opslag van de app. Tip: zet de app op je beginscherm via Delen → "Zet op beginscherm".</p></div>
+ <div class="sec"><button class="btn" id="v2B" style="width:100%">✨ Nieuw ontwerp uitproberen</button></div>`;$('v2B').onclick=()=>{ls.set('v2',true);home();};}
  $('newP').onclick=newProject;$('arcT')&&($('arcT').onclick=()=>{showArch=!showArch;home();});
  app.querySelectorAll('[data-p]').forEach(e=>e.onclick=ev=>{if(ev.target.closest('[data-m]'))return;openProject(e.dataset.p);});
  app.querySelectorAll('[data-m]').forEach(e=>e.onclick=()=>projActions(all.find(p=>p.id===e.dataset.m)));}
@@ -336,7 +385,7 @@ function newProject(){let draw=null,pdoc=null;
  function showDraw(b){$('dTh').innerHTML=`<img src="${URL.createObjectURL(b)}" alt="">`;$('dNote').textContent='Tekening gekozen.';$('pdfPages').innerHTML='';}
  $('pok').onclick=async()=>{const name=$('pn').value.trim()||'Nieuw project';if(!draw){$('dNote').innerHTML='<span class="warn">Kies eerst een tekening.</span>';return;}
   const k='d_'+uid();await putBlob(k,draw);const im=await loadImg(URL.createObjectURL(draw));
-  const p={id:uid(),name,addr:$('pa').value.trim(),sid:$('ps').value.trim(),draw:k,W:im.naturalWidth,H:im.naturalHeight,pts:[],anchors:[],created:Date.now()};if(pdoc)p.doc=pdoc;await putProj(p);closeSheet();openProject(p.id);};}
+  const p={id:uid(),name,addr:$('pa').value.trim(),sid:$('ps').value.trim(),draw:k,W:im.naturalWidth,H:im.naturalHeight,pts:[],anchors:[],created:Date.now()};if(ls.get('v2',false))p.v2=true;if(pdoc)p.doc=pdoc;await putProj(p);closeSheet();openProject(p.id);};}
 let pdfjs=null;
 async function pickPdfPage(file,done){
  await loadPdfjs();
@@ -358,7 +407,7 @@ async function openProject(id){cur=(await getAll()).find(p=>p.id===id);if(!cur)r
  <div class="guide" id="guide" hidden></div><div class="bubble" id="bubble" hidden></div><div class="toast" id="toast" hidden></div>`;
  $('infoBtn').onclick=()=>{const i=$('info');i.hidden=!i.hidden;$('infoBtn').setAttribute('aria-expanded',!i.hidden);if(!i.hidden)drawInfo();applyZoom();drawMap();};
  bindProject();drawAll();
- trace=null;document.body.classList.remove('trace');if(!cur.pts.length)startTrace();else requestAnimationFrame(()=>{viewTo(navRect(cur.nav||'alles'),false);drawNav();});}
+ trace=null;ends=null;document.body.classList.remove('trace','ends');document.body.classList.toggle('v2',!!cur.v2);if(!cur.pts.length)(cur.v2?startEnds:startTrace)();else requestAnimationFrame(()=>{viewTo(navRect(cur.nav||'alles'),false);drawNav();});}
 function drawHead(){const M=meters(),N=nums(),inv=cur.pts.findIndex(p=>p.it==='inv'||p.it==='brw');
  const st=T?(T.via==='adres'?(cur.addrFit&&cur.addrFit.iou!=null?`Gekoppeld via adres, overlap ${pct(cur.addrFit.iou)}`:'Gekoppeld via adres, zelf gepast'):'Gekoppeld aan gps'):wiz?'Bezig met koppelen':'Niet gekoppeld aan gps';
  const gtxt=watch!==null?(gpsErr?'gps-fout':gps?`± ${Math.round(gps.acc)} m`:'gps…'):'';
@@ -385,6 +434,7 @@ function drawMap(){drawBase();const s=cur.W/($('svg').getBoundingClientRect().wi
   o+=`<g class="mk" data-id="${p.id}">${p.id===sel?`<circle cx="${p.x}" cy="${p.y}" r="${17*s}" fill="none" stroke="#1d2529" stroke-width="${2*s}" stroke-dasharray="${4*s} ${3*s}"/>`:''}${isA?`<path d="M${p.x} ${p.y-14*s} l${4*s} ${-8*s} h${-8*s}z" fill="#1d2529"/>`:''}${end&&!p.it&&!p.photo?endSym(end,p.x,p.y,s):sym(p.it,p.x,p.y,s,N[p.id])}${end&&!trace?endTag(end,p.x,p.y,s):''}<circle cx="${p.x}" cy="${p.y}" r="${20*s}" fill="transparent"/></g>`;});
  if(wiz)cur.anchors.forEach((a,i)=>{const c=a.la!=null?'#1f7a4a':'#1d2529',h=30*s;
   o+=`<g class="mk af" data-a="${i}"><circle cx="${a.x}" cy="${a.y}" r="${4*s}" fill="${c}" stroke="#fff" stroke-width="${1.5*s}"/><line x1="${a.x}" y1="${a.y}" x2="${a.x}" y2="${a.y-h}" stroke="${c}" stroke-width="${2.4*s}"/><rect x="${a.x}" y="${a.y-h}" width="${20*s}" height="${15*s}" rx="${2*s}" fill="${c}" stroke="#fff" stroke-width="${1.2*s}"/><text x="${a.x+10*s}" y="${a.y-h+11.5*s}" font-size="${11*s}" font-weight="700" text-anchor="middle" fill="#fff" font-family="Barlow,sans-serif">${a.la!=null?'✓':a.k}</text><circle cx="${a.x+6*s}" cy="${a.y-14*s}" r="${20*s}" fill="transparent"/></g>`;});
+ if(ends&&!ends.done)o+=endsLayer(s);
  $('lay').innerHTML=o;}
 const thumb=p=>p.photo&&urls[p.photo]?`<img src="${urls[p.photo]}" alt="">`:'geen foto';
 const keyPts=()=>cur.pts.map((p,i)=>({p,i})).filter(({p,i})=>i===0||i===cur.pts.length-1||p.photo||p.it);
@@ -520,6 +570,7 @@ const isEntry=p=>endKind(p)==='pand'||p.it==='inv'||p.it==='brw';
 function hideBubble(){const b=$('bubble');if(b&&!b.hidden){b.hidden=true;if(!pendingAdd){ghost=null;drawMap();}}}
 function mapTap([x,y],cx,cy){
  if(addrPick){if(!addrLocked){toast('Zet eerst de kaart vast');return;}if(addrManual)return;pickAt(x,y);return;}
+ if(ends&&!ends.done){endsTap(x,y);return;}
  if(wiz){wizTap(x,y);return;}
  if(!editRoute&&cur.pts.length>1){const s=cur.W/$('svg').getBoundingClientRect().width;let bd=1e9,bp=null;
   for(let i=0;i<cur.pts.length-1;i++){const a=cur.pts[i],q=cur.pts[i+1],dx=q.x-a.x,dy=q.y-a.y,tt=Math.max(0,Math.min(1,((x-a.x)*dx+(y-a.y)*dy)/((dx*dx+dy*dy)||1))),px=a.x+tt*dx,py=a.y+tt*dy,d=Math.hypot(px-x,py-y);if(d<bd){bd=d;bp=[px,py];}}
@@ -563,7 +614,7 @@ function wizTap(x,y){const s=wiz.step;
  if(s==='A'||s==='B'||s==='measA'||s==='measB'){const k=s.slice(-1);placeFlag(k,x,y);startMeas(k);return;}
  if(s==='pA'){placeFlag('A',x,y);wiz.step='pB';drawAll();return;}
  if(s==='pB'){placeFlag('B',x,y);drawAll();pasteSheet();}}
-function drawGuide(){const g=$('guide');if(!g)return;if(trace)return traceGuide(g);if(addrPick)return addrGuide(g);if(!wiz){g.hidden=true;return;}g.hidden=false;
+function drawGuide(){const g=$('guide');if(!g)return;if(ends)return endsGuide(g);if(trace)return traceGuide(g);if(addrPick)return addrGuide(g);if(!wiz){g.hidden=true;return;}g.hidden=false;
  const s=wiz.step,phase=/A$/.test(s)?0:/B$/.test(s)?1:2;
  const dots=`<div class="steps">${[0,1,2].map(j=>`<i class="${j<phase?'done':j===phase?'on':''}"></i>`).join('')}</div>`;
  const live=gpsErr?`<p class="gw">${esc(gpsErr)}</p>`:gps?`<div class="live"><b>± ${Math.round(gps.acc)} m</b><span>${gps.acc<=10?'Gps is goed':gps.acc<=20?'Gps is redelijk':'Gps is nog onnauwkeurig, ga onder de open hemel staan'}</span></div>`:`<div class="live"><span>Gps zoeken… Sta je buiten?</span></div>`;
@@ -641,6 +692,49 @@ function traceGuide(g){g.hidden=false;requestAnimationFrame(()=>document.body.st
  :`<h3>Klopt de lijn?</h3><p>${n} bolletjes. Sleep een bolletje als het niet goed ligt. Met een <b>plusje</b> zet je er een punt bij. Trek vanaf het eind verder om de lijn te verlengen.</p><div class="row2"><button class="btn" id="tRe">Opnieuw trekken</button><button class="btn pri" id="tOk">Klaar ✓</button></div>`;
  const on=(id,f)=>{const e=$(id);if(e)e.onclick=f;};
  on('tSkip',endTrace);on('tOk',endTrace);on('tRe',()=>{push();cur.pts=[];save();drawAll();});}
+
+/* ---------- nieuw ontwerp: begin en eind aantikken, rode lijn volgen ---------- */
+let ends=null,redD=null;
+async function redData(){if(redD&&redD.url===drawUrl)return redD;const im=await loadImg(drawUrl),f=Math.min(1,1200/Math.max(cur.W,cur.H)),W=Math.max(1,Math.round(cur.W*f)),H=Math.max(1,Math.round(cur.H*f));
+ const c=document.createElement('canvas');c.width=W;c.height=H;const g=c.getContext('2d',{willReadFrequently:true});g.drawImage(im,0,0,W,H);const d=g.getImageData(0,0,W,H).data,N=W*H,red=new Uint8Array(N),near=new Uint8Array(N);
+ for(let i=0;i<N;i++){const r=d[i*4],gg=d[i*4+1],b=d[i*4+2];if(r>130&&r-gg>60&&r-b>55&&gg<130)red[i]=1;}
+ const R=3;for(let y=0;y<H;y++)for(let x=0;x<W;x++){if(!red[y*W+x])continue;for(let j=-R;j<=R;j++){const yy=y+j;if(yy<0||yy>=H)continue;for(let k=-R;k<=R;k++){const xx=x+k;if(xx>=0&&xx<W&&j*j+k*k<=R*R)near[yy*W+xx]=1;}}}
+ redD={url:drawUrl,f,W,H,red,near};return redD;}
+function nearestRed(D,x,y,rad){const cx=Math.round(x*D.f),cy=Math.round(y*D.f);let best=null,bd=1e9;
+ for(let j=-rad;j<=rad;j++){const yy=cy+j;if(yy<0||yy>=D.H)continue;for(let k=-rad;k<=rad;k++){const xx=cx+k;if(xx<0||xx>=D.W)continue;const dd=j*j+k*k;if(dd<bd&&dd<=rad*rad&&D.red[yy*D.W+xx]){bd=dd;best=[xx,yy];}}}
+ return best;}
+function redPath(D,a,b){const W=D.W,H=D.H,N=W*H,dist=new Int32Array(N).fill(2147483647),prev=new Int32Array(N).fill(-1),s=a[1]*W+a[0],t=b[1]*W+b[0];
+ const MAXC=360,B=[];for(let i=0;i<=MAXC;i++)B.push([]);dist[s]=0;B[0].push(s);let cur0=0,pending=1,done=new Uint8Array(N);
+ const nb=[[1,0,10],[-1,0,10],[0,1,10],[0,-1,10],[1,1,14],[1,-1,14],[-1,1,14],[-1,-1,14]];
+ while(pending>0){const bk=B[cur0%(MAXC+1)];if(!bk.length){cur0++;continue;}const u=bk.pop();pending--;if(done[u]||dist[u]!==cur0)continue;done[u]=1;if(u===t)break;
+  const ux=u%W,uy=(u-ux)/W;for(const[dx,dy,c]of nb){const x=ux+dx,y=uy+dy;if(x<0||y<0||x>=W||y>=H)continue;const v=y*W+x;if(done[v])continue;
+   const w=D.red[v]?c:D.near[v]?c*2:c*25,nd=cur0+w;if(nd<dist[v]){dist[v]=nd;prev[v]=u;B[nd%(MAXC+1)].push(v);pending++;}}}
+ if(prev[t]<0&&t!==s)return null;const P=[];let off=0;for(let v=t;v!==-1;v=prev[v]){P.push([v%W,(v-v%W)/W]);if(!D.red[v]&&!D.near[v])off++;}
+ P.reverse();return{P,off,len:P.length};}
+function startEnds(){ends={s:null,e:null,busy:false,done:false};trace=null;document.body.classList.remove('trace');document.body.classList.add('ends');setEdit(false);drawAll();
+ requestAnimationFrame(()=>{const S=$('mapS');if(!S)return;const z=Math.max(1,S.clientHeight/(S.clientWidth*cur.H/cur.W));setView(z,cur.W/2,cur.H/2);drawMap();drawNav();});}
+function endEnds(){ends=null;document.body.classList.remove('ends');setEdit(false);drawAll();if(cur.pts.length)toast('Route vast. Tik op de lijn voor een foto of item.');}
+async function endsTap(x,y){if(ends.busy)return;let D=null;try{D=await redData();}catch(e){}
+ const q=D&&nearestRed(D,x,y,Math.max(6,Math.round(30*D.f*cur.W/$('svg').getBoundingClientRect().width)));const pt=q?[q[0]/D.f,q[1]/D.f]:[x,y];
+ if(!ends.s){ends.s=pt;ends.sq=q;if(!q)toast('Hier ligt geen rode lijn. Het punt staat waar je tikte.');drawMap();drawGuide();return;}
+ ends.e=pt;ends.eq=q;if(!q)toast('Hier ligt geen rode lijn. Het punt staat waar je tikte.');ends.busy=true;drawMap();drawGuide();
+ await sleep(60);let R=null;try{if(D){const a=ends.sq||[Math.round(ends.s[0]*D.f),Math.round(ends.s[1]*D.f)],b=q||[Math.round(x*D.f),Math.round(y*D.f)];R=redPath(D,a,b);}}catch(e){R=null;}
+ ends.busy=false;const mk=p=>({id:uid(),x:Math.round(p[0]),y:Math.round(p[1]),it:'',c:'',photo:''});push();
+ let V;if(R&&R.P.length>1){V=rdp(R.P,4.5).map(p=>[p[0]/D.f,p[1]/D.f]);V[0]=ends.s;V[V.length-1]=ends.e;V=V.filter((p,i,A)=>i===0||i===A.length-1||Math.hypot(p[0]-A[i-1][0],p[1]-A[i-1][1])>6/D.f);
+  ends.off=R.off/Math.max(1,R.len);}else{V=[ends.s,ends.e];ends.off=1;}
+ cur.pts=V.map(mk);ends.done=true;setEdit(true);solve();save();drawAll();requestAnimationFrame(()=>{try{viewTo(navRect('alles'));}catch(e){}});}
+function endsLayer(s){let o='';const pin=(p,t,c)=>{if(!p)return;o+=`<circle cx="${p[0]}" cy="${p[1]}" r="${10*s}" fill="${c}" stroke="#fff" stroke-width="${3*s}"/><text x="${p[0]}" y="${p[1]-16*s}" font-size="${13*s}" font-weight="700" text-anchor="middle" fill="${c}" stroke="#fff" stroke-width="${3*s}" paint-order="stroke" font-family="system-ui,sans-serif">${t}</text>`;};
+ pin(ends.s,'Begin','#1b1b1f');pin(ends.e,'Eind','#2f4fe0');return o;}
+function endsGuide(g){g.hidden=false;requestAnimationFrame(()=>document.body.style.setProperty('--gh',g.offsetHeight+'px'));const n=cur.pts.length;
+ g.innerHTML=ends.busy?`<h3>Rode lijn volgen…</h3><p>Even geduld, de app zoekt de lijn tussen begin en eind.</p>`
+ :!ends.s?`<div class="stp"><b>1</b><span>van 2</span></div><h3>Tik op het begin</h3><p>Zoom en schuif naar de <b>aansluiting op het netwerk</b> en tik precies op de rode lijn.</p><div class="row2"><button class="btn" id="eHand">Zelf trekken</button></div>`
+ :!ends.done?`<div class="stp"><b>2</b><span>van 2</span></div><h3>Tik op het eindpunt</h3><p>Tik op de rode lijn bij de <b>invoer van het pand</b>. De app volgt dan de lijn.</p><div class="row2"><button class="btn" id="eBack">Begin opnieuw</button></div>`
+ :`<h3>Klopt de lijn?</h3><p>${ends.off>.25?'<b>Let op:</b> de app kon de rode lijn niet overal volgen. Kijk de lijn goed na. ':''}${n} bolletjes. Sleep een bolletje als het niet goed ligt, met een <b>plusje</b> zet je er een punt bij.</p><div class="row2"><button class="btn" id="eRe">Opnieuw aantikken</button><button class="btn pri" id="eOk">Klaar ✓</button></div><button class="lnk" id="eHand">Liever zelf trekken</button>`;
+ const on=(id,f)=>{const e=$(id);if(e)e.onclick=f;};
+ on('eBack',()=>{ends.s=null;ends.e=null;drawMap();drawGuide();});
+ on('eRe',()=>{push();cur.pts=[];save();startEnds();});
+ on('eOk',endEnds);
+ on('eHand',()=>{ends=null;document.body.classList.remove('ends');push();cur.pts=[];save();startTrace();});}
 
 /* ---------- foto markeren ---------- */
 function arrowPoly(a,w){const[x1,y1,x2,y2]=a.map((v,i)=>v*(i%2?1:1)),L=Math.hypot(x2-x1,y2-y1)||1,ux=(x2-x1)/L,uy=(y2-y1)/L,nx=-uy,ny=ux,t=.014*w,hl=Math.min(.05*w,L*.5),hw=.034*w,bx=x2-ux*hl,by=y2-uy*hl;
