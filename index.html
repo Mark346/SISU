@@ -87,7 +87,7 @@ body.wiz .fab{display:none}body.wiz .app{padding-bottom:300px}body.wiz .mapS{max
 .cur{display:flex;gap:12px;align-items:center}.cur svg{width:40px;height:34px}
 .subh{display:flex;gap:10px;align-items:center;margin-bottom:6px}
 .ilist{display:grid;gap:6px}.it.wide span{display:flex;flex-direction:column}.it.wide small{font-size:12px;color:var(--mute)}
-body.trace #svg{touch-action:none}body.trace .app{padding-bottom:230px}body.trace .fab{display:none}
+body.trace #svg{touch-action:none}body.trace .app{padding-bottom:var(--gh,230px)}body.trace .fab{display:none}
 .pl{cursor:pointer;touch-action:none}
 .proj{grid-template-columns:72px minmax(0,1fr) 44px}.more{padding:0;width:44px;font-size:22px;border:0}.arch .proj{opacity:.75}
 .stick{position:sticky;top:0;z-index:4;background:var(--card);box-shadow:0 6px 12px -10px #0006}
@@ -150,7 +150,7 @@ textarea{width:100%;font:16px Barlow,system-ui,sans-serif;padding:10px;border-ra
 .chipb{bottom:66px;left:50%;transform:translateX(-50%);min-height:44px;padding:0 16px;border-radius:22px;border:0;background:#1a73e8;color:#fff;font:600 15px Barlow,sans-serif;box-shadow:0 6px 16px -4px #0008;cursor:pointer;white-space:nowrap}
 .inb{left:8px;top:112px;min-height:44px;padding:0 14px;border-radius:22px;border:0;background:var(--ok);color:#fff;font:700 15px Barlow,sans-serif;box-shadow:0 6px 16px -4px #0008;cursor:pointer}
 .askc{left:8px;right:74px;bottom:66px;display:flex;gap:8px;align-items:center;background:#fff;border-radius:14px;padding:8px 8px 8px 12px;box-shadow:0 8px 20px -6px #0009;font-size:14px}.askc span{flex:1}.askc .btn{min-height:44px}
-body.trace .ov{display:none}body.wiz .ov .pn,body.wiz .ov .askc{display:none}
+body.trace .ov>*:not(.zsl){display:none}body.wiz .ov .pn,body.wiz .ov .askc{display:none}
 body.contrast{--hv:#c24400;--hv2:#8a3000;--mute:#1b1b1b;--line:#9aa0a2}body.contrast .leg,body.contrast .note,body.contrast .row .d{color:#000}body.contrast .seg button,body.contrast .pn{color:#000;font-weight:700}
 .pandsvg{display:block;width:100%;max-height:170px;margin:6px 0}
 .kv{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:15px;margin:8px 0}.kv span{color:var(--mute)}.kv b{font-weight:600}.kv b.ok{color:var(--ok)}.kv b.warn{color:var(--bad)}
@@ -619,11 +619,11 @@ function pointBubble(p,cx,cy){const b=$('bubble');b.innerHTML=`<button class="bt
 function rdp(P,eps){if(P.length<3)return P.slice();const a=P[0],b=P[P.length-1],dx=b[0]-a[0],dy=b[1]-a[1],L=Math.hypot(dx,dy)||1;let dm=0,ix=0;
  for(let i=1;i<P.length-1;i++){const d=L>1e-6?Math.abs(dy*P[i][0]-dx*P[i][1]+b[0]*a[1]-b[1]*a[0])/L:Math.hypot(P[i][0]-a[0],P[i][1]-a[1]);if(d>dm){dm=d;ix=i;}}
  return dm>eps?rdp(P.slice(0,ix+1),eps).slice(0,-1).concat(rdp(P.slice(ix),eps)):[a,b];}
-function fitTrace(on){const I=$('mapI'),S=$('mapS');if(!I)return;
- if(on){const tb=document.querySelector('.stick').offsetHeight,gh=($('guide')&&!$('guide').hidden?$('guide').offsetHeight:200)+10,avail=Math.max(240,innerHeight-tb-gh),w=Math.min(S.clientWidth,avail*cur.W/cur.H);
-  traceBase=w;zoom=1;I.style.margin='0 auto';S.style.maxHeight=Math.round(Math.min(avail,w*cur.H/cur.W))+'px';applyZoom();
-  requestAnimationFrame(()=>scrollTo({top:S.getBoundingClientRect().top+scrollY-tb}));}
- else{traceBase=null;zoom=1;I.style.margin='';S.style.maxHeight='';applyZoom();}}
+function fitTrace(on){const I=$('mapI'),S=$('mapS');if(!I)return;traceBase=null;I.style.margin='';S.style.maxHeight='';
+ if(on){applyZoom();requestAnimationFrame(()=>{const z=Math.max(1,S.clientHeight/(S.clientWidth*cur.H/cur.W));let cx=cur.W/2,cy=cur.H/2;
+  if(cur.pts.length){const X=cur.pts.map(p=>p.x),Y=cur.pts.map(p=>p.y);cx=(Math.min(...X)+Math.max(...X))/2;cy=(Math.min(...Y)+Math.max(...Y))/2;}
+  setView(z,cx,cy);drawMap();drawNav();});}
+ else{zoom=1;applyZoom();}}
 function startTrace(){trace={stroke:null};document.body.classList.add('trace');zoom=1;drawAll();fitTrace(true);drawMap();}
 function endTrace(){trace=null;setEdit(false);document.body.classList.remove('trace');fitTrace(false);drawAll();if(cur.pts.length)toast('Route vast. Tik op de lijn voor een foto of item.');}
 function finishStroke(){const S=trace.stroke;trace.stroke=null;const s=cur.W/$('svg').getBoundingClientRect().width;
@@ -636,7 +636,7 @@ function finishStroke(){const S=trace.stroke;trace.stroke=null;const s=cur.W/$('
  else if(first&&Math.hypot(V[V.length-1][0]-first.x,V[V.length-1][1]-first.y)<28*s)cur.pts.unshift(...V.slice(0,-1).map(mk));
  else cur.pts=V.map(mk);
  solve();save();drawAll();}
-function traceGuide(g){g.hidden=false;const n=cur.pts.length;
+function traceGuide(g){g.hidden=false;requestAnimationFrame(()=>document.body.style.setProperty('--gh',g.offsetHeight+'px'));const n=cur.pts.length;
  g.innerHTML=n<2?`<h3>Trek de route</h3><p>Trek met je vinger over de rode lijn, van het begin tot het eind. Bij elke hoek en bocht komt een bolletje, midden op elke lijn een plusje.</p><div class="row2"><button class="btn" id="tSkip">Later</button></div>`
  :`<h3>Klopt de lijn?</h3><p>${n} bolletjes. Sleep een bolletje als het niet goed ligt. Met een <b>plusje</b> zet je er een punt bij. Trek vanaf het eind verder om de lijn te verlengen.</p><div class="row2"><button class="btn" id="tRe">Opnieuw trekken</button><button class="btn pri" id="tOk">Klaar ✓</button></div>`;
  const on=(id,f)=>{const e=$(id);if(e)e.onclick=f;};
