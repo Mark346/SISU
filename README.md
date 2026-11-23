@@ -20,3 +20,22 @@ Een web-app voor de telefoon om een kabelroute op een tekening te zetten, foto's
 - Bij de eerste keer "Positie" of "Ik sta hier" vraagt de telefoon om toestemming voor je locatie.
 - Voor het inlezen van een PDF-tekening is internet nodig. De PDF-lezer wordt dan van cdnjs geladen.
 - Werk je een bestand bij op GitHub, dan krijg je de nieuwe versie soms pas na twee keer openen te zien. Dat komt doordat de app een kopie bewaart voor slecht bereik.
+
+## Varianten
+De hoofdpagina (`index.html`) laat vier manieren zien om de schouw buiten te doen:
+
+| Variant | Pagina | Wat het is |
+|---|---|---|
+| Origineel | `origineel.html` | De bestaande app: route van de tekening, punten slepen, gps-koppeling. Gegevens blijven in de opslag `schouw`. |
+| Veeg & Klik | `veeg.html` | Foto maken, route vegen: de app maakt er een nette pijl van. (komt eraan) |
+| Richt & Zet | `richt.html` | De pijl ligt in perspectief op de grond in je camerabeeld. (komt eraan) |
+| Loop-spoor | `loop.html` | Jij loopt, de app tekent de richting en telt de meters. (komt eraan) |
+
+De drie nieuwe varianten delen code in `shared/`:
+- `legend.js` – tekent pijlen, bestaande buis en symbolen als SVG over een foto (`render`) en brandt ze in een JPEG (`burnIn`).
+- `store.js` – IndexedDB `sisu` met de tabellen `surveys` en `photos`; verkleint foto's naar max. 1600 px.
+- `camera.js` – foto maken via de camera-kiezer en een live camerabeeld.
+- `sensors.js` – knop "Sensoren toestaan" voor kompas, beweging en gps.
+- `document.html` – "Zo komt het in het document": tellers, foto's in twee kolommen, afdrukken als PDF en foto's met pijlen delen.
+
+De laatst gekozen variant wordt onthouden (`localStorage` sleutel `sisu.lastVariant`).

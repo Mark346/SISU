@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0d0f12">
+<title>Document – Sisu</title>
+<link rel="manifest" href="../manifest.webmanifest">
+<link rel="apple-touch-icon" href="../icon-192.png">
+<link rel="stylesheet" href="base.css">
+<style>
+.ctl{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0}
+.ctl select{flex:1 1 100%;width:100%;min-width:0;min-height:48px;border-radius:14px;border:2px solid var(--line);background:var(--card);padding:0 12px;font-size:16px}
+.msg{min-height:24px;color:var(--mute)}
+/* het document zelf: wit papier, zoals het schouwdocument */
+.doc{background:#fff;color:#111;border-radius:8px;padding:20px 16px;margin-top:8px}
+.doc h1{font-size:24px;margin:0 0 2px}
+.doc .sub{color:#555;margin:0 0 12px}
+.doc h2{font-size:21px;border-bottom:2px solid #FF7A1A;padding-bottom:4px;margin:16px 0 10px}
+.tel{width:100%;border-collapse:collapse;font-size:16px;border:2px solid #111}
+.tel td{padding:8px 10px;border-bottom:1px solid #ccc}.tel tr:last-child td{border-bottom:0}
+.tel td.n{text-align:right;white-space:nowrap}
+.tel input{width:84px;min-height:40px;text-align:right;border:1px solid #bbb;border-radius:8px;padding:0 8px;font-size:16px;color:#111;background:#fff}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:14px}
+.vak{break-inside:avoid;page-break-inside:avoid;border:1px solid #ccc;border-radius:6px;padding:8px;display:flex;flex-direction:column}
+.box{aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;background:#f2f2f2}
+.ph{position:relative;overflow:hidden}
+.ph.liggend{width:100%;aspect-ratio:4/3}.ph.staand{height:100%;aspect-ratio:3/4}
+.ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;display:block}
+.cap{font-size:15px;margin-top:6px;line-height:1.35}.cap b{display:block}
+.empty{color:#555}
+@page{size:A4 portrait;margin:12mm}
+@media print{
+  body{background:#fff}.bar,.ctl,.msg,.noprint{display:none!important}
+  .page{max-width:none;padding:0}.doc{padding:0;border-radius:0}
+  .tel input{border:0;padding:0;width:auto}
+  .grid{gap:6mm}
+  .vak{height:128mm;border-color:#999}
+  .box{aspect-ratio:auto;flex:1;min-height:0;background:#fff}
+  .ph.liggend{width:100%;max-height:100%}.ph.staand{height:100%}
+}
+</style>
+</head>
+<body>
+<header class="bar"><a class="back" href="../index.html">‹ Hoofdmenu</a><h1>Zo komt het in het document</h1></header>
+<main class="page">
+  <div class="ctl">
+    <select id="sel" aria-label="Kies een schouw"></select>
+    <button class="btn pri" id="print">Afdrukken als PDF</button>
+    <button class="btn" id="share">Foto's met pijlen delen</button>
+    <button class="btn" id="test">Testschouw maken</button>
+  </div>
+  <p class="msg" id="msg" role="status"></p>
+  <article class="doc" id="doc"></article>
+</main>
+<script src="store.js"></script>
+<script src="legend.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const msg=t=>{$('msg').textContent=t||'';};
+let cur=null,urls=[];
+
+/* ---- testschouw met twee voorbeeldfoto's ---- */
+function fakePhoto(W,H){
+  const c=document.createElement('canvas');c.width=W;c.height=H;const g=c.getContext('2d');
+  const hz=H*.42,sky=g.createLinearGradient(0,0,0,hz);sky.addColorStop(0,'#5f97de');sky.addColorStop(1,'#bcd6f2');g.fillStyle=sky;g.fillRect(0,0,W,hz);
+  g.fillStyle='#4f7a3a';g.fillRect(0,hz-H*.06,W,H*.06);
+  const gr=g.createLinearGradient(0,hz,0,H);gr.addColorStop(0,'#9a9a96');gr.addColorStop(1,'#6e6d69');g.fillStyle=gr;g.fillRect(0,hz,W,H-hz);
+  g.strokeStyle='rgba(40,40,40,.35)';g.lineWidth=2;
+  for(let i=1;i<14;i++){const y=hz+(H-hz)*Math.pow(i/14,1.7);g.beginPath();g.moveTo(0,y);g.lineTo(W,y);g.stroke();}
+  for(let i=-10;i<=10;i++){g.beginPath();g.moveTo(W/2+i*W*.02,hz);g.lineTo(W/2+i*W*.16,H);g.stroke();}
+  g.fillStyle='#d9d6cf';g.beginPath();g.moveTo(W*.62,hz);g.lineTo(W*.66,hz);g.lineTo(W,H*.78);g.lineTo(W,H*.72);g.closePath();g.fill();
+  return new Promise(res=>c.toBlob(res,'image/jpeg',.85));
+}
+async function makeTest(){
+  const s=await Store.surveys.put({adres:'Testschouw – Voorbeeldstraat 1',variant:'veeg',status:'klaar',tellers:{meters:42,invoeringen:1,boringen:1}});
+  await Store.photos.put({surveyId:s.id,volgorde:1,blob:await fakePhoto(1600,1200),bron:'veeg',
+    ann:{orient:'liggend',arrow:[[200,292],[200,205],[292,160]],syms:[{t:'kn',x:310,y:152}],buis:[[12,150],[388,140]]},
+    bijschrift:'Vervolg tracé naar gemeentegrond. Vanaf koppeling te blazen naar bestaande HH.'});
+  await Store.photos.put({surveyId:s.id,volgorde:2,blob:await fakePhoto(1200,1600),bron:'veeg',
+    ann:{orient:'staand',arrow:[[20,300],[160,300],[215,215]],syms:[{t:'dv',x:226,y:196},{t:'lo',x:90,y:200}]},
+    bijschrift:'Vervolg tracé langs parkeervakken naar de invoering.'});
+  return s;
+}
+
+async function fill(){
+  let list=await Store.surveys.list();
+  if(!list.length){msg('Nog geen schouw gevonden. Er is een testschouw gemaakt om te laten zien hoe het eruitziet.');await makeTest();list=await Store.surveys.list();}
+  const want=new URLSearchParams(location.search).get('survey');
+  $('sel').innerHTML=list.map(s=>`<option value="${esc(s.id)}">${esc(s.adres||'zonder adres')} · ${new Date(s.datum).toLocaleDateString('nl-NL')}${s.status==='open'?' · open':''}</option>`).join('');
+  if(want&&list.some(s=>s.id===want))$('sel').value=want;
+  await show($('sel').value);
+}
+async function show(id){
+  urls.forEach(u=>URL.revokeObjectURL(u));urls=[];
+  cur=await Store.surveys.get(id);if(!cur)return;
+  const T=cur.tellers||{},ph=await Store.photos.bySurvey(id);
+  const row=(l,k,eenheid)=>`<tr><td>${l}</td><td class="n"><input inputmode="numeric" data-k="${k}" value="${esc(T[k]??0)}" aria-label="${l}">${eenheid?' '+eenheid:''}</td></tr>`;
+  $('doc').innerHTML=`<h1>${esc(cur.adres||'Schouw')}</h1><p class="sub">${new Date(cur.datum).toLocaleDateString('nl-NL',{day:'numeric',month:'long',year:'numeric'})}</p>
+   <h2>Buitentracé</h2>
+   <table class="tel">${row('Aantal meters buiten tracé','meters','m')}${row('Aantal invoeringen','invoeringen')}${row('Aantal boringen/persingen','boringen')}</table>
+   <div class="grid">${ph.map((p,i)=>{const u=URL.createObjectURL(p.blob);urls.push(u);const o=(p.ann&&p.ann.orient)||'liggend';
+     return `<figure class="vak" style="margin:0"><div class="box"><div class="ph ${o}" data-i="${i}"><img src="${u}" alt="Foto ${i+1}"></div></div>
+     <figcaption class="cap"><b>Foto ${i+1}</b>${esc(p.bijschrift||'')}</figcaption></figure>`;}).join('')}</div>
+   ${ph.length?'':'<p class="empty">Nog geen foto\'s in deze schouw.</p>'}`;
+  document.querySelectorAll('.ph').forEach(el=>{const p=ph[+el.dataset.i];if(p.ann)Legend.render(el,p.ann);});
+  document.querySelectorAll('.tel input').forEach(inp=>inp.addEventListener('change',async()=>{
+    const v=parseFloat(inp.value.replace(',','.'));cur.tellers={...cur.tellers,[inp.dataset.k]:isFinite(v)?v:0};await Store.surveys.put(cur);msg('Opgeslagen');setTimeout(()=>msg(''),1500);}));
+}
+$('sel').addEventListener('change',e=>show(e.target.value));
+$('test').addEventListener('click',async()=>{const s=await makeTest();history.replaceState(null,'','?survey='+s.id);await fill();msg('Testschouw gemaakt.');});
+$('print').addEventListener('click',()=>window.print());
+$('share').addEventListener('click',async()=>{
+  if(!cur)return;const ph=await Store.photos.bySurvey(cur.id);if(!ph.length){msg('Geen foto\'s om te delen.');return;}
+  $('share').disabled=true;msg('Pijlen in de foto\'s zetten…');
+  try{
+    const base=(cur.adres||'schouw').replace(/[^\w\- ]+/g,'').trim().replace(/\s+/g,'-').slice(0,40)||'schouw';
+    const files=[];for(let i=0;i<ph.length;i++){const b=ph[i].ann?await Legend.burnIn(ph[i].blob,ph[i].ann):ph[i].blob;files.push(new File([b],`${base}-foto-${i+1}.jpg`,{type:'image/jpeg'}));}
+    if(navigator.canShare&&navigator.canShare({files})){
+      try{await navigator.share({files,title:cur.adres||'Schouw'});msg('');}catch(e){msg(e&&e.name==='AbortError'?'':'Delen lukte niet.');}
+    }else{
+      for(const f of files){const a=document.createElement('a');a.href=URL.createObjectURL(f);a.download=f.name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},2000);}
+      msg(files.length+' foto\'s gedownload.');
+    }
+  }catch(e){msg('Er ging iets mis: '+(e&&e.message||e));}
+  $('share').disabled=false;
+});
+fill().catch(e=>msg('Kon de opslag niet openen: '+(e&&e.message||e)));
+if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('../sw.js').catch(()=>{});
+</script>
+</body>
+</html>
