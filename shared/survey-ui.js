@@ -5,7 +5,8 @@
      acties:(survey,aantal)=>[{label,pri,fn}],   // knoppen bovenaan het overzicht
      tellen:(survey,fotos)=>({meters?,metersNote?,invoeringen}),  // tellers die de app zelf bepaalt
      metersZelf:true,                             // meters zelf invullen (anders telt de app)
-     openFoto:(survey,photoId)=>{}               // tik op een foto in de strook
+     openFoto:(survey,photoId)=>{},              // tik op een foto in de strook
+     eigenScherm:(survey)=>{}                    // optioneel: eigen scherm in plaats van het overzicht
    })  Vereist store.js en editor.js (voor stripBind). */
 (function(){
   const $=id=>document.getElementById(id);
@@ -71,6 +72,7 @@
   }
   async function show(s){
     survey=s;history.replaceState(null,'','?survey='+encodeURIComponent(s.id));title(s.adres||cfg.naam);
+    if(cfg.eigenScherm)return cfg.eigenScherm(s); // variant met een eigen schouwscherm (Loop-spoor)
     const ph=await Store.photos.bySurvey(s.id,true),ok=ph.filter(p=>p.status!=='vervallen');
     Object.values(urls).forEach(u=>URL.revokeObjectURL(u));urls={};ph.forEach(p=>urls[p.id]=URL.createObjectURL(p.blob));
     const T=await recount(),acts=cfg.acties(s,ok.length);
@@ -98,5 +100,5 @@
     $('done').onclick=async()=>{survey.status=survey.status==='klaar'?'open':'klaar';await Store.surveys.put(survey);toast(survey.status==='klaar'?'Schouw afgerond':'Schouw staat weer open');show(survey);};
     $('other').onclick=()=>{history.replaceState(null,'',location.pathname);start();};
   }
-  window.SurveyUI={init,show:s=>show(s||survey),recount,toast,current:()=>survey};
+  window.SurveyUI={init,show:s=>show(s||survey),start:()=>{history.replaceState(null,'',location.pathname);return start();},recount,toast,current:()=>survey};
 })();

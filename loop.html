@@ -10,17 +10,333 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="stylesheet" href="shared/base.css">
-<style>.soon{margin-top:28px;text-align:center}.soon h2{font-size:28px;margin:0 0 8px}.soon p{margin:0 auto;max-width:28em}</style>
+<style>
+.live{display:grid;grid-template-columns:1fr auto;gap:8px 14px;align-items:center;padding:14px 16px;border-radius:var(--r);background:var(--card);border:2px solid var(--line);margin-top:4px}
+.live .seg{font-size:64px;font-weight:900;line-height:1;letter-spacing:-.02em}
+.live .seg small{font-size:22px;font-weight:800;margin-left:4px}
+.live .sub{font-size:17px;color:var(--mute)}.live .sub b{color:var(--ink)}
+.live .acc{font-weight:800;font-size:16px;display:flex;align-items:center;gap:6px}
+.live .acc i{width:12px;height:12px;border-radius:50%;background:#2BB24C}.live .acc.warn i{background:#F2B705}.live .acc.bad i{background:#D7261E}
+.rose{grid-row:1/4;grid-column:2}
+.say{margin:12px 0 0;font-size:18px;font-weight:700}
+.bend{margin-top:10px;padding:12px 14px;border-radius:14px;background:#3a2a06;border:2px solid #F2B705;color:#ffe08a;font-weight:800;font-size:18px;display:flex;align-items:center;gap:10px}
+.bend .btn{margin-left:auto;min-height:44px}
+.tip{margin-top:10px;padding:12px 14px;border-radius:14px;background:#10283a;border:1px solid #2b6c9a;color:#cfe8ff;font-size:16px}
+.tip button{display:block;margin-top:8px}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}.row .btn{flex:1}
+.big{width:100%;min-height:72px;font-size:21px}
+h2{font-size:22px;margin:22px 0 10px}
+.spoor{display:flex;gap:10px;overflow-x:auto;padding:4px 0 8px}
+.sp{flex:none;width:132px;border-radius:12px;border:2px solid var(--line);background:var(--card);color:var(--ink);padding:0;cursor:pointer;text-align:left;overflow:hidden}
+.sp.vv{opacity:.45}.sp.pick{border-color:var(--acc)}
+.sp .im{position:relative;height:99px;background:#000;overflow:hidden}
+.sp .im img{position:absolute;inset:0;width:100%;height:100%;object-fit:fill}
+.sp .t{display:block;padding:6px 8px;font-size:15px;font-weight:700;line-height:1.25}
+.sp .t small{display:block;color:var(--mute);font-weight:600;font-size:13px}
+.back2{margin-top:10px;padding:14px;border-radius:14px;background:var(--card2);border:2px solid var(--acc)}
+.back2 .d{font-size:34px;font-weight:900}
+.blk{display:flex;flex-direction:column;gap:10px}
+.blk .btn{min-height:60px;font-size:18px;justify-content:flex-start}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:48;background:#181b20;border-radius:20px 20px 0 0;padding:16px calc(16px + env(safe-area-inset-right)) calc(18px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left));box-shadow:0 -10px 30px #000a}
+.sheet h3{margin:0 0 12px;font-size:21px}
+.tel{display:flex;flex-direction:column;border:2px solid var(--line);border-radius:var(--r);overflow:hidden}
+.tel .r{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--line);min-height:64px}.tel .r:last-child{border-bottom:0}
+.tel .r .l{flex:1}.tel .r .l small{display:block;color:var(--mute);font-size:14px}
+.tel .v{min-width:48px;text-align:center;font-size:22px;font-weight:800;white-space:nowrap}
+.step{width:48px;height:48px;border-radius:12px;border:2px solid var(--line);background:var(--card);font-size:24px;font-weight:800;cursor:pointer}
+.set{display:flex;align-items:center;gap:10px;margin-top:10px}.set input{width:90px;min-height:48px;border-radius:12px;border:2px solid var(--line);background:var(--card);text-align:right;padding:0 10px;font-size:18px}
+.sim{margin-top:18px;padding:10px;border:2px dashed #555;border-radius:14px}.sim .row{margin-top:6px}
+</style>
 </head>
 <body>
-<header class="bar"><a class="back" href="index.html">‹ Hoofdmenu</a><h1>Loop-spoor</h1></header>
-<main class="page">
-  <div class="card soon">
-    <h2>Komt eraan</h2>
-    <p class="note">Jij loopt, de app tekent de richting en telt de meters.</p>
-  </div>
-</main>
-<script>try{localStorage.setItem('sisu.lastVariant','loop');}catch(e){}
-if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{});</script>
+<header class="bar"><a class="back" href="index.html">‹ Hoofdmenu</a><h1 id="ttl">Loop-spoor</h1></header>
+<main class="page" id="main"></main>
+<div class="sheet" id="sheet" hidden role="dialog" aria-labelledby="shT"><h3 id="shT"></h3><div class="blk" id="shB"></div></div>
+<script src="shared/store.js"></script>
+<script src="shared/legend.js"></script>
+<script src="shared/camera.js"></script>
+<script src="shared/sensors.js"></script>
+<script src="shared/editor.js"></script>
+<script src="shared/survey-ui.js"></script>
+<script>
+/* Loop-spoor: jij loopt en maakt foto's bij elke knik; de telefoon meet hoe ver en welke kant op,
+   en tekent daarmee de pijl op de vorige foto. */
+const $=id=>document.getElementById(id),main=$('main');
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const D2R=Math.PI/180,SIM=new URLSearchParams(location.search).has('sim');
+const nl0=v=>Math.round(v).toLocaleString('nl-NL');
+const norm=a=>{a=((a%360)+540)%360-180;return a;};           // -180..180
+const toast=t=>SurveyUI.toast(t);
+let stepLen=0.7;try{stepLen=+localStorage.getItem('sisu.loop.stap')||0.7;}catch(e){}
+
+/* ---------- toestand ---------- */
+let S=null;            // de schouw (met S.loop en S.spoor)
+let watchId=null,wake=null,fixes=[],smooth=null,lastCounted=null,lastGoodT=0,gpsAcc=null,mode='gps',head=null,pos=null,segPts=[],bendShown=false,pickMode=false;
+const L=()=>S.loop;
+function newLoop(){return{fase:'start',o:null,cur:null,segStart:null,segM:0,segFlag:'gps',pend:null,eind:null,terug:null,tip:false};}
+
+/* lokale meters rond het eerste punt (x = oost, y = noord) */
+function enu(lat,lon){const o=L().o;return[(lon-o[1])*Math.cos(o[0]*D2R)*111320,(lat-o[0])*110540];}
+function llOf(p){const o=L().o;return[o[0]+p[1]/110540,o[1]+p[0]/(Math.cos(o[0]*D2R)*111320)];}
+const dist=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
+const bearing=(a,b)=>(Math.atan2(b[0]-a[0],b[1]-a[1])/D2R+360)%360;
+
+/* ---------- opslaan (gesmoord) ---------- */
+let svT=null;function saveS(now){clearTimeout(svT);const go=()=>Store.surveys.put(S);if(now)return go();svT=setTimeout(go,3000);}
+
+/* ---------- gps ---------- */
+function onFix(lat,lon,acc,t){
+  if(!S)return;if(!L().o)L().o=[lat,lon];
+  (S.spoor=S.spoor||[]).push([+lat.toFixed(7),+lon.toFixed(7),Math.round(acc*10)/10,t]);saveS();
+  gpsAcc=acc;
+  if(acc>15){render();return;}
+  if(acc<=10)lastGoodT=t;
+  fixes.push({p:enu(lat,lon),t,acc});while(fixes.length>3)fixes.shift();
+  smooth=[fixes.reduce((s,f)=>s+f.p[0],0)/fixes.length,fixes.reduce((s,f)=>s+f.p[1],0)/fixes.length];
+  if(mode==='stappen'&&acc<=10){mode='gps';lastCounted=smooth;pos=smooth;render();return;}
+  if(mode!=='gps'){render();return;}
+  if(!counting()||!lastCounted){lastCounted=smooth;if(!counting())pos=smooth;render();return;}
+  const d=dist(smooth,lastCounted);
+  if(d>=1.5){lastCounted=smooth;pos=smooth;addDist(d);}
+  else render();
+}
+function startGps(){
+  if(SIM||watchId!=null||!navigator.geolocation)return;
+  watchId=navigator.geolocation.watchPosition(p=>onFix(p.coords.latitude,p.coords.longitude,p.coords.accuracy,Date.now()),
+    e=>{if(e.code===1)toast('Geen toestemming voor de locatie: tel met stappen');},{enableHighAccuracy:true,maximumAge:0,timeout:20000});
+}
+function stopGps(){if(watchId!=null)navigator.geolocation.clearWatch(watchId);watchId=null;}
+const counting=()=>S&&L().fase==='lopen'&&!L().terug&&L().cur;
+/* reserve: stappen als de gps langer dan 10 s slechter is dan 10 m */
+setInterval(()=>{if(!S||L().fase!=='lopen')return;if(mode==='gps'&&Date.now()-lastGoodT>10000){mode='stappen';if(!pos)pos=smooth||[0,0];toast('Gps is slecht: ik tel nu stappen');render();}},1000);
+
+/* ---------- stappen (DeviceMotion) ---------- */
+let lp=null,base=null,above=false,lastStep=0;
+window.addEventListener('devicemotion',e=>{const a=e.accelerationIncludingGravity;if(!a||a.x==null)return;
+  const m=Math.hypot(a.x,a.y,a.z);lp=lp==null?m:lp*.8+m*.2;base=base==null?m:base*.98+m*.02;
+  const t=performance.now();
+  if(!above&&lp-base>1.2){above=true;if(t-lastStep>=300){lastStep=t;onStep();}}
+  else if(above&&lp-base<.4)above=false;});
+function onStep(){
+  if(mode!=='stappen'||!counting())return;
+  const h=(head==null?0:head)*D2R;pos=[(pos||[0,0])[0]+stepLen*Math.sin(h),(pos||[0,0])[1]+stepLen*Math.cos(h)];addDist(stepLen);
+}
+
+/* ---------- kompas: kijkrichting van de achtercamera ---------- */
+function onOri(e){
+  if(e.beta==null)return;
+  let al=e.alpha;if(e.webkitCompassHeading!=null)al=360-e.webkitCompassHeading;if(al==null)return;
+  const cA=Math.cos(al*D2R),sA=Math.sin(al*D2R),cB=Math.cos(e.beta*D2R),sB=Math.sin(e.beta*D2R),cG=Math.cos((e.gamma||0)*D2R),sG=Math.sin((e.gamma||0)*D2R);
+  const vx=-(cA*sG+sA*sB*cG),vy=cA*sB*cG-sA*sG;     // vector naar achteren, op het horizontale vlak
+  if(Math.hypot(vx,vy)<.2)return;                     // telefoon plat: geen betrouwbare kijkrichting
+  const h=(Math.atan2(vx,vy)/D2R+360)%360;
+  head=head==null?h:(head+norm(h-head)*.2+360)%360;
+}
+window.addEventListener('deviceorientation',onOri);
+
+/* ---------- meters optellen ---------- */
+function addDist(d){
+  const l=L();l.segM+=d;if(mode==='stappen')l.segFlag='stappen';
+  segPts.push({p:pos.slice(),c:l.segM});
+  // draai van de vorige foto definitief zodra 3 m van het nieuwe stuk gelopen is
+  if(l.pend&&l.segM>=3){const hNew=bearing(l.segStart,pos);finishTurn(l.pend.id,norm(hNew-l.pend.hSeg),false);l.pend=null;}
+  // afgebogen? koers over de laatste 5 m tegen de koers van het begin van dit stuk
+  if(l.segM>=8&&!bendShown){const at=c=>{let q=segPts[0];for(const s of segPts){if(s.c<=c)q=s;else break;}return q.p;};
+    const h0=bearing(segPts[0].p,at(5)),h1=bearing(at(l.segM-5),pos);if(Math.abs(norm(h1-h0))>35){bendShown=true;}}
+  saveS();render();
+}
+
+/* ---------- pijl tekenen op de vorige foto ---------- */
+const REL={recht:[[.5,.97],[.5,.45]],rechts:[[.47,.97],[.47,.62],[.8,.62]],links:[[.53,.97],[.53,.62],[.2,.62]]};
+const turnKind=t=>t==null||Math.abs(t)<30?'recht':t>0?'rechts':'links';
+const DIRW={recht:'rechtdoor',rechts:'rechtsaf',links:'linksaf'};
+const STARTW={kn:'Plaatsen nieuwe koppeling op bestaande buis.',hn:'Plaatsen nieuwe handhole.',best:'Vervolg in bestaand tracé.'};
+const EINDW={dv:'de invoer in de gevel',hn:'de nieuwe handhole',kn:'de koppeling'};
+function annFor(p){
+  const[W,H]=Legend.size(p.ann||{orient:'liggend'}),u=q=>[Math.round(q[0]*W),Math.round(q[1]*H)];
+  const k=p.last?'recht':turnKind(p.turn),pts=REL[k].map(u),ann={orient:(p.ann&&p.ann.orient)||'liggend',arrow:pts,syms:[]};
+  const sx=pts[0][0];
+  if(p.start==='kn'){ann.buis=[u([.05,.92]),u([.95,.92])];ann.syms.push({t:'kn',x:sx,y:Math.round(.92*H)});}
+  if(p.start==='hn')ann.syms.push({t:'hn',x:sx,y:Math.round(.92*H)});
+  if(p.start==='best')ann.buis=[u([.05,.92]),u([.95,.92])];
+  if(p.last&&p.eind)ann.syms.push({t:p.eind,x:Math.round(.5*W),y:Math.round(.39*H)});
+  if(!ann.syms.length)delete ann.syms;
+  return ann;
+}
+function capFor(p){
+  const t=[];if(p.start)t.push(STARTW[p.start]);
+  const m=Math.max(1,Math.round(p.meters||0));
+  if(p.last)t.push(`Nieuw te leggen tracé, ca. ${m} m, tot ${EINDW[p.eind]||'het eindpunt'}.`);
+  else t.push(`Nieuw te leggen tracé, ca. ${m} m, daarna ${DIRW[turnKind(p.turn)]}.`);
+  return t.join(' ');
+}
+async function redrawPhoto(id){
+  const p=await Store.photos.get(id);if(!p)return;
+  if(!p.bijgeveegd){p.ann=annFor(p);const c=capFor(p);p.bijschrift=c;p.cap={auto:false,sel:[],lo:'',vrij:c};}
+  await Store.photos.put(p);
+  if(!L().tip&&p.ann&&p.ann.arrow){L().tip=true;showTip=true;saveS(true);}
+}
+async function finishTurn(id,turn,voorlopig){const p=await Store.photos.get(id);if(!p)return;p.turn=Math.round(turn);p.turnVoorlopig=voorlopig;await Store.photos.put(p);await redrawPhoto(id);await refresh();}
+let showTip=false;
+
+/* ---------- foto maken ---------- */
+function tapPos(){const now=Date.now(),r=(S.spoor||[]).filter(f=>now-f[3]<=3000&&f[2]<=15);
+  if(r.length){const lastP=enu(r[r.length-1][0],r[r.length-1][1]),P=SIM?[lastP]:r.map(f=>enu(f[0],f[1])).filter(q=>dist(q,lastP)<=3);return[P.reduce((s,q)=>s+q[0],0)/P.length,P.reduce((s,q)=>s+q[1],0)/P.length];}
+  return pos||smooth||null;}
+function takePhoto(galerij){
+  // positie en richting vastleggen op het moment van de tik, vóór de camera opent
+  const pTap=tapPos(),hTap=head,acc=gpsAcc,fl=mode;
+  Camera.take({galerij}).then(async r=>{
+    if(!r||!r.blob)return;
+    const l=L(),ll=pTap&&l.o?llOf(pTap):null;
+    const ph=await Store.photos.put({surveyId:S.id,blob:r.blob,ann:{orient:r.orient||'liggend'},bron:'loop',status:'ok',
+      gps:ll?{lat:+ll[0].toFixed(7),lon:+ll[1].toFixed(7),acc:acc==null?null:Math.round(acc)}:null,heading:hTap==null?null:Math.round(hTap),meting:fl});
+    if(l.cur){ // vorige foto afmaken: lengte van het stuk en (voorlopige) draai
+      const prev=await Store.photos.get(l.cur);
+      if(prev&&prev.status!=='vervallen'){
+        const hSeg=l.segM>=3&&l.segStart&&pTap?bearing(l.segStart,pTap):(prev.heading!=null?prev.heading:hTap);
+        if(mode==='gps'&&lastCounted&&smooth&&l.fase==='lopen'&&!l.terug)l.segM+=dist(lastCounted,smooth); // stukje sinds het laatst getelde punt
+        prev.meters=Math.round(l.segM*10)/10;prev.meting=l.segFlag;prev.hSeg=hSeg==null?null:Math.round(hSeg);
+        prev.turn=(hTap!=null&&hSeg!=null)?Math.round(norm(hTap-hSeg)):0;prev.turnVoorlopig=true;
+        await Store.photos.put(prev);await redrawPhoto(prev.id);
+        l.pend=hSeg!=null?{id:prev.id,hSeg}:null;
+      }
+    }
+    const first=!l.cur;
+    l.cur=ph.id;l.segStart=pTap;l.segM=0;l.segFlag=mode;l.fase='lopen';segPts=[{p:pTap||[0,0],c:0}];pos=pTap||pos;lastCounted=pTap||smooth;bendShown=false;
+    await saveS(true);startGps();keepAwake();await SurveyUI.recount();await refresh();
+    if(first)askStart(ph.id);
+  }).catch(e=>toast('Foto maken lukte niet'));
+}
+function sheet(title,items){
+  $('shT').textContent=title;$('shB').innerHTML=items.map((it,i)=>`<button class="btn${it.pri?' pri':''}" data-i="${i}">${esc(it.label)}</button>`).join('');$('sheet').hidden=false;
+  $('shB').querySelectorAll('button').forEach(b=>b.onclick=()=>{$('sheet').hidden=true;items[+b.dataset.i].fn&&items[+b.dataset.i].fn();});
+}
+function askStart(id){
+  const set=async v=>{const p=await Store.photos.get(id);p.start=v;await Store.photos.put(p);await redrawPhoto(id);await refresh();};
+  sheet('Wat is het startpunt?',[{label:'Koppeling op bestaande buis',fn:()=>set('kn')},{label:'Nieuwe handhole',fn:()=>set('hn')},{label:'Vervolg bestaand tracé',fn:()=>set('best')},{label:'Overslaan'}]);
+}
+function askEnd(){
+  if(!L().cur){toast('Maak eerst een foto');return;}
+  const fin=async v=>{const l=L(),p=await Store.photos.get(l.cur);
+    if(mode==='gps'&&lastCounted&&smooth&&!l.terug)l.segM+=dist(lastCounted,smooth);
+    p.meters=Math.round(l.segM*10)/10;p.meting=l.segFlag;p.last=true;p.eind=v;delete p.turn;await Store.photos.put(p);await redrawPhoto(p.id);
+    if(l.pend){l.pend=null;}
+    l.fase='klaar';l.eind=v;l.segM=0;bendShown=false;stopGps();letSleep();await saveS(true);await SurveyUI.recount();await refresh();toast('Eindpunt opgeslagen');};
+  sheet('Wat is het eindpunt?',[{label:'Invoer gevel',pri:1,fn:()=>fin('dv')},{label:'Nieuwe handhole',fn:()=>fin('hn')},{label:'Koppeling',fn:()=>fin('kn')},{label:'Annuleren'}]);
+}
+
+/* ---------- ander tracé vanaf een foto ---------- */
+async function reroute(id){
+  const ph=await Store.photos.bySurvey(S.id,true),i=ph.findIndex(p=>p.id===id);if(i<0)return;
+  for(const p of ph.slice(i+1))if(p.status!=='vervallen'){p.status='vervallen';await Store.photos.put(p);}
+  const k=ph[i];k.meters=null;delete k.last;delete k.eind;delete k.turn;k.status='ok';await Store.photos.put(k);
+  const fresh=await Store.photos.get(k.id);if(!fresh.bijgeveegd){fresh.ann={...annFor(fresh)};delete fresh.ann.arrow;fresh.bijschrift=fresh.start?STARTW[fresh.start]:'';fresh.cap={auto:false,sel:[],lo:'',vrij:fresh.bijschrift};await Store.photos.put(fresh);}
+  const l=L();l.cur=k.id;l.segM=0;l.segFlag='gps';l.pend=null;l.eind=null;l.fase='lopen';
+  l.segStart=k.gps&&l.o?enu(k.gps.lat,k.gps.lon):null;l.terug={id:k.id,nr:i+1};
+  pickMode=false;await saveS(true);startGps();keepAwake();await SurveyUI.recount();await refresh();
+  toast(`Foto's na foto ${i+1} vervallen`);
+}
+function resume(){const l=L();l.terug=null;lastCounted=smooth;pos=smooth||l.segStart;segPts=[{p:l.segStart||pos||[0,0],c:0}];bendShown=false;saveS(true);refresh();}
+
+/* ---------- scherm aan ---------- */
+async function keepAwake(){try{if('wakeLock' in navigator&&!wake){wake=await navigator.wakeLock.request('screen');wake.addEventListener('release',()=>wake=null);}}catch(e){}}
+function letSleep(){try{wake&&wake.release();}catch(e){}wake=null;}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&S&&L().fase==='lopen')keepAwake();});
+
+/* ---------- scherm ---------- */
+let photos=[],urls={};
+function rose(){const h=head==null?0:head;
+  return `<svg class="rose" width="104" height="104" viewBox="-52 -52 104 104" role="img" aria-label="Kompas: ${head==null?'onbekend':Math.round(h)+' graden'}">
+  <circle r="48" fill="#0d0f12" stroke="#33383f" stroke-width="3"/>
+  <g transform="rotate(${-h})"><path d="M0 -44 L7 -26 L-7 -26Z" fill="#D7261E"/><text y="-12" text-anchor="middle" font-size="15" font-weight="800" fill="#fff">N</text>
+  ${['O','Z','W'].map((t,i)=>`<text transform="rotate(${(i+1)*90}) translate(0 -14)" text-anchor="middle" font-size="12" fill="#b9bec6">${t}</text>`).join('')}</g>
+  <path d="M0 -30 L10 6 L0 0 L-10 6Z" fill="#FF7A1A"/></svg>`;}
+function totalM(){return photos.filter(p=>p.status!=='vervallen').reduce((s,p)=>s+(p.meters||0),0)+(S&&L().fase==='lopen'&&!L().terug?L().segM:0);}
+function accTxt(){if(mode==='stappen')return['bad',`stappen (gps ${gpsAcc==null?'–':'±'+Math.round(gpsAcc)+' m'})`];if(gpsAcc==null)return['warn','gps zoeken…'];
+  return[gpsAcc<=10?'':gpsAcc<=15?'warn':'bad',`gps ±${Math.round(gpsAcc)} m`];}
+function render(){
+  if(!S||!$('lv'))return;const l=L(),[cls,t]=accTxt();
+  $('lv').innerHTML=`<div><div class="seg">${nl0(l.fase==='lopen'&&!l.terug?l.segM:0)}<small>m</small></div><div class="sub">sinds vorige foto</div></div>${rose()}
+    <div class="sub">Totaal <b>${nl0(totalM())} m</b></div><div class="acc ${cls}"><i></i>${esc(t)}</div>`;
+  const tb=$('terug');if(tb&&l.terug){const k=photos.find(p=>p.id===l.terug.id),here=smooth||pos;
+    tb.querySelector('.d').textContent=k&&k.gps&&here&&l.o?nl0(dist(enu(k.gps.lat,k.gps.lon),here))+' m':'– m';}
+  const b=$('bend');if(b)b.hidden=!(bendShown&&l.fase==='lopen'&&!l.terug);
+}
+async function refresh(){
+  if(!S)return;photos=await Store.photos.bySurvey(S.id,true);
+  Object.values(urls).forEach(u=>URL.revokeObjectURL(u));urls={};photos.forEach(p=>urls[p.id]=URL.createObjectURL(p.blob));
+  const l=L(),ok=photos.filter(p=>p.status!=='vervallen'),n=ok.length,T=S.tellers||{};
+  const mBadge=p=>p.meters!=null?`${nl0(p.meters)} m${p.meting==='stappen'?' · stappen':''}${p.last?' · eind':p.turn!=null?' · '+DIRW[turnKind(p.turn)]+(p.turnVoorlopig?' (voorlopig)':''):''}`:(p.id===l.cur&&l.fase==='lopen'?'loopt…':'');
+  main.innerHTML=`
+   ${l.fase==='start'?`<p class="say">Sta op het startpunt, kijk in de looprichting.</p>`:''}
+   ${l.fase==='klaar'?`<p class="say">Klaar: het eindpunt staat erin. Bekijk het document of pas een foto aan.</p>`:''}
+   <div class="live" id="lv"></div>
+   <div class="bend" id="bend" hidden>Je bent afgebogen. Foto maken?<button class="btn pri" id="bendF">Foto</button></div>
+   ${l.terug?`<div class="back2" id="terug"><div>Loop terug naar foto ${l.terug.nr}:</div><div class="d">– m</div><div class="row"><button class="btn pri" id="here">Ik sta bij foto ${l.terug.nr}, verder</button></div></div>`:''}
+   ${showTip?`<div class="tip">De pijl laat je looprichting zien, recht door het midden van de foto. Loopt de echte lijn langs de rand? Tik dan op de foto en veeg hem even bij.<button class="btn" id="tipX">Begrepen</button></div>`:''}
+   ${l.fase!=='klaar'&&!l.terug?`<div class="row"><button class="btn pri big" id="shoot">Foto ${n+1}</button></div>`:''}
+   <div class="row">${l.fase==='lopen'&&!l.terug?'<button class="btn" id="eind">Eindpunt</button>':''}${n>1||l.fase==='klaar'?`<button class="btn${pickMode?' pri':''}" id="rr">${pickMode?'Kies een foto…':'Ander tracé vanaf…'}</button>`:''}</div>
+   ${head==null&&!SIM&&l.fase!=='klaar'?'<div class="row"><button class="btn" id="perm">Sensoren toestaan</button></div>':''}
+   <h2>Spoor</h2>
+   ${pickMode?'<p class="note">Tik op de foto vanaf waar het tracé anders loopt. De foto\'s daarna vervallen.</p>':''}
+   ${photos.length?`<div class="spoor">${photos.map((p,i)=>`<button class="sp${p.status==='vervallen'?' vv':''}${pickMode&&p.status!=='vervallen'?' pick':''}" data-id="${p.id}"><div class="im" data-i="${i}"><img src="${urls[p.id]}" alt="Foto ${i+1}"></div><span class="t">Foto ${i+1}${p.status==='vervallen'?' · vervalt':''}<small>${esc(mBadge(p))||'&nbsp;'}</small></span></button>`).join('')}</div>
+     <p class="note">Tik op een foto om de lijn bij te vegen of een symbool te verplaatsen.</p>`:'<p class="note">Nog geen foto\'s.</p>'}
+   <h2>Tellers</h2>
+   <div class="tel">
+     <div class="r"><div class="l">Meters buiten tracé<small>${esc(T.metersNote||'gps-spoor')}</small></div><span class="v" id="tmv">${nl0(T.meters||0)} m</span></div>
+     <div class="r"><div class="l">Invoeringen<small>1 als het eindpunt Invoer gevel is.</small></div><span class="v" id="ti">${T.invoeringen||0}</span></div>
+     <div class="r"><div class="l">Boringen/persingen</div><button class="step" id="bm" aria-label="Eén minder">−</button><span class="v" id="tb">${T.boringen||0}</span><button class="step" id="bp" aria-label="Eén meer">+</button></div>
+   </div>
+   <div class="set"><label for="stp">Staplengte (reserve)</label><input id="stp" inputmode="decimal" value="${String(stepLen).replace('.',',')}"><span>m</span></div>
+   <div class="row" style="margin-top:20px"><a class="btn pri" href="shared/document.html?survey=${encodeURIComponent(S.id)}">Naar document</a></div>
+   <div class="row"><button class="btn" id="other">Andere schouw</button></div>
+   ${SIM?`<div class="sim"><b>Proefstand</b> (zonder lopen)<div class="row"><button class="btn" data-sim="1">+1 m</button><button class="btn" data-sim="5">+5 m</button><button class="btn" data-sim="L">Links 90°</button><button class="btn" data-sim="R">Rechts 90°</button></div><div class="row"><button class="btn" data-sim="bad">Gps slecht/goed</button></div></div>`:''}`;
+  main.querySelectorAll('.sp .im').forEach(el=>{const p=photos[+el.dataset.i];if(p.ann)Legend.render(el,p.ann,.8);});
+  const on=(id,f)=>{const e=$(id);if(e)e.onclick=f;};
+  on('shoot',()=>takePhoto(false));on('bendF',()=>{bendShown=false;takePhoto(false);});on('eind',askEnd);on('here',resume);
+  on('tipX',()=>{showTip=false;refresh();});on('rr',()=>{pickMode=!pickMode;refresh();});
+  on('perm',async()=>{const r=await Sensors.request();toast(Sensors.summary(r));if(r.pos)onFix(r.pos.lat,r.pos.lon,r.pos.acc,Date.now());startGps();});
+  on('other',()=>{stopGps();letSleep();S=null;SurveyUI.start();});
+  on('bm',()=>stepT(-1));on('bp',()=>stepT(1));
+  const st=$('stp');if(st)st.onchange=()=>{const v=parseFloat(st.value.replace(',','.'));if(v>=.3&&v<=1.2){stepLen=v;try{localStorage.setItem('sisu.loop.stap',v);}catch(e){}toast('Staplengte opgeslagen');}else st.value=String(stepLen).replace('.',',');};
+  main.querySelectorAll('.sp').forEach(b=>Editor.stripBind(b,b.dataset.id,id=>{if(pickMode){const p=photos.find(q=>q.id===id);if(p.status==='vervallen'){toast('Kies een foto die nog meetelt');return;}reroute(id);return;}openEd(id);},
+    ()=>photos.find(p=>p.id===b.dataset.id),async p=>{await Store.photos.put(p);await SurveyUI.recount();refresh();}));
+  main.querySelectorAll('[data-sim]').forEach(b=>b.onclick=()=>sim(b.dataset.sim));
+  render();
+}
+async function stepT(d){const n=Math.max(0,(S.tellers.boringen||0)+d);S.tellers={...S.tellers,boringen:n};$('tb').textContent=n;await Store.surveys.put(S);}
+function openEd(id){
+  Editor.openEditor(id,{onClose:()=>refresh(),onChange:async p=>{p.bron='loop';p.bijgeveegd=true;await Store.photos.put(p);SurveyUI.recount();},
+    onDoc:()=>{location.href='shared/document.html?survey='+encodeURIComponent(S.id);}}).catch(e=>toast('Kon de foto niet openen: '+(e.message||e)));
+}
+
+/* ---------- proefstand: lopen zonder lopen (?sim=1) ---------- */
+let simP=[0,0],simH=0,simBad=false,simStep=0;
+function sim(c){
+  if(!S)return;const o=L().o||[51.7,5.35];if(!L().o)L().o=o;
+  head=simH;
+  if(c==='L'){simH=(simH+270)%360;head=simH;render();return;}if(c==='R'){simH=(simH+90)%360;head=simH;render();return;}
+  if(c==='bad'){simBad=!simBad;if(simBad)lastGoodT=Date.now()-11000;toast(simBad?'Proef: gps slecht':'Proef: gps goed');return;}
+  const n=+c;
+  for(let i=0;i<n;i++){simP=[simP[0]+Math.sin(simH*D2R),simP[1]+Math.cos(simH*D2R)];const ll=llOf(simP);
+    if(simBad){onFix(ll[0],ll[1],30,Date.now());simStep+=1;while(simStep>=stepLen){onStep();simStep-=stepLen;}}
+    else{onFix(ll[0],ll[1],4,Date.now());onFix(ll[0],ll[1],4,Date.now());onFix(ll[0],ll[1],4,Date.now());}}
+}
+
+/* ---------- schouw ---------- */
+SurveyUI.init({
+  variant:'loop',naam:'Loop-spoor',metersZelf:false,acties:()=>[],openFoto:()=>{},
+  tellen:(s,ph)=>{const ok=ph.filter(p=>p.status!=='vervallen');
+    return{meters:Math.round(ok.reduce((t,p)=>t+(p.meters||0),0)),metersNote:ok.some(p=>p.meting==='stappen')?'deels stappen':'gps-spoor',
+      invoeringen:(s.loop&&s.loop.eind==='dv'&&ok.some(p=>p.last&&p.eind==='dv'))?1:0};},
+  eigenScherm:async s=>{S=s;S.loop=S.loop||newLoop();S.spoor=S.spoor||[];S.tellers={meters:0,invoeringen:0,boringen:0,...S.tellers};
+    mode='gps';lastGoodT=Date.now();fixes=[];smooth=null;lastCounted=null;segPts=[{p:L().segStart||[0,0],c:L().segM}];
+    if(SIM&&!fixes.length){const o=L().o||[51.7,5.35];L().o=o;const ll=llOf(simP);for(let i=0;i<3;i++)onFix(ll[0],ll[1],4,Date.now());}
+    await Store.surveys.put(S);if(L().fase!=='klaar')startGps();if(L().fase==='lopen')keepAwake();await SurveyUI.recount();await refresh();}
+});
+setInterval(()=>{if(S)render();},1000);
+if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
 </body>
 </html>

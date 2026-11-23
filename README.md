@@ -29,7 +29,7 @@ De hoofdpagina (`index.html`) laat vier manieren zien om de schouw buiten te doe
 | Origineel | `origineel.html` | De bestaande app: route van de tekening, punten slepen, gps-koppeling. Gegevens blijven in de opslag `schouw`. |
 | Veeg & Klik | `veeg.html` | Foto maken, route vegen: de app maakt er een nette pijl van. Symbolen tikken, bijschrift met tikblokjes. |
 | Richt & Zet | `richt.html` | Kantel-AR: live camera + kanteling (beta/gamma), pijl in perspectief op de grond, lengte in meters (schatting). Geen echte AR: sta stil bij het afdrukken. Proefstand zonder telefoon: `richt.html?sim=1`. |
-| Loop-spoor | `loop.html` | Jij loopt, de app tekent de richting en telt de meters. (komt eraan) |
+| Loop-spoor | `loop.html` | Jij loopt en maakt een foto bij elke knik; gps (reserve: stappen) meet het stuk en de draai, en de app tekent de pijl op de vorige foto. Proefstand zonder lopen: `loop.html?sim=1`. |
 
 De drie nieuwe varianten delen code in `shared/`:
 - `legend.js` – tekent pijlen, bestaande buis en symbolen als SVG over een foto (`render`) en brandt ze in een JPEG (`burnIn`).
