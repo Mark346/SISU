@@ -28,7 +28,7 @@ De hoofdpagina (`index.html`) laat vier manieren zien om de schouw buiten te doe
 |---|---|---|
 | Origineel | `origineel.html` | De bestaande app: route van de tekening, punten slepen, gps-koppeling. Gegevens blijven in de opslag `schouw`. |
 | Veeg & Klik | `veeg.html` | Foto maken, route vegen: de app maakt er een nette pijl van. Symbolen tikken, bijschrift met tikblokjes. |
-| Richt & Zet | `richt.html` | De pijl ligt in perspectief op de grond in je camerabeeld. (komt eraan) |
+| Richt & Zet | `richt.html` | Kantel-AR: live camera + kanteling (beta/gamma), pijl in perspectief op de grond, lengte in meters (schatting). Geen echte AR: sta stil bij het afdrukken. Proefstand zonder telefoon: `richt.html?sim=1`. |
 | Loop-spoor | `loop.html` | Jij loopt, de app tekent de richting en telt de meters. (komt eraan) |
 
 De drie nieuwe varianten delen code in `shared/`:
@@ -37,6 +37,7 @@ De drie nieuwe varianten delen code in `shared/`:
 - `camera.js` – foto maken via de camera-kiezer en een live camerabeeld.
 - `sensors.js` – knop "Sensoren toestaan" voor kompas, beweging en gps.
 - `editor.js` – de foto-editor van Veeg & Klik (vegen → nette pijl, symbolen, bijschrift, fotostrook). Los te openen met `Editor.openEditor(photoId, opties)`, zodat Richt & Zet en Loop-spoor hem als correctie kunnen gebruiken.
+- `survey-ui.js` – gedeeld startscherm (nieuw/doorgaan) en schouwoverzicht met fotostrook, vervalt en tellers.
 - `document.html` – "Zo komt het in het document": tellers, foto's in twee kolommen, afdrukken als PDF en foto's met pijlen delen.
 
 De laatst gekozen variant wordt onthouden (`localStorage` sleutel `sisu.lastVariant`).

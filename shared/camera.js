@@ -20,10 +20,11 @@
   }
   let stream=null;
   /* Live camerabeeld in een <video>. Geeft de stream terug; stop() zet hem weer uit. */
-  async function live(video){
+  async function live(video,opts={}){
     if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)throw new Error('Live camera wordt hier niet ondersteund');
     stop();
-    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1920},height:{ideal:1080}},audio:false});
+    const v=opts.staand?{facingMode:{ideal:'environment'},width:{ideal:1440},height:{ideal:1920},aspectRatio:{ideal:3/4}}:{facingMode:{ideal:'environment'},width:{ideal:1920},height:{ideal:1080}};
+    stream=await navigator.mediaDevices.getUserMedia({video:v,audio:false});
     video.setAttribute('playsinline','');video.muted=true;video.srcObject=stream;await video.play().catch(()=>{});
     return stream;
   }

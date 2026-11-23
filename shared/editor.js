@@ -110,7 +110,7 @@
   /* ---- bijschrift ---- */
   function suggest(ann){
     const s=(ann&&ann.syms)||[],has=t=>s.some(x=>x.t===t),out=[];
-    if(ann&&ann.arrow&&ann.arrow.length>1)out.push('pijl');
+    if(ann&&((ann.arrow&&ann.arrow.length>1)||(ann.poly&&ann.poly.body)))out.push('pijl');
     if(has('kn'))out.push('kn');if(has('hn'))out.push('hn');if(has('dv'))out.push('dv');
     if(ann&&ann.buis&&ann.buis.length>1&&!has('kn'))out.push('best');
     if(has('lo'))out.push('lo');

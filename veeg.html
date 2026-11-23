@@ -10,118 +10,40 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="stylesheet" href="shared/base.css">
-<style>
-h2{font-size:22px;margin:22px 0 10px}
-label{display:block;font-weight:700;margin:14px 0 6px}
-input.f{width:100%;min-height:52px;border-radius:14px;border:2px solid var(--line);background:var(--card);padding:0 14px;font-size:17px}
-.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}.row .btn{flex:1}
-.big{width:100%;min-height:64px;font-size:19px}
-.surv{display:flex;flex-direction:column;gap:10px}
-.sv{display:flex;align-items:center;gap:12px;min-height:64px;padding:10px 14px;border-radius:var(--r);background:var(--card);border:2px solid var(--line);color:var(--ink);text-decoration:none;text-align:left;cursor:pointer;width:100%}
-.sv b{display:block;font-size:17px}.sv span{display:block;color:var(--mute);font-size:15px}.sv .go{margin-left:auto;font-size:24px;font-weight:900}
-.strip{display:flex;gap:8px;overflow-x:auto;padding:4px 0 8px}
-.th{position:relative;flex:none;width:96px;height:72px;border-radius:12px;overflow:hidden;border:2px solid var(--line);background:#000;padding:0;cursor:pointer}
-.th img{width:100%;height:100%;object-fit:cover;display:block}.th.vv img{filter:grayscale(1) brightness(.45)}
-.th span{position:absolute;left:5px;bottom:3px;font-weight:800;color:#fff;text-shadow:0 1px 3px #000}
-.th em{position:absolute;inset:auto 0 0 0;font-style:normal;font-size:12px;font-weight:800;background:#000b;color:#fff;text-align:center}
-.tel{display:flex;flex-direction:column;gap:0;border:2px solid var(--line);border-radius:var(--r);overflow:hidden}
-.tel .r{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--line);min-height:64px}.tel .r:last-child{border-bottom:0}
-.tel .r .l{flex:1}.tel .r .l small{display:block;color:var(--mute);font-size:14px}
-.tel input{width:96px;min-height:48px;border-radius:12px;border:2px solid var(--line);background:var(--card);text-align:right;padding:0 10px;font-size:18px}
-.tel .v{min-width:48px;text-align:center;font-size:22px;font-weight:800}
-.step{width:48px;height:48px;border-radius:12px;border:2px solid var(--line);background:var(--card);font-size:24px;font-weight:800;cursor:pointer}
-.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:80;background:#f5f6f7;color:#111;font-weight:700;padding:12px 18px;border-radius:14px;max-width:92vw;box-shadow:0 8px 24px #000a}
-</style>
+
 </head>
 <body>
 <header class="bar"><a class="back" href="index.html">‹ Hoofdmenu</a><h1 id="ttl">Veeg &amp; Klik</h1></header>
 <main class="page" id="main"></main>
-<div class="toast" id="toast" role="status" hidden></div>
 <script src="shared/store.js"></script>
 <script src="shared/legend.js"></script>
 <script src="shared/camera.js"></script>
 <script src="shared/editor.js"></script>
+<script src="shared/survey-ui.js"></script>
 <script>
-const $=id=>document.getElementById(id),main=$('main');
-const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const fmtD=d=>d?new Date(d).toLocaleDateString('nl-NL',{day:'numeric',month:'long',year:'numeric'}):'';
-let tT=null;function toast(t){const e=$('toast');e.textContent=t;e.hidden=false;clearTimeout(tT);tT=setTimeout(()=>e.hidden=true,2600);}
-try{localStorage.setItem('sisu.lastVariant','veeg');}catch(e){}
-let survey=null,urls={};
-
-/* ---------- start ---------- */
-async function start(){
-  const want=new URLSearchParams(location.search).get('survey');
-  if(want){const s=await Store.surveys.get(want);if(s)return openSurvey(s);}
-  const all=await Store.surveys.list(),open=all.filter(s=>s.status==='open'),lastOpen=open[0];
-  $('ttl').textContent='Veeg & Klik';
-  main.innerHTML=`
-   ${open.length?`<h2>Doorgaan</h2><div class="surv">${open.map(s=>`<button class="sv" data-id="${esc(s.id)}"><div><b>${esc(s.adres||'zonder adres')}</b><span>${esc(fmtD(s.datum))}</span></div><span class="go" aria-hidden="true">›</span></button>`).join('')}</div>`:''}
-   <h2>Nieuwe schouw</h2>
-   <label for="adr">Adres</label>
-   <input class="f" id="adr" autocomplete="street-address" placeholder="Straat en huisnummer, plaats">
-   ${lastOpen&&lastOpen.adres?`<div class="row"><button class="btn" id="take">Adres overnemen: ${esc(lastOpen.adres)}</button></div>`:''}
-   <div class="row"><button class="btn pri big" id="go">Start schouw</button></div>`;
-  main.querySelectorAll('.sv').forEach(b=>b.onclick=async()=>openSurvey(await Store.surveys.get(b.dataset.id)));
-  if($('take'))$('take').onclick=()=>{$('adr').value=lastOpen.adres;};
-  $('go').onclick=async()=>{const a=$('adr').value.trim();if(!a){toast('Vul eerst het adres in');$('adr').focus();return;}
-    const s=await Store.surveys.put({adres:a,variant:'veeg',status:'open'});openSurvey(s);};
+/* Veeg & Klik: foto maken, route vegen, editor uit shared/editor.js */
+function newPhoto(survey,galerij){
+  Camera.take({galerij}).then(async r=>{
+    if(!r||!r.blob)return;
+    const p=await Store.photos.put({surveyId:survey.id,blob:r.blob,ann:{orient:r.orient||'liggend'},bron:'veeg',status:'ok'});
+    edit(survey,p.id);
+  }).catch(()=>SurveyUI.toast('Foto maken lukte niet'));
 }
-
-/* ---------- schouw-overzicht ---------- */
-async function openSurvey(s){
-  survey=s;history.replaceState(null,'','?survey='+encodeURIComponent(s.id));
-  $('ttl').textContent=s.adres||'Veeg & Klik';
-  const ph=await Store.photos.bySurvey(s.id,true),ok=ph.filter(p=>p.status!=='vervallen');
-  Object.values(urls).forEach(u=>URL.revokeObjectURL(u));urls={};ph.forEach(p=>urls[p.id]=URL.createObjectURL(p.blob));
-  await recount(ph);
-  const T=survey.tellers||{};
-  main.innerHTML=`
-   <div class="row" style="margin-top:4px"><button class="btn pri big" id="shoot">Foto ${ok.length+1} maken</button></div>
-   <div class="row"><button class="btn" id="gal">Foto uit galerij</button></div>
-   <h2>Foto's</h2>
-   ${ph.length?`<div class="strip" id="strip">${ph.map((p,i)=>`<button class="th${p.status==='vervallen'?' vv':''}" data-id="${p.id}" aria-label="Foto ${i+1}${p.status==='vervallen'?', vervalt':''}"><img src="${urls[p.id]}" alt=""><span>${i+1}</span>${p.status==='vervallen'?'<em>vervalt</em>':''}</button>`).join('')}</div>
-   <p class="note">Tik om te bewerken. Lang drukken: vervalt (ander tracé) of terugzetten.</p>`:'<p class="note">Nog geen foto\'s. Begin bij de aansluiting op het netwerk.</p>'}
-   <h2>Tellers</h2>
-   <div class="tel">
-     <div class="r"><div class="l"><label for="tm" style="margin:0">Meters buiten tracé</label><small>Zelf invullen: deze variant meet niet.</small></div><input id="tm" inputmode="decimal" value="${esc(T.meters||'')}" placeholder="0"></div>
-     <div class="r"><div class="l">Invoeringen<small>Telt de app: IN-symbolen op geldige foto's.</small></div><span class="v" id="ti">${T.invoeringen||0}</span></div>
-     <div class="r"><div class="l">Boringen/persingen</div><button class="step" id="bm" aria-label="Eén minder">−</button><span class="v" id="tb">${T.boringen||0}</span><button class="step" id="bp" aria-label="Eén meer">+</button></div>
-   </div>
-   <div class="row" style="margin-top:20px"><a class="btn pri" href="shared/document.html?survey=${encodeURIComponent(s.id)}">Naar document</a></div>
-   <div class="row"><button class="btn" id="done">${survey.status==='klaar'?'Schouw weer openen':'Schouw afronden'}</button><button class="btn" id="other">Andere schouw</button></div>`;
-  $('shoot').onclick=()=>newPhoto(false);$('gal').onclick=()=>newPhoto(true);
-  main.querySelectorAll('.th').forEach(b=>Editor.stripBind(b,b.dataset.id,id=>edit(id),()=>ph.find(p=>p.id===b.dataset.id),async p=>{await Store.photos.put(p);toast(p.status==='vervallen'?'Foto vervalt: telt niet mee en komt niet in het document':'Foto teruggezet');openSurvey(survey);}));
-  $('tm').onchange=async()=>{const v=parseFloat($('tm').value.replace(',','.'));survey.tellers={...survey.tellers,meters:isFinite(v)?v:0};await Store.surveys.put(survey);toast('Opgeslagen');};
-  const step=async d=>{const n=Math.max(0,(survey.tellers.boringen||0)+d);survey.tellers={...survey.tellers,boringen:n};$('tb').textContent=n;await Store.surveys.put(survey);};
-  $('bm').onclick=()=>step(-1);$('bp').onclick=()=>step(1);
-  $('done').onclick=async()=>{survey.status=survey.status==='klaar'?'open':'klaar';await Store.surveys.put(survey);toast(survey.status==='klaar'?'Schouw afgerond':'Schouw staat weer open');openSurvey(survey);};
-  $('other').onclick=()=>{history.replaceState(null,'','veeg.html');survey=null;start();};
-}
-/* invoeringen = aantal IN-symbolen op geldige foto's */
-async function recount(ph){
-  ph=ph||await Store.photos.bySurvey(survey.id,true);
-  const n=ph.filter(p=>p.status!=='vervallen').reduce((s,p)=>s+(((p.ann&&p.ann.syms)||[]).filter(x=>x.t==='dv').length),0);
-  if(!survey.tellers||survey.tellers.invoeringen!==n){survey.tellers={meters:0,boringen:0,...survey.tellers,invoeringen:n};await Store.surveys.put(survey);}
-  const el=$('ti');if(el)el.textContent=n;
-}
-
-/* ---------- foto maken en bewerken ---------- */
-async function newPhoto(galerij){
-  let r;try{r=await Camera.take({galerij});}catch(e){toast('Foto maken lukte niet');return;}
-  if(!r||!r.blob)return;
-  const p=await Store.photos.put({surveyId:survey.id,blob:r.blob,ann:{orient:r.orient||'liggend'},bron:'veeg',status:'ok'});
-  edit(p.id);
-}
-function edit(id){
+function edit(survey,id){
   Editor.openEditor(id,{
-    onClose:()=>openSurvey(survey),
-    onChange:()=>recount(),
-    onNext:()=>{Editor.close();newPhoto(false);},
+    onClose:()=>SurveyUI.show(survey),
+    onChange:()=>SurveyUI.recount(),
+    onNext:()=>{Editor.close();newPhoto(survey,false);},
     onDoc:()=>{location.href='shared/document.html?survey='+encodeURIComponent(survey.id);}
-  }).catch(e=>toast('Kon de foto niet openen: '+(e.message||e)));
+  }).catch(e=>SurveyUI.toast('Kon de foto niet openen: '+(e.message||e)));
 }
-start().catch(e=>{main.innerHTML=`<p class="note">Kon de opslag niet openen: ${esc(e.message||e)}</p>`;});
+SurveyUI.init({
+  variant:'veeg',naam:'Veeg & Klik',metersZelf:true,
+  invoerUitleg:"Telt de app: IN-symbolen op geldige foto's.",
+  acties:(s,n)=>[{label:`Foto ${n+1} maken`,pri:1,fn:s=>newPhoto(s,false)},{label:'Foto uit galerij',fn:s=>newPhoto(s,true)}],
+  tellen:(s,ph)=>({invoeringen:ph.reduce((n,p)=>n+(((p.ann&&p.ann.syms)||[]).filter(x=>x.t==='dv').length),0)}),
+  openFoto:(s,id)=>edit(s,id)
+});
 if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
 </body>

@@ -2,7 +2,7 @@
    Annotaties zijn data en worden niet in de foto gebrand. Eenheden lopen over de foto:
    liggend 400 x 300, staand 300 x 400. Zo blijven lijndiktes en symbolen even groot.
    ann = { orient:'liggend'|'staand', arrow:[[x,y],...], poly:{body:[[x,y],...],head:[[x,y],...]},
-           buis:[[x,y],...], syms:[{t,x,y,label}] } */
+           buis:[[x,y],...], syms:[{t,x,y,label,s}] }   s = optionele grootte (1 = normaal) */
 (function(){
   const C={green:'#2BB24C',red:'#D7261E',teal:'#0E7C86',yellow:'#F2D024',brown:'#8B2E16',label:'#C62828',letop:'#F2B705',dark:'#1a1a1a',white:'#ffffff'};
   const NS='http://www.w3.org/2000/svg';
@@ -37,6 +37,7 @@
       `<text x="${x}" y="${y+fs*.36}" font-size="${fs}" font-weight="800" text-anchor="middle" fill="${ink}" font-family="${FONT}">${esc(text)}</text>`;
   }
   function symSvg(s,k){
+    k=k*(s.s>0?s.s:1); // optioneel: grootte per symbool (bijv. kleiner op afstand)
     const x=+s.x,y=+s.y,r=14*k,sw=3*k;let o='';
     switch(s.t){
       case 'kn':o=`<circle cx="${x}" cy="${y}" r="${r}" fill="${C.brown}" stroke="${C.green}" stroke-width="${sw}"/>`;break;

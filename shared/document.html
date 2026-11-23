@@ -98,7 +98,7 @@ async function show(id){
   urls.forEach(u=>URL.revokeObjectURL(u));urls=[];
   cur=await Store.surveys.get(id);if(!cur)return;
   const T=cur.tellers||{},ph=await Store.photos.bySurvey(id);
-  const row=(l,k,eenheid)=>`<tr><td>${l}</td><td class="n"><input inputmode="numeric" data-k="${k}" value="${esc(T[k]??0)}" aria-label="${l}">${eenheid?' '+eenheid:''}</td></tr>`;
+  const row=(l,k,eenheid)=>`<tr><td>${l}${k==='meters'&&T.metersNote?` <small>(${esc(T.metersNote)})</small>`:''}</td><td class="n"><input inputmode="numeric" data-k="${k}" value="${esc(T[k]??0)}" aria-label="${l}">${eenheid?' '+eenheid:''}</td></tr>`;
   $('doc').innerHTML=`<h1>${esc(cur.adres||'Schouw')}</h1><p class="sub">${new Date(cur.datum).toLocaleDateString('nl-NL',{day:'numeric',month:'long',year:'numeric'})}</p>
    <h2>Buitentracé</h2>
    <table class="tel">${row('Aantal meters buiten tracé','meters','m')}${row('Aantal invoeringen','invoeringen')}${row('Aantal boringen/persingen','boringen')}</table>

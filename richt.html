@@ -10,17 +10,301 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="stylesheet" href="shared/base.css">
-<style>.soon{margin-top:28px;text-align:center}.soon h2{font-size:28px;margin:0 0 8px}.soon p{margin:0 auto;max-width:28em}</style>
+<style>
+.cam{position:fixed;inset:0;z-index:40;background:#000;color:#fff;display:flex;flex-direction:column;overflow:hidden}
+.ctop{flex:none;display:flex;align-items:center;gap:8px;padding:calc(4px + env(safe-area-inset-top)) calc(8px + env(safe-area-inset-right)) 4px calc(4px + env(safe-area-inset-left));background:#0d0f12}
+.ctop .st{flex:1;min-width:0;font-weight:800;font-size:16px;display:flex;align-items:center;gap:8px}
+.ctop .st i{width:12px;height:12px;border-radius:50%;background:#2BB24C;flex:none}
+.ctop .st.warn i{background:#F2B705}.ctop .st.bad i{background:#D7261E}
+.ctop .len{font-size:22px;font-weight:900;color:#FF7A1A;white-space:nowrap}
+.frame{position:relative;flex:none;margin:0 auto;background:#111;touch-action:none;overflow:hidden}
+.frame video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000}
+.frame svg{position:absolute;pointer-events:none}
+.frame .hold{position:absolute;left:50%;top:12px;transform:translateX(-50%);background:#000c;border-radius:12px;padding:6px 12px;font-weight:800;font-size:15px;white-space:nowrap}
+.ctl{flex:1;min-height:0;overflow-y:auto;background:#0d0f12;padding:8px calc(10px + env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) calc(10px + env(safe-area-inset-left));display:flex;flex-direction:column;gap:8px}
+.seg{display:flex;gap:4px}
+.seg button,.cb{flex:1;min-height:48px;border-radius:12px;border:2px solid #33383f;background:#181b20;color:#fff;font-weight:800;font-size:15px;cursor:pointer;padding:0 4px}
+.seg button.on,.cb.on{background:#FF7A1A;border-color:#FF7A1A;color:#141414}
+.adj{display:flex;gap:6px;align-items:center}
+.adj .lb{font-size:14px;color:#b9bec6;font-weight:700;min-width:58px}
+.adj button{width:52px;min-height:48px;border-radius:12px;border:2px solid #33383f;background:#181b20;color:#fff;font-size:22px;font-weight:900;cursor:pointer}
+.adj .sp{flex:1}
+.syms{display:flex;gap:6px;overflow-x:auto}
+.syms .cb{flex:none;padding:0 12px;font-size:15px}
+.shot{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.shot .btn{min-width:88px}
+.shutter{width:76px;height:76px;border-radius:50%;border:5px solid #fff;background:#fff;box-shadow:inset 0 0 0 4px #111;cursor:pointer;flex:none}
+.shutter:active{transform:scale(.95)}
+.shutter[disabled]{opacity:.5}
+.fb{flex:1;display:flex;flex-direction:column;justify-content:center;gap:12px;padding:24px}
+.fb p{font-size:18px}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:48;background:#181b20;color:#fff;border-radius:20px 20px 0 0;padding:14px calc(16px + env(safe-area-inset-right)) calc(16px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left));box-shadow:0 -10px 30px #000a;max-height:80vh;overflow-y:auto}
+.sheet h3{margin:0 0 6px;font-size:20px}
+.sheet label{display:flex;justify-content:space-between;font-weight:700;margin:12px 0 4px}
+.sheet input[type=range]{width:100%;height:44px;accent-color:#FF7A1A}
+.sheet .tg{display:flex;align-items:center;gap:10px;min-height:48px;font-weight:700}
+.sheet .tg input{width:24px;height:24px;accent-color:#FF7A1A}
+.chk{position:fixed;inset:0;z-index:45;background:#0d0f12;color:#fff;display:flex;flex-direction:column;overflow-y:auto;padding:calc(10px + env(safe-area-inset-top)) 12px calc(12px + env(safe-area-inset-bottom))}
+.chk h3{margin:4px 0 10px;font-size:20px}
+.chk .ph{position:relative;width:100%;max-width:520px;margin:0 auto;background:#000}
+.chk .ph img{display:block;width:100%;height:auto}
+.chk .cap{margin:10px 0;padding:10px 12px;border-radius:12px;background:#f5f4f0;color:#16191d;font-size:16px;line-height:1.4}
+.chk .row{display:flex;gap:8px}.chk .row .btn{flex:1}
+</style>
 </head>
 <body>
-<header class="bar"><a class="back" href="index.html">‹ Hoofdmenu</a><h1>Richt &amp; Zet</h1></header>
-<main class="page">
-  <div class="card soon">
-    <h2>Komt eraan</h2>
-    <p class="note">De pijl ligt in perspectief op de grond in je camerabeeld.</p>
+<header class="bar"><a class="back" href="index.html">‹ Hoofdmenu</a><h1 id="ttl">Richt &amp; Zet</h1></header>
+<main class="page" id="main"></main>
+
+<div class="cam" id="cam" hidden>
+  <div class="ctop"><button class="back" id="cBack" style="color:#fff">‹ Stop</button><div class="st" id="cSt" role="status"><i></i><span>Camera starten…</span></div><div class="len" id="cLen" aria-label="Lengte van de pijl"></div></div>
+  <div class="frame" id="frame"><video id="vid" playsinline muted autoplay></video><svg id="ov" aria-hidden="true"></svg><svg id="dbg" aria-hidden="true"></svg><div class="hold" id="hold" hidden>Sta stil bij het afdrukken</div></div>
+  <div class="ctl" id="ctl">
+    <div class="seg" role="group" aria-label="Richting" id="dirs">
+      <button data-d="links">Links</button><button data-d="recht" class="on">Recht</button><button data-d="rechts">Rechts</button><button data-d="bochtL">Bocht L</button><button data-d="bochtR">Bocht R</button>
+    </div>
+    <div class="adj"><span class="lb">Schuiven</span><button id="sL" aria-label="Pijl naar links schuiven">‹</button><button id="sR" aria-label="Pijl naar rechts schuiven">›</button><span class="sp"></span><span class="lb">Lengte</span><button id="lM" aria-label="Pijl korter">−</button><button id="lP" aria-label="Pijl langer">+</button></div>
+    <div class="syms" role="group" aria-label="Symbolen">
+      <button class="cb" data-s="kn" aria-pressed="false">Koppeling</button><button class="cb" data-s="hn" aria-pressed="false">Handhole</button><button class="cb" data-s="dv" aria-pressed="false">Invoer</button><button class="cb" data-s="buis" aria-pressed="false">Bestaande buis</button>
+    </div>
+    <div class="shot"><button class="btn" id="cSet">Instellen</button><button class="shutter" id="shoot" aria-label="Foto maken"></button><button class="btn" id="cEdit" title="Gewone foto met Veeg-editor">Vegen</button></div>
   </div>
-</main>
-<script>try{localStorage.setItem('sisu.lastVariant','richt');}catch(e){}
-if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{});</script>
+  <div class="fb" id="fb" hidden></div>
+</div>
+
+<div class="sheet" id="set" hidden role="dialog" aria-label="Instellen">
+  <h3 id="setT">Instellen</h3>
+  <p class="note" id="calTxt" hidden>Leg een meetlint van 3 m recht voor je, met het begin onder je voeten. Schuif tot het streepje van 3 m op het eind van het meetlint ligt.</p>
+  <label for="rH"><span>Camerahoogte</span><span id="vH"></span></label><input type="range" id="rH" min="1" max="1.8" step="0.01">
+  <label for="rF"><span>Beeldhoek (HFOV)</span><span id="vF"></span></label><input type="range" id="rF" min="40" max="70" step="0.5">
+  <div id="simBox" hidden>
+    <label for="rB"><span>Proef: beta</span><span id="vB"></span></label><input type="range" id="rB" min="0" max="100" step="0.5" value="45">
+    <label for="rG"><span>Proef: gamma</span><span id="vG"></span></label><input type="range" id="rG" min="-30" max="30" step="0.5" value="0">
+  </div>
+  <div class="tg"><input type="checkbox" id="dHor"><label for="dHor" style="margin:0">Horizonlijn tonen (controle)</label></div>
+  <div class="tg"><input type="checkbox" id="dFlip"><label for="dFlip" style="margin:0">Rol omkeren (als de horizonlijn scheef loopt)</label></div>
+  <div class="row" style="display:flex;gap:8px;margin-top:12px"><button class="btn" id="calB">Kalibreren met meetlint</button><button class="btn pri" id="setOk">Klaar</button></div>
+</div>
+
+<div class="chk" id="chk" hidden role="dialog" aria-label="Controle">
+  <h3>Klopt de foto?</h3>
+  <div class="ph" id="chkPh"><img id="chkImg" alt="Gemaakte foto met pijl"></div>
+  <div class="cap" id="chkCap"></div>
+  <div class="row"><button class="btn pri" id="kOk">Goed</button><button class="btn" id="kEd">Bijwerken</button><button class="btn" id="kRe">Opnieuw</button></div>
+</div>
+
+<script src="shared/store.js"></script>
+<script src="shared/legend.js"></script>
+<script src="shared/camera.js"></script>
+<script src="shared/sensors.js"></script>
+<script src="shared/editor.js"></script>
+<script src="shared/survey-ui.js"></script>
+<script>
+/* Richt & Zet: kantel-AR. Live camera + kanteling (beta/gamma). Geen echte AR:
+   de pijl staat vast ten opzichte van de schouwer, niet ten opzichte van de grond. */
+const $=id=>document.getElementById(id);
+const D2R=Math.PI/180,nl1=v=>(Math.round(v*10)/10).toLocaleString('nl-NL',{minimumFractionDigits:1,maximumFractionDigits:1});
+const SIM=new URLSearchParams(location.search).has('sim');
+const CAL_KEY='sisu.richt.cal';
+let cal={H:1.4,HFOV:53,hor:false,flip:false};
+try{Object.assign(cal,JSON.parse(localStorage.getItem(CAL_KEY)||'{}'));}catch(e){}
+const saveCal=()=>{try{localStorage.setItem(CAL_KEY,JSON.stringify(cal));}catch(e){}};
+let A={dir:'recht',L:1,S:0,kp:null,dv:false,buis:false}; // pijl-instellingen
+let survey=null,running=false,calMode=false,raf=0,filt=null,gotOri=false,hist=[],last=null,lastPhoto=null;
+
+/* ---------- sensoren ---------- */
+function onOri(e){if(e.beta==null)return;gotOri=true;
+  if(!filt)filt={b:e.beta,g:e.gamma||0};else{filt.b+=.15*(e.beta-filt.b);filt.g+=.15*((e.gamma||0)-filt.g);}}
+window.addEventListener('deviceorientation',onOri);
+function simOri(){onOri({beta:+$('rB').value,gamma:+$('rG').value});}
+const waitOri=ms=>new Promise(res=>{if(gotOri)return res(true);const t0=Date.now(),iv=setInterval(()=>{if(gotOri||Date.now()-t0>ms){clearInterval(iv);res(gotOri);}},100);});
+
+/* ---------- projectie: grond (X rechts, Z vooruit, meters) naar beeld ---------- */
+function params(rect){
+  const b=filt?filt.b:60,g=filt?filt.g:0,th=(90-b)*D2R,phi=g*D2R*(cal.flip?-1:1);
+  const f=(rect.w/2)/Math.tan(cal.HFOV/2*D2R);
+  return{th,phi,H:cal.H,f,cx:rect.w/2,cy:rect.h/2,beta:b,gamma:g};
+}
+function proj(P,X,Z){
+  if(Z>8)return null;
+  const c=Math.cos(P.th),s=Math.sin(P.th),yc=Z*s-P.H*c,zc=Z*c+P.H*s;
+  if(zc<.3)return null;
+  const u=P.f*X/zc,v=-P.f*yc/zc,a=-P.phi,cu=Math.cos(a),su=Math.sin(a);
+  return[P.cx+u*cu-v*su,P.cy+u*su+v*cu,zc];
+}
+function groundPath(a){
+  const L=a.L,P=[];
+  const seg=(x0,z0,x1,z1)=>{const n=Math.max(1,Math.ceil(Math.hypot(x1-x0,z1-z0)/.2));for(let i=P.length?1:0;i<=n;i++)P.push([x0+(x1-x0)*i/n,z0+(z1-z0)*i/n]);};
+  const z0=1.3,R=2.2*L;
+  if(a.dir==='recht')seg(0,z0,0,z0+4*L);
+  else if(a.dir==='links'||a.dir==='rechts'){const sg=a.dir==='links'?-1:1;seg(0,z0,0,z0+2.2*L);seg(0,z0+2.2*L,sg*1.7*L,z0+2.2*L);}
+  else{const sg=a.dir==='bochtL'?-1:1;for(let t=0;t<=78.001;t+=3){const r=t*D2R;P.push([sg*(R-R*Math.cos(r)),z0+R*Math.sin(r)]);}}
+  return P.map(p=>[p[0]+a.S,p[1]]);
+}
+const plen=P=>{let s=0;for(let i=1;i<P.length;i++)s+=Math.hypot(P[i][0]-P[i-1][0],P[i][1]-P[i-1][1]);return s;};
+/* bouwt de annotatie (eenheden over de foto: 300 x 400 staand) uit de huidige stand */
+function buildAnn(P,rect,staand){
+  const UW=staand?300:400,UH=staand?400:300,kx=UW/rect.w,ky=UH/rect.h;
+  const toU=q=>q&&[+(q[0]*kx).toFixed(1),+(q[1]*ky).toFixed(1)];
+  const G=groundPath(A),Lt=plen(G),ann={orient:staand?'staand':'liggend',syms:[]};
+  // band van 0,22 m met pijlpunt van 0,42 m lang en 0,56 m breed
+  const HL=Math.min(.42,Lt*.4),cum=[0];for(let i=1;i<G.length;i++)cum.push(cum[i-1]+Math.hypot(G[i][0]-G[i-1][0],G[i][1]-G[i-1][1]));
+  const hs=Lt-HL,body=[];for(let i=0;i<G.length;i++){if(cum[i]<hs)body.push(G[i]);else{const t=(hs-cum[i-1])/((cum[i]-cum[i-1])||1),a=G[i-1];body.push([a[0]+(G[i][0]-a[0])*t,a[1]+(G[i][1]-a[1])*t]);break;}}
+  const dirAt=i=>{const a=body[Math.max(0,i-1)],b=body[Math.min(body.length-1,i+1)],dx=b[0]-a[0],dz=b[1]-a[1],l=Math.hypot(dx,dz)||1;return[dx/l,dz/l];};
+  const Lft=[],Rgt=[];let cut=false;
+  for(let i=0;i<body.length;i++){const d=dirAt(i),n=[-d[1],d[0]],l=proj(P,body[i][0]+n[0]*.11,body[i][1]+n[1]*.11),r=proj(P,body[i][0]-n[0]*.11,body[i][1]-n[1]*.11);
+    if(!l||!r){cut=true;break;}Lft.push(toU(l));Rgt.push(toU(r));}
+  if(Lft.length>1){ann.poly={body:Lft.concat(Rgt.reverse())};
+    if(!cut){const B=body[body.length-1],E=G[G.length-1],dx=E[0]-B[0],dz=E[1]-B[1],l=Math.hypot(dx,dz)||1,n=[-dz/l,dx/l];
+      const h=[proj(P,E[0],E[1]),proj(P,B[0]+n[0]*.28,B[1]+n[1]*.28),proj(P,B[0]-n[0]*.28,B[1]-n[1]*.28)];
+      if(h.every(Boolean))ann.poly.head=h.map(toU);}}
+  const symAt=(t,X,Z)=>{const q=proj(P,X,Z);if(!q)return;const px=P.f*(t==="dv"?.3:.25)/q[2]*kx;ann.syms.push({t,x:+(q[0]*kx).toFixed(1),y:+(q[1]*ky).toFixed(1),s:+Math.max(.5,Math.min(2,px/28)).toFixed(2)});};
+  if(A.buis){const b=[];for(let x=-2.5;x<=2.501;x+=.25){const q=proj(P,A.S+x,1.75);if(q)b.push(toU(q));}if(b.length>1)ann.buis=b;}
+  if(A.kp)symAt(A.kp,A.S,1.75);
+  if(A.dv){const E=G[G.length-1];symAt('dv',E[0],E[1]);}
+  if(!ann.syms.length)delete ann.syms;
+  return{ann,Lt};
+}
+
+/* ---------- live beeld ---------- */
+let rect={x:0,y:0,w:300,h:400};
+function layout(){
+  const cam=$('cam'),fr=$('frame'),top=cam.querySelector('.ctop').offsetHeight,ctlMin=268;
+  const W=Math.min(innerWidth,Math.max(200,(innerHeight-top-ctlMin)*3/4)),H=W*4/3;
+  fr.style.width=W+'px';fr.style.height=H+'px';
+  const v=$('vid'),vw=v.videoWidth||3,vh=v.videoHeight||4,sc=Math.min(W/vw,H/vh);
+  rect={w:vw*sc,h:vh*sc,x:(W-vw*sc)/2,y:(H-vh*sc)/2};
+  for(const id of ['ov','dbg']){const s=$(id);Object.assign(s.style,{left:rect.x+'px',top:rect.y+'px',width:rect.w+'px',height:rect.h+'px'});}
+}
+function tick(){
+  if(!running)return;raf=requestAnimationFrame(tick);
+  if(SIM)simOri();
+  const v=$('vid'),staand=(v.videoHeight||4)>=(v.videoWidth||3),P=params(rect);
+  const th=90-P.beta,now=performance.now();hist.push([now,th]);while(hist.length&&now-hist[0][0]>650)hist.shift();
+  const old=hist.find(h=>now-h[0]<=520)||hist[0],moving=Math.abs(th-old[1])>2;
+  const st=$('cSt'),sp=st.querySelector('span');
+  if(!filt){st.className='st bad';sp.textContent='Geen kantelsensor';}
+  else if(th<10){st.className='st bad';sp.textContent='Richt meer naar beneden';}
+  else if(moving){st.className='st warn';sp.textContent='Houd stil';}
+  else{st.className='st';sp.textContent='Grond in beeld';}
+  $('hold').hidden=!moving||th<10;
+  const r=buildAnn(P,rect,staand);last={...r,P,staand,moving};
+  $('cLen').textContent=calMode?'3,0 m':nl1(r.Lt)+' m';
+  const UW=staand?300:400,UH=staand?400:300;
+  const ov=$('ov');
+  if(calMode){ov.setAttribute('viewBox',`0 0 ${rect.w} ${rect.h}`);ov.innerHTML=calSvg(P);}
+  else Legend.render(ov,r.ann);
+  const dbg=$('dbg');dbg.setAttribute('viewBox',`0 0 ${rect.w} ${rect.h}`);dbg.setAttribute('preserveAspectRatio','none');
+  if(cal.hor){const vh=-P.f*Math.tan(P.th),a=-P.phi,pt=u=>[P.cx+u*Math.cos(a)-vh*Math.sin(a),P.cy+u*Math.sin(a)+vh*Math.cos(a)];const p1=pt(-rect.w),p2=pt(rect.w);
+    dbg.innerHTML=`<line x1="${p1[0]}" y1="${p1[1]}" x2="${p2[0]}" y2="${p2[1]}" stroke="#00e5ff" stroke-width="3" stroke-dasharray="10 6"/><text x="8" y="${Math.max(16,Math.min(rect.h-8,(p1[1]+p2[1])/2-6))}" fill="#00e5ff" font-size="13" font-weight="800">horizon</text>`;}
+  else dbg.innerHTML='';
+}
+/* kalibratie: streepjes op 1, 2 en 3 m recht voor je voeten */
+function calSvg(P){
+  let o='';const g=[];for(let z=0;z<=3.001;z+=.1){const q=proj(P,0,z);if(q)g.push(q);}
+  if(g.length>1)o+=`<polyline points="${g.map(q=>q[0].toFixed(1)+','+q[1].toFixed(1)).join(' ')}" fill="none" stroke="#F2D024" stroke-width="6" stroke-linecap="round"/>`;
+  for(const z of [1,2,3]){const a=proj(P,-.35,z),b=proj(P,.35,z);if(a&&b)o+=`<line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" stroke="${z===3?'#FF7A1A':'#fff'}" stroke-width="${z===3?6:3}"/><text x="${b[0]+8}" y="${b[1]+5}" fill="#fff" stroke="#000" stroke-width="3" paint-order="stroke" font-size="16" font-weight="800">${z} m</text>`;}
+  return o;
+}
+function camUI(on){$('cam').hidden=!on;document.body.style.overflow=on?'hidden':'';}
+async function startCam(s){
+  survey=s;camUI(true);$('fb').hidden=true;$('frame').hidden=false;$('ctl').hidden=false;
+  // in dezelfde tik: toestemming voor kanteling en camera vragen
+  const sensP=SIM?Promise.resolve({orientation:'ok'}):Sensors.request({gps:false});
+  let camErr=null;const camP=Camera.live($('vid'),{staand:true}).catch(e=>{camErr=e;});
+  if(SIM){$('simBox').hidden=false;}
+  const[sr]=await Promise.all([sensP,camP]);
+  if(camErr)return fallback('Er is geen toegang tot de camera, dus je maakt een gewone foto en tekent de pijl met je vinger.');
+  if(sr.orientation==='geweigerd')return fallback('Er is geen toestemming voor de kantelsensor, dus je maakt een gewone foto en tekent de pijl met je vinger.');
+  if(sr.orientation!=='ok')return fallback('Deze telefoon geeft geen kantelgegevens door, dus je maakt een gewone foto en tekent de pijl met je vinger.');
+  if(!SIM&&!(await waitOri(1500)))return fallback('Deze telefoon geeft geen kantelgegevens door, dus je maakt een gewone foto en tekent de pijl met je vinger.');
+  const v=$('vid');if(!v.videoWidth)await new Promise(r=>{v.onloadedmetadata=r;setTimeout(r,1500);});
+  layout();running=true;cancelAnimationFrame(raf);tick();
+}
+function stopCam(){running=false;cancelAnimationFrame(raf);Camera.stop();camUI(false);calMode=false;$('set').hidden=true;}
+function fallback(msg){
+  running=false;Camera.stop();$('frame').hidden=true;$('ctl').hidden=true;const fb=$('fb');fb.hidden=false;
+  fb.innerHTML=`<p>${msg}</p><button class="btn pri" id="fbCam" style="min-height:60px">Foto maken</button><button class="btn" id="fbGal">Foto uit galerij</button><button class="btn" id="fbX">Terug</button>`;
+  $('fbCam').onclick=()=>plainPhoto(false);$('fbGal').onclick=()=>plainPhoto(true);$('fbX').onclick=()=>{stopCam();SurveyUI.show(survey);};
+}
+function plainPhoto(galerij){
+  Camera.take({galerij}).then(async r=>{if(!r||!r.blob)return;
+    const p=await Store.photos.put({surveyId:survey.id,blob:r.blob,ann:{orient:r.orient||'liggend'},bron:'veeg',status:'ok'});
+    stopCam();openEd(p.id,()=>SurveyUI.show(survey),true);}).catch(()=>SurveyUI.toast('Foto maken lukte niet'));
+}
+function openEd(id,onClose,withNext){
+  Editor.openEditor(id,{onClose,onChange:()=>SurveyUI.recount(),
+    onNext:withNext?()=>{Editor.close();plainPhoto(false);}:null,
+    onDoc:()=>{location.href='shared/document.html?survey='+encodeURIComponent(survey.id);}}).catch(e=>SurveyUI.toast('Kon de foto niet openen: '+(e.message||e)));
+}
+
+/* ---------- bediening ---------- */
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+$('dirs').querySelectorAll('button').forEach(b=>{b.setAttribute('aria-pressed',b.classList.contains('on'));b.onclick=()=>{A.dir=b.dataset.d;$('dirs').querySelectorAll('button').forEach(x=>{x.classList.toggle('on',x===b);x.setAttribute('aria-pressed',x===b);});};});
+$('sL').onclick=()=>A.S=clamp(A.S-.1,-1.2,1.2);$('sR').onclick=()=>A.S=clamp(A.S+.1,-1.2,1.2);
+$('lM').onclick=()=>A.L=clamp(A.L-.05,.6,1.6);$('lP').onclick=()=>A.L=clamp(A.L+.05,.6,1.6);
+document.querySelectorAll('.syms .cb').forEach(b=>b.onclick=()=>{const k=b.dataset.s;
+  if(k==='kn'||k==='hn')A.kp=A.kp===k?null:k;else A[k]=!A[k];
+  document.querySelectorAll('.syms .cb').forEach(x=>{const on=x.dataset.s===A.kp||(x.dataset.s==='dv'&&A.dv)||(x.dataset.s==='buis'&&A.buis);x.classList.toggle('on',on);x.setAttribute('aria-pressed',on);});});
+(function drag(){const fr=$('frame');let g=null;
+  fr.addEventListener('pointerdown',e=>{g={x:e.clientX,y:e.clientY,S:A.S,L:A.L};try{fr.setPointerCapture(e.pointerId);}catch(x){}});
+  fr.addEventListener('pointermove',e=>{if(!g)return;A.S=clamp(g.S+(e.clientX-g.x)/rect.w*2.4,-1.2,1.2);A.L=clamp(g.L-(e.clientY-g.y)/rect.h*1.6,.6,1.6);});
+  const up=()=>g=null;fr.addEventListener('pointerup',up);fr.addEventListener('pointercancel',up);})();
+$('cBack').onclick=()=>{stopCam();SurveyUI.show(survey);};
+$('cEdit').onclick=()=>{plainPhoto(false);};
+/* instellen en kalibreren */
+function syncSet(){$('rH').value=cal.H;$('rF').value=cal.HFOV;$('vH').textContent=cal.H.toFixed(2).replace('.',',')+' m';$('vF').textContent=Math.round(cal.HFOV*10)/10+'°';
+  $('dHor').checked=cal.hor;$('dFlip').checked=cal.flip;$('vB').textContent=$('rB').value+'°';$('vG').textContent=$('rG').value+'°';}
+$('cSet').onclick=()=>{calMode=false;$('setT').textContent='Instellen';$('calTxt').hidden=true;$('calB').hidden=false;syncSet();$('set').hidden=false;};
+$('calB').onclick=()=>{calMode=true;$('setT').textContent='Kalibreren';$('calTxt').hidden=false;$('calB').hidden=true;};
+$('setOk').onclick=()=>{calMode=false;$('set').hidden=true;saveCal();};
+$('rH').oninput=()=>{cal.H=+$('rH').value;syncSet();saveCal();};$('rF').oninput=()=>{cal.HFOV=+$('rF').value;syncSet();saveCal();};
+$('dHor').onchange=()=>{cal.hor=$('dHor').checked;saveCal();};$('dFlip').onchange=()=>{cal.flip=$('dFlip').checked;saveCal();};
+$('rB').oninput=syncSet;$('rG').oninput=syncSet;
+
+/* ---------- afdrukken ---------- */
+const DIRTXT={recht:'rechtdoor',links:'linksaf',rechts:'rechtsaf',bochtL:'met een bocht naar links',bochtR:'met een bocht naar rechts'};
+function caption(m){
+  const t=[`Nieuw te leggen tracé via de aangegeven route, ${DIRTXT[A.dir]}. Lengte ca. ${nl1(m)} m.`];
+  if(A.kp==='kn')t.push('Plaatsen nieuwe koppeling op bestaande buis.');
+  if(A.kp==='hn')t.push('Plaatsen nieuwe handhole.');
+  if(A.dv)t.push('Nieuwe invoer in de gevel.');
+  if(A.buis&&!A.kp)t.push('Vervolg in bestaand tracé.');
+  return t.join(' ');
+}
+$('shoot').onclick=async()=>{
+  if(!running||!last)return;const snap=last,v=$('vid');
+  if(snap.moving)SurveyUI.toast('Je bewoog: de pijl kan iets verschoven zijn');
+  $('shoot').disabled=true;
+  try{
+    const r=await Camera.grab(v);
+    const m=Math.round(snap.Lt*10)/10,cap=caption(m);
+    const p=await Store.photos.put({surveyId:survey.id,blob:r.blob,ann:snap.ann,meters:m,beta:+snap.P.beta.toFixed(1),gamma:+snap.P.gamma.toFixed(1),H:cal.H,HFOV:cal.HFOV,
+      bron:'richt',status:'ok',bijschrift:cap,cap:{auto:false,sel:[],lo:'',vrij:cap},richt:{...A}});
+    lastPhoto=p;await SurveyUI.recount();showCheck(p,r.blob);
+  }catch(e){SurveyUI.toast('Foto maken lukte niet: '+(e.message||e));}
+  $('shoot').disabled=false;
+};
+let chkUrl=null;
+function showCheck(p,blob){
+  if(chkUrl)URL.revokeObjectURL(chkUrl);chkUrl=URL.createObjectURL(blob);$('chkImg').src=chkUrl;
+  Legend.render($('chkPh'),p.ann);$('chkCap').textContent=p.bijschrift;$('chk').hidden=false;
+}
+$('kOk').onclick=()=>{$('chk').hidden=true;SurveyUI.toast('Opgeslagen');};
+$('kRe').onclick=async()=>{if(lastPhoto){await Store.photos.del(lastPhoto.id);lastPhoto=null;await SurveyUI.recount();}$('chk').hidden=true;};
+$('kEd').onclick=()=>{if(!lastPhoto)return;$('chk').hidden=true;running=false;openEd(lastPhoto.id,()=>{running=true;tick();},false);};
+addEventListener('resize',()=>{if(running)layout();});
+
+/* ---------- schouw ---------- */
+SurveyUI.init({
+  variant:'richt',naam:'Richt & Zet',metersZelf:false,
+  invoerUitleg:'Telt de app: foto\'s met Invoer.',
+  acties:(s,n)=>[{label:`Camera richten · foto ${n+1}`,pri:1,fn:s=>startCam(s)},{label:'Gewone foto (vegen)',fn:s=>{survey=s;plainPhoto(false);}}],
+  tellen:(s,ph)=>({meters:Math.round(ph.reduce((t,p)=>t+(p.meters||0),0)*10)/10,metersNote:'schatting kantel-AR',
+    invoeringen:ph.filter(p=>((p.ann&&p.ann.syms)||[]).some(x=>x.t==='dv')).length}),
+  openFoto:(s,id)=>{survey=s;openEd(id,()=>SurveyUI.show(s),false);}
+});
+if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
 </body>
 </html>
