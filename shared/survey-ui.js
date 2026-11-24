@@ -39,6 +39,7 @@
   let tT=null;
   function toast(t){let e=$('stoast');if(!e){e=document.createElement('div');e.id='stoast';e.className='stoast';e.setAttribute('role','status');document.body.appendChild(e);}
     e.textContent=t;e.hidden=false;clearTimeout(tT);tT=setTimeout(()=>e.hidden=true,2600);}
+  const NAMEN={origineel:'Origineel',veeg:'Veeg & Klik',richt:'Richt & Zet',loop:'Loop-spoor'};
   function title(t){const h=$('ttl');if(h)h.textContent=t;}
 
   async function init(c){
@@ -52,7 +53,7 @@
     const all=await Store.surveys.list(),open=all.filter(s=>s.status==='open'),lastOpen=open[0];
     title(cfg.naam);survey=null;
     main.innerHTML=`
-     ${open.length?`<h2>Doorgaan</h2><div class="surv">${open.map(s=>`<button class="sv" data-id="${esc(s.id)}"><div><b>${esc(s.adres||'zonder adres')}</b><span>${esc(fmtD(s.datum))}</span></div><span class="go" aria-hidden="true">›</span></button>`).join('')}</div>`:''}
+     ${open.length?`<h2>Doorgaan</h2><div class="surv">${open.map(s=>`<button class="sv" data-id="${esc(s.id)}"><div><b>${esc(s.adres||'zonder adres')}</b><span>${esc(fmtD(s.datum))}${s.variant&&s.variant!==cfg.variant?' · gemaakt in '+esc(NAMEN[s.variant]||s.variant):''}</span></div><span class="go" aria-hidden="true">›</span></button>`).join('')}</div>`:''}
      <h2>Nieuwe schouw</h2>
      <label for="adr">Adres</label>
      <input class="f" id="adr" autocomplete="street-address" placeholder="Straat en huisnummer, plaats">
@@ -72,6 +73,9 @@
   }
   async function show(s){
     survey=s;history.replaceState(null,'','?survey='+encodeURIComponent(s.id));title(s.adres||cfg.naam);
+    // een schouw uit een andere variant gaat vanaf nu verder in deze variant (terugknoppen en 'Doorgaan met' volgen dat)
+    if(s.variant!==cfg.variant){const was=NAMEN[s.variant]||s.variant;s.variant=cfg.variant;await Store.surveys.put(s);if(was)toast(`Deze schouw gaat nu verder in ${cfg.naam} (was ${was})`);}
+    title((s.adres||cfg.naam)+' · '+cfg.naam);
     if(cfg.eigenScherm)return cfg.eigenScherm(s); // variant met een eigen schouwscherm (Loop-spoor)
     const ph=await Store.photos.bySurvey(s.id,true),ok=ph.filter(p=>p.status!=='vervallen');
     Object.values(urls).forEach(u=>URL.revokeObjectURL(u));urls={};ph.forEach(p=>urls[p.id]=URL.createObjectURL(p.blob));
