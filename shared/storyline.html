@@ -27,7 +27,8 @@
 .st .ph.vv img{filter:grayscale(1) brightness(.5)}
 .st .ph .ed{position:absolute;right:10px;bottom:10px;background:#000c;color:#fff;border-radius:12px;padding:8px 12px;font-weight:800;font-size:15px;pointer-events:none}
 .st textarea{display:block;width:calc(100% - 20px);margin:10px;min-height:88px;border-radius:12px;border:2px solid #3c434c;background:#f5f4f0;color:#16191d;padding:10px 12px;font-size:16px;line-height:1.4;resize:vertical}
-.st .acts{display:flex;gap:8px;padding:0 10px 10px}.st .acts .btn{flex:1;min-height:48px}
+.st .acts{display:flex;gap:8px;padding:0 10px 10px}.st .acts .btn{flex:1;min-height:48px;padding:0 8px}
+.st .acts .del{border-color:#7a2a26;color:#ff9b94}.st .acts .del.sure{background:#D7261E;border-color:#D7261E;color:#fff}
 .saved{font-size:14px;color:#2BB24C;font-weight:800;padding:0 14px 10px;min-height:18px}
 h2{font-size:22px;margin:24px 0 10px}
 .tel{display:flex;flex-direction:column;border:2px solid var(--line);border-radius:var(--r);overflow:hidden}
@@ -95,13 +96,16 @@ function render(){
       <label class="note" for="tx${i}" style="display:block;padding:8px 12px 0">Bijschrift</label>
       <textarea id="tx${i}" data-tx="${i}" ${vv?'disabled':''} placeholder="Schrijf wat hier gebeurt">${esc(p.bijschrift||'')}</textarea>
       <div class="saved" id="sv${i}"></div>
-      <div class="acts"><button class="btn" data-ed="${i}">Bewerken</button><button class="btn" data-vv="${i}">${vv?'Terugzetten':'Vervalt'}</button></div>
+      <div class="acts"><button class="btn" data-ed="${i}">Bewerken</button><button class="btn" data-vv="${i}">${vv?'Terugzetten':'Vervalt'}</button><button class="btn del" data-del="${i}">Verwijderen</button></div>
     </article>`;}).join(''):'<p class="note">Nog geen foto\'s in deze schouw.</p>';
   document.querySelectorAll('.st .ph').forEach(el=>{const p=P[+el.dataset.ed];if(p.ann)Legend.render(el,p.ann);});
   document.querySelectorAll('[data-ed]').forEach(el=>{el.onclick=()=>edit(+el.dataset.ed);el.onkeydown=e=>{if(e.key==='Enter')edit(+el.dataset.ed);};});
   document.querySelectorAll('[data-up]').forEach(b=>b.onclick=()=>move(+b.dataset.up,-1));
   document.querySelectorAll('[data-dn]').forEach(b=>b.onclick=()=>move(+b.dataset.dn,1));
   document.querySelectorAll('[data-vv]').forEach(b=>b.onclick=()=>toggleVv(+b.dataset.vv));
+  document.querySelectorAll('[data-del]').forEach(b=>{let t=null;b.onclick=()=>{
+    if(!b.classList.contains('sure')){b.classList.add('sure');b.textContent='Zeker? Tik nog eens';t=setTimeout(()=>{b.classList.remove('sure');b.textContent='Verwijderen';},3000);return;}
+    clearTimeout(t);del(+b.dataset.del);};});
   document.querySelectorAll('[data-tx]').forEach(t=>{let tm=null;t.oninput=()=>{clearTimeout(tm);tm=setTimeout(()=>saveText(+t.dataset.tx,t.value),400);};t.onblur=()=>{clearTimeout(tm);saveText(+t.dataset.tx,t.value);};});
   renderTel();
 }
@@ -114,6 +118,11 @@ async function move(i,d){
   const j=i+d;if(j<0||j>=P.length)return;[P[i],P[j]]=[P[j],P[i]];
   for(let k=0;k<P.length;k++){P[k].volgorde=k+1;await Store.photos.put(P[k]);}
   render();const el=document.querySelector(`.st[data-i="${j}"]`);if(el)el.scrollIntoView({block:'nearest'});
+}
+async function del(i){
+  const p=P[i];await Store.photos.del(p.id);P.splice(i,1);
+  for(let k=0;k<P.length;k++)if(P[k].volgorde!==k+1){P[k].volgorde=k+1;await Store.photos.put(P[k]);}
+  await recount();render();msg('Foto verwijderd.');
 }
 async function toggleVv(i){const p=P[i];p.status=p.status==='vervallen'?'ok':'vervallen';await Store.photos.put(p);await recount();render();msg(p.status==='vervallen'?'Foto vervalt: niet in het document.':'Foto teruggezet.');}
 function edit(i){
