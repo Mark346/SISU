@@ -51,14 +51,14 @@
     const want=new URLSearchParams(location.search).get('survey');
     if(want){const s=await Store.surveys.get(want);if(s)return show(s);}
     const all=await Store.surveys.list(),open=all.filter(s=>s.status==='open'),lastOpen=open[0];
-    title(cfg.naam);survey=null;
+    title(cfg.startTitel||cfg.naam);survey=null;if(cfg.onScreen)cfg.onScreen('start');
     main.innerHTML=`
      ${open.length?`<h2>Doorgaan</h2><div class="surv">${open.map(s=>`<button class="sv" data-id="${esc(s.id)}"><div><b>${esc(s.adres||'zonder adres')}</b><span>${esc(fmtD(s.datum))}${s.variant&&s.variant!==cfg.variant?' · gemaakt in '+esc(NAMEN[s.variant]||s.variant):''}</span></div><span class="go" aria-hidden="true">›</span></button>`).join('')}</div>`:''}
      <h2>Nieuwe schouw</h2>
      <label for="adr">Adres</label>
      <input class="f" id="adr" autocomplete="street-address" placeholder="Straat en huisnummer, plaats">
      ${lastOpen&&lastOpen.adres?`<div class="row"><button class="btn" id="take">Adres overnemen: ${esc(lastOpen.adres)}</button></div>`:''}
-     <div class="row"><button class="btn pri big" id="go">Start schouw</button></div>`;
+     <div class="row"><button class="btn pri big" id="go">Start schouw</button></div>${cfg.startExtra||''}`;
     main.querySelectorAll('.sv').forEach(b=>b.onclick=async()=>show(await Store.surveys.get(b.dataset.id)));
     if($('take'))$('take').onclick=()=>{$('adr').value=lastOpen.adres;};
     $('go').onclick=async()=>{const a=$('adr').value.trim();if(!a){toast('Vul eerst het adres in');$('adr').focus();return;}
@@ -75,7 +75,7 @@
     survey=s;history.replaceState(null,'','?survey='+encodeURIComponent(s.id));title(s.adres||cfg.naam);
     // een schouw uit een andere variant gaat vanaf nu verder in deze variant (terugknoppen en 'Doorgaan met' volgen dat)
     if(s.variant!==cfg.variant){const was=NAMEN[s.variant]||s.variant;s.variant=cfg.variant;await Store.surveys.put(s);if(was)toast(`Deze schouw gaat nu verder in ${cfg.naam} (was ${was})`);}
-    title((s.adres||cfg.naam)+' · '+cfg.naam);
+    title((s.adres||cfg.naam)+' · '+cfg.naam);if(cfg.onScreen)cfg.onScreen('survey');
     if(cfg.eigenScherm)return cfg.eigenScherm(s); // variant met een eigen schouwscherm (Loop-spoor)
     const ph=await Store.photos.bySurvey(s.id,true),ok=ph.filter(p=>p.status!=='vervallen');
     Object.values(urls).forEach(u=>URL.revokeObjectURL(u));urls={};ph.forEach(p=>urls[p.id]=URL.createObjectURL(p.blob));

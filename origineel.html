@@ -342,13 +342,13 @@ async function home(){view='home';stopSensors();document.body.classList.remove('
  const th={};await Promise.all(all.map(async p=>th[p.id]=await url(p.draw)));
  const row=p=>`<div class="proj" data-p="${p.id}"><div class="th">${th[p.id]?`<img src="${th[p.id]}" alt="">`:''}</div><div><b>${esc(p.name)}</b><span>${esc(p.addr)}${p.addr?' · ':''}${p.pts.length} punten · ${fotos(p.pts.filter(q=>q.photo).length)} · ${new Date(p.updated).toLocaleDateString('nl-NL')}</span></div><button class="btn more" data-m="${p.id}" aria-label="Opties voor ${esc(p.name)}">⋯</button></div>`;
  const row2=p=>`<div class="card2" data-p="${p.id}"><div class="th2">${th[p.id]?`<img src="${th[p.id]}" alt="">`:''}</div><div class="cb"><b>${esc(p.name)}</b><span>${esc(p.addr)||'&nbsp;'}</span><span>${p.pts.length?p.pts.length+' punten · '+fotos(p.pts.filter(q=>q.photo).length):'Nog geen route'}</span></div><button class="more2" data-m="${p.id}" aria-label="Opties voor ${esc(p.name)}">⋯</button></div>`;
- if(V2){app.innerHTML=`<div class="h2top"><div><a class="hubL" href="index.html">‹ Hoofdmenu</a><br><span class="tag">Nieuw ontwerp · proef</span><h1>Buitentracé</h1></div><button class="pill ghost" id="v1B">Oud ontwerp</button></div>
+ if(V2){app.innerHTML=`<div class="h2top"><div><a class="hubL" href="opties.html">‹ Opties</a><br><span class="tag">Nieuw ontwerp · proef</span><h1>Buitentracé</h1></div><button class="pill ghost" id="v1B">Oud ontwerp</button></div>
  <div class="sec2"><button class="big2" id="newP"><span>＋</span>Nieuwe tekening</button>
  <div class="grid2">${act.map(row2).join('')}</div>${act.length?'':'<p class="note">Nog geen projecten in het nieuwe ontwerp. Begin met een foto of PDF van de tekening.</p>'}
  ${arc.length?`<button class="pill ghost" id="arcT" style="margin-top:16px">${showArch?'▾':'▸'} Archief (${arc.length})</button>${showArch?`<div class="grid2">${arc.map(row2).join('')}</div>`:''}`:''}
  <p class="note">Proefversie: alleen het buitentracé, zonder gps. Projecten hier staan los van het oude ontwerp.</p></div>`;
   $('v1B').onclick=()=>{ls.set('v2',false);home();};}
- else{ app.innerHTML=`<div class="top"><a class="hubL" href="index.html">‹ Hoofdmenu</a><small>Schouw · veldtest</small><h1>Projecten</h1></div>
+ else{ app.innerHTML=`<div class="top"><a class="hubL" href="opties.html">‹ Opties</a><small>Schouw · veldtest</small><h1>Projecten</h1></div>
  <div class="sec"><button class="btn pri" id="newP" style="width:100%">+ Nieuw project</button>
  ${act.map(row).join('')||'<p class="note" style="margin-top:14px">Geen actieve projecten.</p>'}
  ${arc.length?`<button class="btn" id="arcT" style="width:100%;margin-top:16px">${showArch?'▾':'▸'} Archief (${arc.length})</button>${showArch?`<div class="arch">${arc.map(row).join('')}</div>`:''}`:''}

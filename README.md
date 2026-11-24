@@ -22,12 +22,12 @@ Een web-app voor de telefoon om een kabelroute op een tekening te zetten, foto's
 - Werk je een bestand bij op GitHub, dan krijg je de nieuwe versie soms pas na twee keer openen te zien. Dat komt doordat de app een kopie bewaart voor slecht bereik.
 
 ## Varianten
-De hoofdpagina (`index.html`) laat vier manieren zien om de schouw buiten te doen:
+De app opent direct in Veeg & Klik (`index.html`). Onderaan het startscherm staat "Andere opties" (`opties.html`) met alle vier manieren:
 
 | Variant | Pagina | Wat het is |
 |---|---|---|
 | Origineel | `origineel.html` | De bestaande app: route van de tekening, punten slepen, gps-koppeling. Gegevens blijven in de opslag `schouw`. |
-| Veeg & Klik | `veeg.html` | Foto maken, route vegen: de app maakt er een nette pijl van. Symbolen tikken, bijschrift met tikblokjes. |
+| Veeg & Klik | `index.html` (oud adres `veeg.html` stuurt door) | Foto maken, route vegen: de app maakt er een nette pijl van. Symbolen tikken, bijschrift met tikblokjes. |
 | Richt & Zet | `richt.html` | Kantel-AR: live camera + kanteling (beta/gamma), pijl in perspectief op de grond, lengte in meters (schatting). Geen echte AR: sta stil bij het afdrukken. Proefstand zonder telefoon: `richt.html?sim=1`. |
 | Loop-spoor | `loop.html` | Jij loopt en maakt een foto bij elke knik; gps (reserve: stappen) meet het stuk en de draai, en de app tekent de pijl op de vorige foto. Proefstand zonder lopen: `loop.html?sim=1`. |
 

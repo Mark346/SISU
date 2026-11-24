@@ -63,7 +63,7 @@ const nl1=v=>(Math.round(v*10)/10).toLocaleString('nl-NL',{maximumFractionDigits
 const msg=t=>{$('msg').textContent=t||'';};
 const id=new URLSearchParams(location.search).get('survey');
 let S=null,P=[],urls={};
-const PAGE={veeg:'veeg.html',richt:'richt.html',loop:'loop.html'};
+const PAGE={veeg:'index.html',richt:'richt.html',loop:'loop.html'};
 /* tellers die de app zelf bepaalt, per variant (zelfde regels als in de variant) */
 const TEL={
   veeg:ph=>({invoeringen:ph.reduce((n,p)=>n+(((p.ann&&p.ann.syms)||[]).filter(x=>x.t==='dv').length),0)}),

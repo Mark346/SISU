@@ -10,59 +10,42 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="stylesheet" href="shared/base.css">
-<style>
-.hero{padding:18px 2px 10px}
-.hero h1{font-size:40px;line-height:1;margin:0;font-weight:900;letter-spacing:-.02em}
-.hero p{margin:8px 0 0;color:var(--mute);font-size:18px}
-.cont{display:flex;align-items:center;gap:12px;width:100%;min-height:64px;margin:12px 0 4px;padding:10px 16px;border-radius:var(--r);
-  background:var(--acc);color:var(--on-acc);border:0;text-align:left;cursor:pointer;text-decoration:none}
-.cont b{display:block;font-size:17px}.cont span{display:block;font-size:16px}
-.cont .go{margin-left:auto;font-size:26px;font-weight:900}
-.tiles{display:flex;flex-direction:column;gap:12px;margin-top:16px}
-.tile{position:relative;display:flex;flex-direction:column;justify-content:center;min-height:96px;padding:14px 16px 14px 18px;border-radius:var(--r);
-  background:var(--card);border:2px solid var(--line);color:var(--ink);text-decoration:none}
-.tile:active{background:var(--card2)}
-.tile .nm{font-size:21px;font-weight:800;padding-right:110px}
-.tile .ex{font-size:16px;color:var(--mute);margin-top:4px}
-.tile .lab{position:absolute;top:14px;right:14px;font-size:14px;font-weight:800;padding:3px 10px;border-radius:20px;border:2px solid var(--line);color:var(--ink);text-transform:lowercase}
-.tile.last{border-color:var(--acc)}
-.tile .lastb{display:inline-block;margin-top:8px;align-self:flex-start;font-size:14px;font-weight:800;background:var(--acc);color:var(--on-acc);border-radius:20px;padding:2px 10px}
-.foot{margin-top:22px;display:flex;flex-wrap:wrap;gap:10px}
-</style>
+
 </head>
 <body>
-<main class="page">
-  <header class="hero">
-    <h1>Sisu</h1>
-    <p>Schouw buiten – kies je manier</p>
-  </header>
-  <a class="cont" id="cont" href="#" hidden></a>
-  <nav class="tiles" id="tiles" aria-label="Varianten"></nav>
-  <div class="foot"><a class="btn" href="shared/document.html">Document bekijken</a></div>
-</main>
+<header class="bar"><button class="back" id="hb" hidden>‹ Schouwen</button><h1 id="ttl">Sisu</h1></header>
+<main class="page" id="main"></main>
 <script src="shared/store.js"></script>
+<script src="shared/legend.js"></script>
+<script src="shared/camera.js"></script>
+<script src="shared/editor.js"></script>
+<script src="shared/survey-ui.js"></script>
 <script>
-const V=[
-  {id:'origineel',href:'origineel.html',nm:'Origineel',ex:'Route van de tekening, punten slepen, gps-koppeling.',lab:'vertrouwd'},
-  {id:'veeg',href:'veeg.html',nm:'Veeg & Klik',ex:'Foto maken, route vegen: de app maakt er een nette pijl van.',lab:'tekenen'},
-  {id:'richt',href:'richt.html',nm:'Richt & Zet',ex:'De pijl ligt in perspectief op de grond in je camerabeeld.',lab:'kantel-AR'},
-  {id:'loop',href:'loop.html',nm:'Loop-spoor',ex:'Jij loopt, de app tekent de richting en telt de meters.',lab:'gps'}
-];
-const KEY='sisu.lastVariant';
-let last=null;try{last=localStorage.getItem(KEY);}catch(e){}
-const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-document.getElementById('tiles').innerHTML=V.map(v=>`<a class="tile${v.id===last?' last':''}" href="${v.href}" data-v="${v.id}">
-  <span class="nm">${v.nm}</span><span class="ex">${v.ex}</span><span class="lab">${v.lab}</span>${v.id===last?'<span class="lastb">laatst gebruikt</span>':''}</a>`).join('');
-document.querySelectorAll('.tile').forEach(a=>a.addEventListener('click',()=>{try{localStorage.setItem(KEY,a.dataset.v);}catch(e){}}));
-(async()=>{try{
-  const s=await Store.surveys.lastOpen();if(!s)return;
-  const v=V.find(x=>x.id===s.variant)||V[0],c=document.getElementById('cont');
-  const d=s.datum?new Date(s.datum).toLocaleDateString('nl-NL',{day:'numeric',month:'long',year:'numeric'}):'';
-  c.href=v.href+'?survey='+encodeURIComponent(s.id);
-  c.innerHTML=`<div><b>Doorgaan met:</b><span>${esc(s.adres||'schouw zonder adres')}, ${esc(d)}</span></div><span class="go" aria-hidden="true">›</span>`;
-  c.addEventListener('click',()=>{try{localStorage.setItem(KEY,v.id);}catch(e){}});
-  c.hidden=false;
-}catch(e){}})();
+/* Veeg & Klik: foto maken, route vegen, editor uit shared/editor.js */
+function newPhoto(survey,galerij){
+  Camera.take({galerij}).then(async r=>{
+    if(!r||!r.blob)return;
+    const p=await Store.photos.put({surveyId:survey.id,blob:r.blob,ann:{orient:r.orient||'liggend'},bron:'veeg',status:'ok'});
+    edit(survey,p.id);
+  }).catch(()=>SurveyUI.toast('Foto maken lukte niet'));
+}
+function edit(survey,id){
+  Editor.openEditor(id,{
+    onClose:()=>SurveyUI.show(survey),
+    onChange:()=>SurveyUI.recount(),
+    onNext:()=>{Editor.close();newPhoto(survey,false);},
+    onDoc:()=>{location.href='shared/storyline.html?survey='+encodeURIComponent(survey.id);}
+  }).catch(e=>SurveyUI.toast('Kon de foto niet openen: '+(e.message||e)));
+}
+SurveyUI.init({
+  variant:'veeg',naam:'Veeg & Klik',startTitel:'Sisu · Veeg & Klik',metersZelf:true,
+  startExtra:'<div class="row" style="margin-top:40px"><a class="btn" href="opties.html" style="flex:1">Andere opties</a></div>',
+  onScreen:w=>{const b=document.getElementById("hb");b.hidden=w==="start";b.onclick=()=>SurveyUI.start();},
+  invoerUitleg:"Telt de app: IN-symbolen op geldige foto's.",
+  acties:(s,n)=>[{label:`Foto ${n+1} maken`,pri:1,fn:s=>newPhoto(s,false)},{label:'Foto uit galerij',fn:s=>newPhoto(s,true)}],
+  tellen:(s,ph)=>({invoeringen:ph.reduce((n,p)=>n+(((p.ann&&p.ann.syms)||[]).filter(x=>x.t==='dv').length),0)}),
+  openFoto:(s,id)=>edit(s,id)
+});
 if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
 </body>
