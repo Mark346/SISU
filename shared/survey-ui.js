@@ -89,7 +89,7 @@
        <div class="r"><div class="l">Invoeringen<small>${esc(cfg.invoerUitleg||'Telt de app.')}</small></div><span class="v" id="ti">${T.invoeringen||0}</span></div>
        <div class="r"><div class="l">Boringen/persingen</div><button class="step" id="bm" aria-label="Eén minder">−</button><span class="v" id="tb">${T.boringen||0}</span><button class="step" id="bp" aria-label="Eén meer">+</button></div>
      </div>
-     <div class="row" style="margin-top:20px"><a class="btn pri" href="shared/document.html?survey=${encodeURIComponent(s.id)}">Naar document</a></div>
+     <div class="row" style="margin-top:20px"><a class="btn pri" href="shared/storyline.html?survey=${encodeURIComponent(s.id)}">Naar document</a></div>
      <div class="row"><button class="btn" id="done">${survey.status==='klaar'?'Schouw weer openen':'Schouw afronden'}</button><button class="btn" id="other">Andere schouw</button></div>`;
     main.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>acts[+b.dataset.a].fn(survey));
     main.querySelectorAll('.th').forEach(b=>Editor.stripBind(b,b.dataset.id,id=>cfg.openFoto(survey,id),()=>ph.find(p=>p.id===b.dataset.id),async p=>{

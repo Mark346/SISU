@@ -235,7 +235,7 @@ function plainPhoto(galerij){
 function openEd(id,onClose,withNext){
   Editor.openEditor(id,{onClose,onChange:()=>SurveyUI.recount(),
     onNext:withNext?()=>{Editor.close();plainPhoto(false);}:null,
-    onDoc:()=>{location.href='shared/document.html?survey='+encodeURIComponent(survey.id);}}).catch(e=>SurveyUI.toast('Kon de foto niet openen: '+(e.message||e)));
+    onDoc:()=>{location.href='shared/storyline.html?survey='+encodeURIComponent(survey.id);}}).catch(e=>SurveyUI.toast('Kon de foto niet openen: '+(e.message||e)));
 }
 
 /* ---------- bediening ---------- */

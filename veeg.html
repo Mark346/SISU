@@ -34,7 +34,7 @@ function edit(survey,id){
     onClose:()=>SurveyUI.show(survey),
     onChange:()=>SurveyUI.recount(),
     onNext:()=>{Editor.close();newPhoto(survey,false);},
-    onDoc:()=>{location.href='shared/document.html?survey='+encodeURIComponent(survey.id);}
+    onDoc:()=>{location.href='shared/storyline.html?survey='+encodeURIComponent(survey.id);}
   }).catch(e=>SurveyUI.toast('Kon de foto niet openen: '+(e.message||e)));
 }
 SurveyUI.init({

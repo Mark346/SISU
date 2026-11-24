@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0d0f12">
+<title>Storyline – Sisu</title>
+<link rel="manifest" href="../manifest.webmanifest">
+<link rel="apple-touch-icon" href="../icon-192.png">
+<link rel="stylesheet" href="base.css">
+<style>
+.intro{margin:6px 0 14px;color:var(--mute)}
+.adr{font-size:22px;font-weight:800;margin:8px 0 2px}
+.story{display:flex;flex-direction:column;gap:14px}
+.st{background:var(--card);border:2px solid var(--line);border-radius:var(--r);overflow:hidden}
+.st.vv{opacity:.55}
+.st .hd{display:flex;align-items:center;gap:8px;padding:8px 10px 8px 14px}
+.st .hd b{flex:1;font-size:18px}
+.st .hd .tag{font-size:13px;font-weight:800;padding:2px 8px;border-radius:20px;background:#3a3f47}
+.st .hd .tag.vv{background:#D7261E;color:#fff}
+.mv{width:44px;height:44px;border-radius:12px;border:2px solid var(--line);background:var(--card2);color:var(--ink);font-size:20px;font-weight:900;cursor:pointer}
+.mv[disabled]{opacity:.3}
+.st .ph{position:relative;background:#000;cursor:pointer}
+.st .ph img{display:block;width:100%;height:auto}
+.st .ph.vv img{filter:grayscale(1) brightness(.5)}
+.st .ph .ed{position:absolute;right:10px;bottom:10px;background:#000c;color:#fff;border-radius:12px;padding:8px 12px;font-weight:800;font-size:15px;pointer-events:none}
+.st textarea{display:block;width:calc(100% - 20px);margin:10px;min-height:88px;border-radius:12px;border:2px solid #3c434c;background:#f5f4f0;color:#16191d;padding:10px 12px;font-size:16px;line-height:1.4;resize:vertical}
+.st .acts{display:flex;gap:8px;padding:0 10px 10px}.st .acts .btn{flex:1;min-height:48px}
+.saved{font-size:14px;color:#2BB24C;font-weight:800;padding:0 14px 10px;min-height:18px}
+h2{font-size:22px;margin:24px 0 10px}
+.tel{display:flex;flex-direction:column;border:2px solid var(--line);border-radius:var(--r);overflow:hidden}
+.tel .r{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--line);min-height:64px}.tel .r:last-child{border-bottom:0}
+.tel .r .l{flex:1}.tel .r .l small{display:block;color:var(--mute);font-size:14px}
+.tel input{width:96px;min-height:48px;border-radius:12px;border:2px solid var(--line);background:var(--card);text-align:right;padding:0 10px;font-size:18px}
+.tel .v{min-width:48px;text-align:center;font-size:22px;font-weight:800;white-space:nowrap}
+.step{width:48px;height:48px;border-radius:12px;border:2px solid var(--line);background:var(--card);font-size:24px;font-weight:800;cursor:pointer}
+.foot{position:sticky;bottom:0;margin:20px -16px 0;padding:12px 16px calc(12px + env(safe-area-inset-bottom));background:var(--bg);border-top:1px solid var(--line);display:flex;gap:10px}
+.foot .btn{flex:1;min-height:56px;font-size:18px}
+.msg{min-height:22px;color:var(--mute)}
+</style>
+</head>
+<body>
+<header class="bar"><a class="back" id="back" href="../index.html">‹ Terug</a><h1>Storyline</h1></header>
+<main class="page">
+  <div id="top"></div>
+  <p class="msg" id="msg" role="status"></p>
+  <div class="story" id="story"></div>
+  <div id="tel"></div>
+  <div class="foot"><button class="btn pri" id="make">Document maken</button></div>
+</main>
+<script src="store.js"></script>
+<script src="legend.js"></script>
+<script src="editor.js"></script>
+<script>
+/* Storyline: alle foto's en teksten van een schouw op een rij, om na te lopen en aan te passen
+   voordat het echte document wordt gemaakt. */
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const nl1=v=>(Math.round(v*10)/10).toLocaleString('nl-NL',{maximumFractionDigits:1});
+const msg=t=>{$('msg').textContent=t||'';};
+const id=new URLSearchParams(location.search).get('survey');
+let S=null,P=[],urls={};
+const PAGE={veeg:'veeg.html',richt:'richt.html',loop:'loop.html'};
+/* tellers die de app zelf bepaalt, per variant (zelfde regels als in de variant) */
+const TEL={
+  veeg:ph=>({invoeringen:ph.reduce((n,p)=>n+(((p.ann&&p.ann.syms)||[]).filter(x=>x.t==='dv').length),0)}),
+  richt:ph=>({meters:Math.round(ph.reduce((t,p)=>t+(p.meters||0),0)*10)/10,metersNote:'schatting kantel-AR',invoeringen:ph.filter(p=>((p.ann&&p.ann.syms)||[]).some(x=>x.t==='dv')).length}),
+  loop:ph=>({meters:Math.round(ph.reduce((t,p)=>t+(p.meters||0),0)),metersNote:ph.some(p=>p.meting==='stappen')?'deels stappen':'gps-spoor',invoeringen:ph.some(p=>p.last&&p.eind==='dv')?1:0})
+};
+async function recount(){
+  const ok=P.filter(p=>p.status!=='vervallen'),f=TEL[S.variant];if(!f)return;
+  S.tellers={meters:0,invoeringen:0,boringen:0,...S.tellers,...f(ok)};await Store.surveys.put(S);
+}
+async function load(){
+  if(!id){$('story').innerHTML='<p class="note">Geen schouw gekozen.</p>';$('make').disabled=true;return;}
+  S=await Store.surveys.get(id);if(!S){$('story').innerHTML='<p class="note">Deze schouw is niet gevonden.</p>';$('make').disabled=true;return;}
+  $('back').href='../'+(PAGE[S.variant]||'index.html')+'?survey='+encodeURIComponent(S.id);
+  P=await Store.photos.bySurvey(S.id,true);
+  // volgorde netjes doornummeren (1, 2, 3 …)
+  for(let i=0;i<P.length;i++)if(P[i].volgorde!==i+1){P[i].volgorde=i+1;await Store.photos.put(P[i]);}
+  await recount();render();
+}
+function render(){
+  Object.values(urls).forEach(u=>URL.revokeObjectURL(u));urls={};P.forEach(p=>urls[p.id]=URL.createObjectURL(p.blob));
+  const ok=P.filter(p=>p.status!=='vervallen').length;
+  $('top').innerHTML=`<div class="adr">${esc(S.adres||'Schouw')}</div><p class="intro">Loop het verhaal na. Pas foto's en teksten aan, zet foto's in de goede volgorde en maak daarna het document. ${ok} van ${P.length} foto's komen in het document.</p>`;
+  let n=0;
+  $('story').innerHTML=P.length?P.map((p,i)=>{const vv=p.status==='vervallen';if(!vv)n++;
+    return `<article class="st${vv?' vv':''}" data-i="${i}">
+      <div class="hd"><b>${vv?'Foto (vervalt)':'Foto '+n}</b>${p.meters!=null?`<span class="tag">${nl1(p.meters)} m</span>`:''}${vv?'<span class="tag vv">niet in document</span>':''}
+        <button class="mv" data-up="${i}" aria-label="Foto omhoog" ${i===0?'disabled':''}>↑</button><button class="mv" data-dn="${i}" aria-label="Foto omlaag" ${i===P.length-1?'disabled':''}>↓</button></div>
+      <div class="ph${vv?' vv':''}" data-ed="${i}" role="button" tabindex="0" aria-label="Pijlen en symbolen aanpassen"><img src="${urls[p.id]}" alt="Foto ${i+1}"><span class="ed">Pijl aanpassen</span></div>
+      <label class="note" for="tx${i}" style="display:block;padding:8px 12px 0">Bijschrift</label>
+      <textarea id="tx${i}" data-tx="${i}" ${vv?'disabled':''} placeholder="Schrijf wat hier gebeurt">${esc(p.bijschrift||'')}</textarea>
+      <div class="saved" id="sv${i}"></div>
+      <div class="acts"><button class="btn" data-ed="${i}">Bewerken</button><button class="btn" data-vv="${i}">${vv?'Terugzetten':'Vervalt'}</button></div>
+    </article>`;}).join(''):'<p class="note">Nog geen foto\'s in deze schouw.</p>';
+  document.querySelectorAll('.st .ph').forEach(el=>{const p=P[+el.dataset.ed];if(p.ann)Legend.render(el,p.ann);});
+  document.querySelectorAll('[data-ed]').forEach(el=>{el.onclick=()=>edit(+el.dataset.ed);el.onkeydown=e=>{if(e.key==='Enter')edit(+el.dataset.ed);};});
+  document.querySelectorAll('[data-up]').forEach(b=>b.onclick=()=>move(+b.dataset.up,-1));
+  document.querySelectorAll('[data-dn]').forEach(b=>b.onclick=()=>move(+b.dataset.dn,1));
+  document.querySelectorAll('[data-vv]').forEach(b=>b.onclick=()=>toggleVv(+b.dataset.vv));
+  document.querySelectorAll('[data-tx]').forEach(t=>{let tm=null;t.oninput=()=>{clearTimeout(tm);tm=setTimeout(()=>saveText(+t.dataset.tx,t.value),400);};t.onblur=()=>{clearTimeout(tm);saveText(+t.dataset.tx,t.value);};});
+  renderTel();
+}
+async function saveText(i,v){
+  const p=P[i];if(!p||(p.bijschrift||'')===v)return;
+  p.bijschrift=v;p.cap={auto:false,sel:[],lo:'',vrij:v};await Store.photos.put(p);
+  const s=$('sv'+i);if(s){s.textContent='Opgeslagen';setTimeout(()=>{if(s)s.textContent='';},1500);}
+}
+async function move(i,d){
+  const j=i+d;if(j<0||j>=P.length)return;[P[i],P[j]]=[P[j],P[i]];
+  for(let k=0;k<P.length;k++){P[k].volgorde=k+1;await Store.photos.put(P[k]);}
+  render();const el=document.querySelector(`.st[data-i="${j}"]`);if(el)el.scrollIntoView({block:'nearest'});
+}
+async function toggleVv(i){const p=P[i];p.status=p.status==='vervallen'?'ok':'vervallen';await Store.photos.put(p);await recount();render();msg(p.status==='vervallen'?'Foto vervalt: niet in het document.':'Foto teruggezet.');}
+function edit(i){
+  const p=P[i];if(p.status==='vervallen'){msg('Zet de foto eerst terug om hem te bewerken.');return;}
+  Editor.openEditor(p.id,{onClose:async()=>{P=await Store.photos.bySurvey(S.id,true);await recount();render();},
+    onChange:async q=>{if(S.variant==='loop'){q.bron='loop';q.bijgeveegd=true;await Store.photos.put(q);}}}).catch(e=>msg('Kon de foto niet openen: '+(e.message||e)));
+}
+function renderTel(){
+  const T=S.tellers||{},auto=S.variant!=='veeg';
+  $('tel').innerHTML=`<h2>Tellers</h2><div class="tel">
+    ${auto?`<div class="r"><div class="l">Meters buiten tracé<small>${esc(T.metersNote||'')}</small></div><span class="v">${nl1(T.meters||0)} m</span></div>`
+          :`<div class="r"><div class="l"><label for="tm">Meters buiten tracé</label><small>Zelf invullen.</small></div><input id="tm" inputmode="decimal" value="${esc(T.meters||'')}" placeholder="0"></div>`}
+    <div class="r"><div class="l">Invoeringen<small>Telt de app.</small></div><span class="v">${T.invoeringen||0}</span></div>
+    <div class="r"><div class="l">Boringen/persingen</div><button class="step" id="bm" aria-label="Eén minder">−</button><span class="v" id="tb">${T.boringen||0}</span><button class="step" id="bp" aria-label="Eén meer">+</button></div></div>`;
+  if($('tm'))$('tm').onchange=async()=>{const v=parseFloat($('tm').value.replace(',','.'));S.tellers={...S.tellers,meters:isFinite(v)?v:0};await Store.surveys.put(S);msg('Opgeslagen');};
+  const st=async d=>{const n=Math.max(0,(S.tellers.boringen||0)+d);S.tellers={...S.tellers,boringen:n};$('tb').textContent=n;await Store.surveys.put(S);};
+  $('bm').onclick=()=>st(-1);$('bp').onclick=()=>st(1);
+}
+$('make').onclick=async()=>{
+  const a=document.activeElement;if(a&&a.dataset&&a.dataset.tx!=null)await saveText(+a.dataset.tx,a.value);
+  location.href='document.html?survey='+encodeURIComponent(S.id);
+};
+load().catch(e=>msg('Kon de opslag niet openen: '+(e.message||e)));
+if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('../sw.js').catch(()=>{});
+</script>
+</body>
+</html>
