@@ -39,6 +39,7 @@ De drie nieuwe varianten delen code in `shared/`:
 - `editor.js` – de foto-editor van Veeg & Klik (vegen → nette pijl, symbolen, bijschrift, fotostrook). Los te openen met `Editor.openEditor(photoId, opties)`, zodat Richt & Zet en Loop-spoor hem als correctie kunnen gebruiken.
 - `survey-ui.js` – gedeeld startscherm (nieuw/doorgaan) en schouwoverzicht met fotostrook, vervalt en tellers.
 - `storyline.html` – tussenstap vóór het document: alle foto's en bijschriften op een rij om aan te passen, te herordenen of te laten vervallen.
+- `pdfdoc.js` – maakt van een schouw een PDF (A4) zonder internet en deelt die via het deelmenu.
 - `document.html` – "Zo komt het in het document": tellers, foto's in twee kolommen, afdrukken als PDF en foto's met pijlen delen.
 
 De laatst gekozen variant wordt onthouden (`localStorage` sleutel `sisu.lastVariant`).

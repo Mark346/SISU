@@ -49,6 +49,7 @@
   <div class="ctl">
     <select id="sel" aria-label="Kies een schouw"></select>
     <button class="btn pri" id="print">Afdrukken als PDF</button>
+    <button class="btn" id="pdf">Delen als PDF</button>
     <button class="btn" id="share">Foto's met pijlen delen</button>
     <button class="btn" id="test">Testschouw maken</button>
   </div>
@@ -57,6 +58,7 @@
 </main>
 <script src="store.js"></script>
 <script src="legend.js"></script>
+<script src="pdfdoc.js"></script>
 <script>
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -110,8 +112,9 @@ async function show(id){
   document.querySelectorAll('.tel input').forEach(inp=>inp.addEventListener('change',async()=>{
     const v=parseFloat(inp.value.replace(',','.'));cur.tellers={...cur.tellers,[inp.dataset.k]:isFinite(v)?v:0};await Store.surveys.put(cur);msg('Opgeslagen');setTimeout(()=>msg(''),1500);}));
 }
-$('sel').addEventListener('change',e=>show(e.target.value));
-$('test').addEventListener('click',async()=>{const s=await makeTest();history.replaceState(null,'','?survey='+s.id);await fill();msg('Testschouw gemaakt.');});
+$('sel').addEventListener('change',e=>{show(e.target.value);bindPdf();});
+function bindPdf(){const o=$('pdf'),n=o.cloneNode(true);o.replaceWith(n);n.textContent='Delen als PDF';PdfDoc.bindShare(n,$('sel').value,msg);}
+$('test').addEventListener('click',async()=>{const s=await makeTest();history.replaceState(null,'','?survey='+s.id);await fill();bindPdf();msg('Testschouw gemaakt.');});
 $('print').addEventListener('click',()=>window.print());
 $('share').addEventListener('click',async()=>{
   if(!cur)return;const ph=await Store.photos.bySurvey(cur.id);if(!ph.length){msg('Geen foto\'s om te delen.');return;}
@@ -128,7 +131,7 @@ $('share').addEventListener('click',async()=>{
   }catch(e){msg('Er ging iets mis: '+(e&&e.message||e));}
   $('share').disabled=false;
 });
-fill().catch(e=>msg('Kon de opslag niet openen: '+(e&&e.message||e)));
+fill().then(bindPdf).catch(e=>msg('Kon de opslag niet openen: '+(e&&e.message||e)));
 if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('../sw.js').catch(()=>{});
 </script>
 </body>

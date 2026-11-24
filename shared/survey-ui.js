@@ -33,8 +33,15 @@
 .sui .tel input{width:96px;min-height:48px;border-radius:12px;border:2px solid var(--line);background:var(--card);text-align:right;padding:0 10px;font-size:18px}
 .sui .tel .v{min-width:48px;text-align:center;font-size:22px;font-weight:800;white-space:nowrap}
 .sui .step{width:48px;height:48px;border-radius:12px;border:2px solid var(--line);background:var(--card);font-size:24px;font-weight:800;cursor:pointer}
+.sui .svr{display:flex;gap:8px;align-items:stretch}.sui .svr .sv{flex:1;min-width:0}
+.sui .sdel{flex:none;min-width:96px;border-radius:var(--r);border:2px solid #7a2a26;background:transparent;color:#ff9b94;font-weight:700;font-size:15px;cursor:pointer;padding:0 10px}
+.sui .sdel.sure,.sui .sdel2.sure{background:#D7261E;border-color:#D7261E;color:#fff}.sui .sdel2{border-color:#7a2a26;color:#ff9b94}
+.sui .sfold{display:block;width:100%;margin-top:26px;min-height:52px;text-align:left;border:0;border-top:1px solid var(--line);background:none;color:var(--ink);font-size:20px;font-weight:800;padding:12px 0 0;cursor:pointer}
+.sui .sdone{background:var(--card);border:2px solid var(--line);border-radius:var(--r);padding:12px}
+.sui .sdone .sh b{display:block;font-size:17px}.sui .sdone .sh span{display:block;color:var(--mute);font-size:15px}
+.sui .sdone .sb{display:flex;gap:8px;margin-top:10px}.sui .sdone .sb .btn{flex:1;min-height:48px;padding:0 8px}
 .stoast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:90;background:#f5f6f7;color:#111;font-weight:700;padding:12px 18px;border-radius:14px;max-width:92vw;box-shadow:0 8px 24px #000a}`;
-  let cfg=null,survey=null,urls={},main=null;
+  let cfg=null,survey=null,urls={},main=null,showDone=false;
   function css(){if($('suicss'))return;const s=document.createElement('style');s.id='suicss';s.textContent=CSS;document.head.appendChild(s);}
   let tT=null;
   function toast(t){let e=$('stoast');if(!e){e=document.createElement('div');e.id='stoast';e.className='stoast';e.setAttribute('role','status');document.body.appendChild(e);}
@@ -50,16 +57,27 @@
   async function start(){
     const want=new URLSearchParams(location.search).get('survey');
     if(want){const s=await Store.surveys.get(want);if(s)return show(s);}
-    const all=await Store.surveys.list(),open=all.filter(s=>s.status==='open'),lastOpen=open[0];
+    const all=await Store.surveys.list(),open=all.filter(s=>s.status==='open'),done=all.filter(s=>s.status==='klaar'),lastOpen=open[0];
     title(cfg.startTitel||cfg.naam);survey=null;if(cfg.onScreen)cfg.onScreen('start');
+    const sub=s=>`${esc(fmtD(s.datum))}${s.variant&&s.variant!==cfg.variant?' · gemaakt in '+esc(NAMEN[s.variant]||s.variant):''}`;
     main.innerHTML=`
-     ${open.length?`<h2>Doorgaan</h2><div class="surv">${open.map(s=>`<button class="sv" data-id="${esc(s.id)}"><div><b>${esc(s.adres||'zonder adres')}</b><span>${esc(fmtD(s.datum))}${s.variant&&s.variant!==cfg.variant?' · gemaakt in '+esc(NAMEN[s.variant]||s.variant):''}</span></div><span class="go" aria-hidden="true">›</span></button>`).join('')}</div>`:''}
+     ${open.length?`<h2>Doorgaan</h2><div class="surv">${open.map(s=>`<div class="svr"><button class="sv" data-id="${esc(s.id)}"><div><b>${esc(s.adres||'zonder adres')}</b><span>${sub(s)}</span></div><span class="go" aria-hidden="true">›</span></button><button class="sdel" data-del="${esc(s.id)}" aria-label="Schouw ${esc(s.adres||'')} verwijderen">Verwijderen</button></div>`).join('')}</div>`:''}
      <h2>Nieuwe schouw</h2>
      <label for="adr">Adres</label>
      <input class="f" id="adr" autocomplete="street-address" placeholder="Straat en huisnummer, plaats">
      ${lastOpen&&lastOpen.adres?`<div class="row"><button class="btn" id="take">Adres overnemen: ${esc(lastOpen.adres)}</button></div>`:''}
-     <div class="row"><button class="btn pri big" id="go">Start schouw</button></div>${cfg.startExtra||''}`;
-    main.querySelectorAll('.sv').forEach(b=>b.onclick=async()=>show(await Store.surveys.get(b.dataset.id)));
+     <div class="row"><button class="btn pri big" id="go">Start schouw</button></div>
+     ${done.length?`<button class="sfold" id="fold" aria-expanded="${showDone}">${showDone?'▾':'▸'} Afgeronde schouwen (${done.length})</button>
+       ${showDone?`<div class="surv">${done.map(s=>`<div class="sdone"><div class="sh"><b>${esc(s.adres||'zonder adres')}</b><span>${sub(s)}</span></div>
+         <div class="sb"><a class="btn pri" href="shared/document.html?survey=${encodeURIComponent(s.id)}">Document</a><button class="btn" data-share="${esc(s.id)}">Delen (PDF)</button></div>
+         <div class="sb"><button class="btn" data-open="${esc(s.id)}">Openen</button><button class="btn sdel2" data-del="${esc(s.id)}">Verwijderen</button></div></div>`).join('')}</div>`:''}`:''}
+     ${cfg.startExtra||''}`;
+    main.querySelectorAll('.sv,[data-open]').forEach(b=>b.onclick=async()=>show(await Store.surveys.get(b.dataset.id||b.dataset.open)));
+    main.querySelectorAll('[data-del]').forEach(b=>{let t=null;const lab=b.textContent;b.onclick=async()=>{
+      if(!b.classList.contains('sure')){b.classList.add('sure');b.textContent='Zeker? Tik nog eens';t=setTimeout(()=>{b.classList.remove('sure');b.textContent=lab;},3000);return;}
+      clearTimeout(t);await Store.surveys.del(b.dataset.del);toast('Schouw verwijderd');start();};});
+    main.querySelectorAll('[data-share]').forEach(b=>{if(window.PdfDoc)PdfDoc.bindShare(b,b.dataset.share,toast);else b.hidden=true;});
+    if($('fold'))$('fold').onclick=()=>{showDone=!showDone;start();};
     if($('take'))$('take').onclick=()=>{$('adr').value=lastOpen.adres;};
     $('go').onclick=async()=>{const a=$('adr').value.trim();if(!a){toast('Vul eerst het adres in');$('adr').focus();return;}
       show(await Store.surveys.put({adres:a,variant:cfg.variant,status:'open'}));};
