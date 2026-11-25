@@ -24,14 +24,14 @@
   // type: text | lang | datum | tel | mail | getal | keuze | janee | foto | fotos | vg | legenda | teller
   const VELDEN=[
     {k:'projectnummer',s:'alg',l:'Projectnummer',t:'text',in:V,uit:V,vb:'5222119 - 00172403 - 00046005-SID000883900'},
-    {k:'type_aansluiting',s:'alg',l:'Type aansluiting',t:'keuze',opties:['OFFNET','ONNET','FTTS','Anders'],in:V,uit:V},
-    {k:'datum_survey',s:'alg',l:'Datum site survey',t:'datum',in:W,uit:V},
-    {k:'aanw_org_naam',s:'alg',l:'Aanwezig organisatie: naam',t:'text',in:W,uit:W,vb:'Dhr. Jesse Berendsen'},
+    {k:'type_aansluiting',s:'alg',l:'Type aansluiting',t:'keuze',opties:['OFFNET','ONNET','FTTS','Anders'],in:V,uit:V,vb:'OFFNET'},
+    {k:'datum_survey',s:'alg',l:'Datum site survey',t:'datum',in:W,uit:V,vb:'07-11-2025'},
+    {k:'aanw_org_naam',s:'alg',l:'Aanwezig organisatie: naam',t:'text',in:W,uit:W,vb:'Dhr. J. Jansen'},
     {k:'aanw_org_bedrijf',s:'alg',l:'Aanwezig organisatie: bedrijf',t:'text',in:W,uit:W,vb:'Duwo'},
-    {k:'aanw_org_tel',s:'alg',l:'Aanwezig organisatie: telefoon',t:'tel',in:W,uit:W},
-    {k:'aanw_aan_naam',s:'alg',l:'Aanwezig aannemer: naam',t:'text',in:W,uit:W,vb:'Dhr. Marco van Voorst'},
+    {k:'aanw_org_tel',s:'alg',l:'Aanwezig organisatie: telefoon',t:'tel',in:W,uit:W,vb:'06-12345678'},
+    {k:'aanw_aan_naam',s:'alg',l:'Aanwezig aannemer: naam',t:'text',in:W,uit:W,vb:'Dhr. P. de Vries'},
     {k:'aanw_aan_bedrijf',s:'alg',l:'Aanwezig aannemer: bedrijf',t:'text',in:W,uit:W,vb:'BAM'},
-    {k:'aanw_aan_tel',s:'alg',l:'Aanwezig aannemer: telefoon',t:'tel',in:W,uit:W},
+    {k:'aanw_aan_tel',s:'alg',l:'Aanwezig aannemer: telefoon',t:'tel',in:W,uit:W,vb:'06-12345678'},
     {k:'afh_org',s:'alg',l:'Afhankelijkheden organisatie (onderwerp, datum gereed)',t:'lang',in:N,uit:W},
     {k:'afh_aan',s:'alg',l:'Afhankelijkheden aannemer (onderwerp, datum gereed)',t:'lang',in:N,uit:W},
 
@@ -39,17 +39,17 @@
     {k:'klant_adres',s:'klant',l:'Adres',t:'text',in:V,uit:V,vb:'Oranjelaan 2'},
     {k:'klant_postcode',s:'klant',l:'Postcode',t:'text',in:V,uit:V,vb:'2341CC'},
     {k:'klant_plaats',s:'klant',l:'Plaats',t:'text',in:V,uit:V,vb:'Oegstgeest'},
-    {k:'klant_contact',s:'klant',l:'Contactpersoon',t:'text',in:V,uit:V},
-    {k:'klant_tel',s:'klant',l:'Telefoonnummer',t:'tel',in:V,uit:V},
-    {k:'klant_mail',s:'klant',l:'E-mail',t:'mail',in:W,uit:W},
+    {k:'klant_contact',s:'klant',l:'Contactpersoon',t:'text',in:V,uit:V,vb:'Dhr. R. Jansen'},
+    {k:'klant_tel',s:'klant',l:'Telefoonnummer',t:'tel',in:V,uit:V,vb:'06-12345678'},
+    {k:'klant_mail',s:'klant',l:'E-mail',t:'mail',in:W,uit:W,vb:'naam@duwo.nl'},
 
     {k:'loc_gebouw',s:'loc',l:'Gebouwnaam',t:'text',in:W,uit:W},
     {k:'loc_soort',s:'loc',l:'Soort gebouw',t:'text',in:W,uit:V,vb:'Studentenhuisvesting'},
-    {k:'loc_adres',s:'loc',l:'Adres',t:'text',in:V,uit:V},
-    {k:'loc_postcode',s:'loc',l:'Postcode',t:'text',in:V,uit:V},
-    {k:'loc_plaats',s:'loc',l:'Plaats',t:'text',in:V,uit:V},
+    {k:'loc_adres',s:'loc',l:'Adres',t:'text',in:V,uit:V,vb:'Oranjelaan 2'},
+    {k:'loc_postcode',s:'loc',l:'Postcode',t:'text',in:V,uit:V,vb:'2341CC'},
+    {k:'loc_plaats',s:'loc',l:'Plaats',t:'text',in:V,uit:V,vb:'Oegstgeest'},
 
-    {k:'eig_klant_is_eigenaar',s:'eig',l:'Is de klant eigenaar van het gebouw?',t:'janee',in:V,uit:V},
+    {k:'eig_klant_is_eigenaar',s:'eig',l:'Is de klant eigenaar van het gebouw?',t:'janee',in:V,uit:V,vb:'Ja'},
     {k:'eig_naam',s:'eig',l:'Naam eigenaar',t:'text',in:W,uit:W,als:nietEigenaar},
     {k:'eig_adres',s:'eig',l:'Adres eigenaar',t:'text',in:W,uit:W,als:nietEigenaar},
     {k:'eig_postcode',s:'eig',l:'Postcode eigenaar',t:'text',in:W,uit:W,als:nietEigenaar},
@@ -58,34 +58,34 @@
     {k:'eig_tel',s:'eig',l:'Telefoon eigenaar',t:'tel',in:V,uit:V,als:nietEigenaar},
     {k:'eig_mail',s:'eig',l:'E-mail eigenaar',t:'mail',in:W,uit:W,als:nietEigenaar},
 
-    {k:'aanm_naam',s:'aanm',l:'Naam',t:'text',in:W,uit:V},
-    {k:'aanm_tel',s:'aanm',l:'Telefoon',t:'tel',in:W,uit:V},
-    {k:'aanm_mail',s:'aanm',l:'E-mail',t:'mail',in:W,uit:W},
-    {k:'aanm_dagen',s:'aanm',l:'Aantal dagen vooraf',t:'getal',in:W,uit:V},
+    {k:'aanm_naam',s:'aanm',l:'Naam',t:'text',in:W,uit:V,vb:'Dhr. R. Jansen'},
+    {k:'aanm_tel',s:'aanm',l:'Telefoon',t:'tel',in:W,uit:V,vb:'06-12345678'},
+    {k:'aanm_mail',s:'aanm',l:'E-mail',t:'mail',in:W,uit:W,vb:'naam@duwo.nl'},
+    {k:'aanm_dagen',s:'aanm',l:'Aantal dagen vooraf',t:'getal',in:W,uit:V,vb:'5'},
 
     {k:'afw_plaats',s:'afw',l:'Plaatsbepaling 19" kast',t:'text',in:N,uit:V,vb:'Begane grond'},
     {k:'afw_ruimte',s:'afw',l:'Ruimtebenaming',t:'text',in:N,uit:V,vb:'Ruimte onder de trap'},
     {k:'afw_kast',s:'afw',l:'Kastbenaming',t:'text',in:N,uit:V,vb:'Wandmontage'},
     {k:'afw_apparatuur',s:'afw',l:'Type apparatuur',t:'text',in:N,uit:V,vb:'WODF + CPE'},
-    {k:'afw_foto',s:'afw',l:'Afbeelding kast',t:'foto',in:N,uit:V},
+    {k:'afw_foto',s:'afw',l:'Afbeelding kast',t:'foto',in:N,uit:V,vb:'foto van de plek waar de kast komt'},
 
-    {k:'trace_geo',s:'trace',l:'Geografische weergave (kaart met tracé)',t:'foto',in:W,uit:V},
+    {k:'trace_geo',s:'trace',l:'Geografische weergave (kaart met tracé)',t:'foto',in:W,uit:V,vb:'luchtfoto of kaart met het tracé ingetekend'},
     {k:'trace_opm',s:'trace',l:'Opmerking bij tracé',t:'lang',in:N,uit:W,vb:'Invoer ongeveer 3 meter uit rechterhoek'},
-    {k:'plattegrond',s:'trace',l:'Plattegrond (indien beschikbaar)',t:'foto',in:W,uit:W,nvt:'NIET BESCHIKBAAR'},
+    {k:'plattegrond',s:'trace',l:'Plattegrond (indien beschikbaar)',t:'foto',in:W,uit:W,nvt:'NIET BESCHIKBAAR',vb:'NIET BESCHIKBAAR'},
 
-    {k:'buiten_meters',s:'buiten',l:'Aantal meters buiten tracé',t:'teller',teller:'meters',in:N,uit:V},
-    {k:'buiten_invoeringen',s:'buiten',l:'Aantal invoeringen',t:'teller',teller:'invoeringen',in:N,uit:V},
+    {k:'buiten_meters',s:'buiten',l:'Aantal meters buiten tracé',t:'teller',teller:'meters',in:N,uit:V,vb:'15 meter'},
+    {k:'buiten_invoeringen',s:'buiten',l:'Aantal invoeringen',t:'teller',teller:'invoeringen',in:N,uit:V,vb:'1'},
     {k:'buiten_boringen',s:'buiten',l:'Aantal boringen/persingen',t:'teller',teller:'boringen',in:N,uit:W},
-    {k:'buiten_fotos',s:'buiten',l:"Foto's buiten tracé",t:'fotos',sectie:'buiten',in:N,uit:V},
+    {k:'buiten_fotos',s:'buiten',l:"Foto's buiten tracé",t:'fotos',sectie:'buiten',in:N,uit:V,vb:'7 foto\'s met pijl en bijschrift'},
 
     {k:'binnen_meters',s:'binnen',l:'Aantal meters binnen tracé',t:'text',in:N,uit:V,vb:'12 meter DB2 door de kruipruimte + 2 meter DB1'},
     {k:'binnen_kabelgoot',s:'binnen',l:'Nieuw aan te leggen kabelgoot',t:'text',in:N,uit:W,vb:'0'},
     {k:'binnen_brandwerend',s:'binnen',l:'Brandwerende doorvoeren',t:'text',in:N,uit:W,vb:'0'},
-    {k:'binnen_fotos',s:'binnen',l:"Foto's binnen tracé",t:'fotos',sectie:'binnen',in:N,uit:W},
+    {k:'binnen_fotos',s:'binnen',l:"Foto's binnen tracé",t:'fotos',sectie:'binnen',in:N,uit:W,vb:'8 foto\'s met pijl en bijschrift'},
     {k:'binnen_stroom',s:'binnen',l:'Stroomvoorziening',t:'lang',in:N,uit:V,vb:'Stroomvoorziening in de ruimte onder de trap aanwezig'},
 
-    {k:'vg',s:'vg',l:'V&G ontwerpnota (aspecten, risico’s, afspraken)',t:'vg',in:N,uit:V},
-    {k:'legenda',s:'leg',l:'Legenda',t:'legenda',in:N,uit:W,vast:'in'}
+    {k:'vg',s:'vg',l:'V&G ontwerpnota (aspecten, risico’s, afspraken)',t:'vg',in:N,uit:V,vb:'werken in kruipruimte: beknelling, verstikking, elektrocutie → mangatwacht, helm, verlichting'},
+    {k:'legenda',s:'leg',l:'Legenda',t:'legenda',in:N,uit:W,vast:'in',vb:'nieuw tracé, bestaande buis, koppeling, handhole, invoer'}
   ];
   /* V&G-aspecten zoals in de ontwerpnota, met de gebruikelijke risico's en afspraken */
   const VG=[

@@ -16,18 +16,20 @@
 .lg{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;font-size:15px;color:var(--mute);margin-bottom:8px}
 .lg b{color:var(--ink)}
 .sec{margin-top:22px}
-.sec h2{font-size:20px;margin:0 0 8px;position:sticky;top:52px;background:var(--bg);padding:6px 0;z-index:2}
+.sec h2{font-size:20px;margin:0 0 8px;position:sticky;top:57px;background:var(--bg);padding:6px 0;z-index:2}
 .veld{background:var(--card);border:2px solid var(--line);border-radius:14px;padding:10px 12px;margin-bottom:8px}
 .veld .nm{font-weight:700;font-size:16px}
 .veld .vb{color:var(--mute);font-size:14px;margin-top:2px}
-.kn{display:flex;align-items:center;gap:8px;margin-top:8px}
-.kn .w{width:58px;flex:none;font-size:14px;font-weight:800;color:var(--mute)}
-.seg{display:flex;flex:1;gap:3px;padding:3px;border-radius:12px;background:#0d0f12;border:1px solid var(--line)}
-.seg button{flex:1;min-height:44px;border:0;border-radius:9px;background:transparent;color:var(--mute);font-size:14px;font-weight:800;cursor:pointer;padding:0 2px}
-.seg button.on.verplicht{background:#FF7A1A;color:#141414}
-.seg button.on.wenselijk{background:#2563eb;color:#fff}
-.seg button.on.nee{background:#3a3f47;color:#fff}
-.seg.dis{opacity:.45;pointer-events:none}
+.kn{display:flex;gap:8px;margin-top:10px}
+.cyc{flex:1;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;min-height:56px;border-radius:12px;border:2px solid transparent;padding:4px 12px;cursor:pointer;text-align:left}
+.cyc small{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;opacity:.8}
+.cyc b{font-size:17px;display:flex;align-items:center;gap:6px;width:100%}
+.cyc b::after{content:"↻";margin-left:auto;font-weight:400;opacity:.7}
+.cyc.verplicht{background:#FF7A1A;color:#141414}
+.cyc.wenselijk{background:#2563eb;color:#fff}
+.cyc.nee{background:#0d0f12;color:#b9bec6;border-color:#3a3f47}
+.cyc[disabled]{opacity:.45;cursor:default}.cyc[disabled] b::after{content:""}
+.dots{display:flex;gap:4px;margin-top:3px}.dots i{width:7px;height:7px;border-radius:50%;background:currentColor;opacity:.3}.dots i.on{opacity:1}
 .tot{display:flex;gap:10px;margin:6px 0 4px;flex-wrap:wrap}
 .tot span{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:4px 12px;font-size:14px;font-weight:700}
 .foot{margin:24px 0 10px;display:flex;gap:10px}.foot .btn{flex:1}
@@ -36,7 +38,7 @@
 <body>
 <header class="bar"><a class="back" href="index.html">‹ Terug</a><h1>Instellingen</h1></header>
 <main class="page">
-  <p class="uitleg">Alle onderdelen van het site survey document. Kies per onderdeel wat er nodig is bij de <b>input</b> (de intake, vóór je gaat lopen) en bij de <b>output</b> (het document).</p>
+  <p class="uitleg">Alle onderdelen van het site survey document. Kies per onderdeel wat er nodig is bij de <b>input</b> (de intake, vóór je gaat lopen) en bij de <b>output</b> (het document). Tik op een knop om te wisselen: Verplicht → Wenselijk → Nee.</p>
   <div class="lg"><b>Verplicht</b><span>Moet ingevuld zijn. Input: nodig voor "intake compleet". Output: nodig voor "klaar".</span>
     <b>Wenselijk</b><span>Wordt gevraagd en komt in het document als het is ingevuld, maar houdt niets tegen.</span>
     <b>Nee</b><span>Wordt niet gevraagd (input) of komt niet in het document (output).</span></div>
@@ -49,19 +51,20 @@
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const OPT=[['verplicht','Verplicht'],['wenselijk','Wenselijk'],['nee','Nee']];
+const VOLG=['verplicht','wenselijk','nee'],NAAM={verplicht:'Verplicht',wenselijk:'Wenselijk',nee:'Nee'};
+function btn(f,kant,v){const vast=kant==='in'&&f.vast==='in',w=kant==='in'?'Input':'Output';
+  return `<button class="cyc ${v}" data-k="${f.k}" data-kant="${kant}" ${vast?'disabled':''} aria-label="${w} voor ${esc(f.l)}: ${NAAM[v]}${vast?'':'. Tik om te wisselen'}"><small>${w}</small><b>${NAAM[v]}</b><span class="dots" aria-hidden="true">${VOLG.map(x=>`<i class="${x===v?'on':''}"></i>`).join('')}</span></button>`;}
+function totaal(){const c=Velden.cfg(),n=(k,v)=>Velden.VELDEN.filter(f=>c[f.k][k]===v).length;
+  $('tot').innerHTML=`<span>Input: ${n('in','verplicht')} verplicht · ${n('in','wenselijk')} wenselijk</span><span>Output: ${n('uit','verplicht')} verplicht · ${n('uit','wenselijk')} wenselijk</span>`;}
 function render(){
-  const c=Velden.cfg();
-  const cnt=(kant,v)=>Velden.VELDEN.filter(f=>c[f.k][kant]===v).length;
-  $('tot').innerHTML=`<span>Input: ${cnt('in','verplicht')} verplicht · ${cnt('in','wenselijk')} wenselijk</span><span>Output: ${cnt('uit','verplicht')} verplicht · ${cnt('uit','wenselijk')} wenselijk</span>`;
+  const c=Velden.cfg();totaal();
   $('lijst').innerHTML=Velden.SECTIES.map(sc=>{const fs=Velden.VELDEN.filter(f=>f.s===sc.id);if(!fs.length)return'';
     return `<section class="sec"><h2>${esc(sc.naam)}</h2>${fs.map(f=>`<div class="veld"><div class="nm">${esc(f.l)}</div>${f.vb?`<div class="vb">Bijv. ${esc(f.vb)}</div>`:''}${f.als?'<div class="vb">Alleen als de klant geen eigenaar is.</div>':''}
-      ${['in','uit'].map(kant=>`<div class="kn"><span class="w">${kant==='in'?'Input':'Output'}</span><div class="seg${kant==='in'&&f.vast==='in'?' dis':''}" role="group" aria-label="${kant==='in'?'Input':'Output'} voor ${esc(f.l)}">
-        ${OPT.map(([v,t])=>`<button class="${v}${c[f.k][kant]===v?' on':''}" data-k="${f.k}" data-kant="${kant}" data-v="${v}" aria-pressed="${c[f.k][kant]===v}">${t}</button>`).join('')}</div></div>`).join('')}</div>`).join('')}</section>`;}).join('');
-  document.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{Velden.setCfg(b.dataset.k,b.dataset.kant,b.dataset.v);
-    b.parentElement.querySelectorAll('button').forEach(x=>{x.classList.toggle('on',x===b);x.setAttribute('aria-pressed',x===b);});
-    const c2=Velden.cfg(),n=(k,v)=>Velden.VELDEN.filter(f=>c2[f.k][k]===v).length;
-    $('tot').innerHTML=`<span>Input: ${n('in','verplicht')} verplicht · ${n('in','wenselijk')} wenselijk</span><span>Output: ${n('uit','verplicht')} verplicht · ${n('uit','wenselijk')} wenselijk</span>`;});
+      <div class="kn">${['in','uit'].map(kant=>btn(f,kant,c[f.k][kant])).join('')}</div></div>`).join('')}</section>`;}).join('');
 }
+$('lijst').addEventListener('click',e=>{const b=e.target.closest('.cyc');if(!b||b.disabled)return;
+  const f=Velden.VELDEN.find(x=>x.k===b.dataset.k),kant=b.dataset.kant,nv=VOLG[(VOLG.indexOf(Velden.cfg()[f.k][kant])+1)%3];
+  Velden.setCfg(f.k,kant,nv);const n=document.createElement('div');n.innerHTML=btn(f,kant,nv);const nb=n.firstElementChild;b.replaceWith(nb);nb.focus();totaal();});
 let sure=null;
 $('reset').onclick=()=>{const b=$('reset');if(!sure){b.textContent='Zeker? Tik nog eens';sure=setTimeout(()=>{b.textContent='Standaard herstellen';sure=null;},3000);return;}
   clearTimeout(sure);sure=null;b.textContent='Standaard herstellen';Velden.resetCfg();render();};
