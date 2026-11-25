@@ -229,6 +229,12 @@
     VELDEN.forEach(f=>{if(f.schakel||f.t==='legenda'||!actief(s,f)||verborgen(s,f)||!nodig(c,f,kant)||gevuld(s,f,fotos))return;
       (f.t==='foto'||f.t==='fotos'?ft:info).push(f);});
     return{info,fotos:ft};}
+  /* vakken op het schouwscherm: informatie, foto's buiten (tracé buiten) en foto's binnen (binnen tracé + afwerkpunt/kast) */
+  const vak=f=>f.s==='buiten'?'buiten':(f.s==='binnen'||f.s==='afw')?'binnen':'info';
+  const VAK_SECTIES={buiten:['buiten'],binnen:['binnen','afw']};
+  function vakken(s,fotos,kant){const c=cfg(),o={info:[],buiten:[],binnen:[]};
+    VELDEN.forEach(f=>{if(f.schakel||f.t==='legenda'||!actief(s,f)||verborgen(s,f)||!nodig(c,f,kant)||gevuld(s,f,fotos))return;o[vak(f)].push(f);});
+    return o;}
   /* open verplichte velden per sectie van het gegevensscherm: [{sc, velden, open}] */
   function secties(s,fotos,o={}){
     const c=cfg();
@@ -236,7 +242,7 @@
     return SECTIES.filter(sc=>sc.lijst!==false).map(sc=>{
       const fs=VELDEN.filter(f=>groep(f)===sc.id&&inLijst(f)&&zichtbaar(c,f)&&actief(s,f));
       const open=fs.filter(f=>!f.schakel&&!verborgen(s,f)&&nodig(c,f,o.kant)&&!gevuld(s,f,fotos));
-      return{sc,velden:fs,open};}).filter(x=>x.velden.length&&(!o.moment||x.sc.moment===o.moment||(o.kant==='in'&&x.open.length)));
+      return{sc,velden:fs,open};}).filter(x=>x.velden.length&&!(o.zonder||[]).includes(x.sc.id)&&(!o.moment||x.sc.moment===o.moment||(o.kant==='in'&&x.open.length)));
   }
   function gevuld(s,f,fotos){
     const v=waarde(s,f.k);
@@ -257,5 +263,5 @@
     return{klaar:fs.length-mis.length,totaal:fs.length,mist:mis,pct:fs.length?Math.round((fs.length-mis.length)/fs.length*100):100};
   }
   window.Velden={VELDEN,SECTIES,MOMENT,VG,VG_VAAK,VG_VOORSTEL,CONTACTEN,STATUS,V,W,N,cfg,setCfg,resetCfg,waarde,zet,actief,gevuld,voortgang,
-    todo,onnet,onnetFix,standaard,setStandaard,statusOf,statusMeta,gearchiveerd,groep,inLijst,nodig,secties,verborgen,zelfdeAan,migreer};
+    todo,vak,vakken,VAK_SECTIES,onnet,onnetFix,standaard,setStandaard,statusOf,statusMeta,gearchiveerd,groep,inLijst,nodig,secties,verborgen,zelfdeAan,migreer};
 })();

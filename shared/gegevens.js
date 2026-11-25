@@ -12,69 +12,69 @@
   const TERUG='M15 5l-7 7 7 7',VERDER='M9 5l7 7-7 7';
   const CSS=`
 .geg{position:fixed;inset:0;z-index:55;background:var(--bg,#121418);color:var(--ink,#F3F4F6);display:flex;flex-direction:column}
-.geg .gh{flex:none;display:flex;align-items:center;gap:8px;padding:calc(4px + env(safe-area-inset-top)) calc(14px + env(safe-area-inset-right)) 6px calc(6px + env(safe-area-inset-left));border-bottom:1px solid var(--line,#2E323A)}
-.geg .gh h2{flex:1;min-width:0;margin:0;font-size:18px;font-weight:800;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.geg .gst{font-weight:800;font-size:15px;white-space:nowrap}
-.geg .gb{flex:1;overflow-y:auto;padding:12px calc(14px + env(safe-area-inset-right)) 24px calc(14px + env(safe-area-inset-left))}
-.geg .gf{flex:none;padding:10px calc(14px + env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom)) calc(14px + env(safe-area-inset-left));border-top:1px solid var(--line,#2E323A);background:var(--bg,#121418)}
-.geg .gf .btn{width:100%;min-height:54px}
-.geg .gdoc{display:flex;align-items:center;gap:10px;color:var(--mute,#A7ADB8);font-size:15px}
-.geg .gdoc i{flex:1;height:6px;border-radius:3px;background:var(--track);overflow:hidden}.geg .gdoc i b{display:block;height:100%;background:var(--prog-doc)}
-.geg .wrn{color:var(--warn)}.geg .okk{color:var(--ok,#22C55E)}
-.geg .gseg{display:flex;background:var(--card);border:1px solid var(--line);border-radius:var(--r-pill,999px);padding:3px;margin-bottom:12px}
-.geg .gseg button{flex:1;min-height:44px;border:0;border-radius:var(--r-pill,999px);background:transparent;color:var(--ink);font-weight:600;font-size:15px;cursor:pointer}
-.geg .gseg button.on{background:var(--acc);color:var(--on-acc);font-weight:800}
-.geg .gmom{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 2px 10px;color:var(--mute);font-size:15px}
-.geg .gmom button{border:0;background:none;color:var(--ink);font-weight:700;font-size:15px;min-height:44px;padding:0 4px;cursor:pointer;text-decoration:underline}
-.geg .glist{background:var(--card);border:1px solid var(--line);border-radius:var(--r,20px);overflow:hidden}
-.geg .gsr{display:flex;align-items:center;gap:12px;width:100%;min-height:68px;padding:10px 14px;border:0;border-bottom:1px solid var(--line);background:transparent;color:var(--ink);text-align:left;cursor:pointer;font:inherit}
-.geg .gsr:last-child{border-bottom:0}.geg .gsr:active{background:var(--card2)}
-.geg .gsr .ic{flex:none;width:40px;height:40px;border-radius:12px;background:var(--well);display:grid;place-items:center;color:var(--mute)}
-.geg .gsr .nm{flex:1;min-width:0}.geg .gsr .nm b{display:block;font-size:17px;font-weight:700;line-height:1.2}
-.geg .gsr .nm small{display:block;color:var(--mute);font-size:14px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.geg .gsr .sx{flex:none;font-weight:800;font-size:15px;white-space:nowrap}.geg .gsr .ch2{flex:none;color:var(--mute)}
-.geg .gleeg{background:var(--card);border:1px solid var(--line);border-radius:var(--r,20px);padding:18px;text-align:center}
-.geg .gleeg p{margin:0 0 12px;font-weight:700}.geg .gleeg .btn{width:100%}
-.geg .fr{background:var(--card,#1C1F25);border:1px solid var(--line,#2E323A);border-radius:var(--r,20px);padding:12px 14px;margin-bottom:8px}
-.geg .mist{border-color:var(--warn)}
-.geg .info{color:var(--mute,#A7ADB8);font-size:15px}
-.geg .fl{display:flex;align-items:center;gap:8px;font-weight:700;font-size:16px;margin-bottom:6px}
-.geg .fl span:first-child{flex:1}
-.geg .vink{flex:none;width:26px;height:26px;border-radius:50%;background:var(--ok,#22C55E);color:#0b1a10;font-style:normal;font-weight:800;font-size:16px;display:grid;place-items:center}
-.geg .vink[hidden]{display:none}
-.geg input,.geg textarea{display:block;box-sizing:border-box;max-width:100%;min-width:0;-webkit-appearance:none;appearance:none;width:100%;min-height:48px;border-radius:14px;border:1px solid var(--line2);background:var(--well,#121418);color:inherit;padding:0 12px;font-size:16px}
-.geg textarea{min-height:84px;padding:10px 12px;line-height:1.4;resize:vertical}
-.geg .ch{display:flex;flex-wrap:wrap;gap:6px}
-.geg .ch button{min-height:44px;padding:0 16px;border-radius:99px;border:1px solid var(--line2);background:transparent;color:inherit;font-size:16px;font-weight:600;cursor:pointer}
-.geg .ch button.on{background:var(--acc);border-color:var(--acc);color:var(--on-acc);font-weight:800}
-.geg .ft{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.geg .ft img{width:120px;height:90px;object-fit:cover;border-radius:var(--r-thumb,14px);border:1px solid var(--line2)}
-.geg .ft .btn{min-height:44px}
-.geg .stp{display:flex;align-items:center;gap:10px}.geg .stp input{width:90px;flex:none;text-align:center;font-size:20px;font-weight:800}
-.geg .stp button{flex:none;width:48px;height:48px;border-radius:24px;border:1px solid var(--line2);background:var(--well);color:var(--ink);font-size:24px;font-weight:800;cursor:pointer;padding:0}
-.geg .zw{display:flex;align-items:center;gap:12px;min-height:56px;padding:8px 14px;font-weight:700;font-size:16px}
-.geg .zw span{flex:1}
-.geg .sw{flex:none;position:relative;width:56px;height:34px;border-radius:17px;border:1px solid var(--line2);background:var(--well);cursor:pointer;padding:0}
-.geg .sw i{position:absolute;top:3px;left:3px;width:26px;height:26px;border-radius:13px;background:var(--mute);transition:left .15s}
-.geg .sw[aria-checked="true"]{background:var(--acc);border-color:var(--acc)}.geg .sw[aria-checked="true"] i{left:25px;background:var(--on-acc)}
-.geg .ccard .cr{margin-top:8px}.geg .ccard .cr label{display:block;color:var(--mute);font-size:14px;font-weight:600;margin:0 0 4px}
-.geg .ccard .kies{margin-top:10px;width:100%;min-height:44px}
-.geg .gopt{display:flex;align-items:center;gap:10px;width:100%;min-height:52px;margin:14px 0 8px;border:1px solid var(--line);border-radius:var(--r-pill,999px);background:transparent;color:var(--ink);font-size:16px;font-weight:600;padding:0 18px;cursor:pointer;text-align:left}
-.geg .gopt span{flex:1}.geg .gopt svg{transition:transform .15s}.geg .gopt[aria-expanded="true"] svg{transform:rotate(90deg)}
-.geg .vgt{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-.geg .tile{position:relative;min-height:72px;border-radius:16px;border:1px solid var(--line2);background:var(--card);color:var(--ink);font-size:15px;font-weight:700;line-height:1.25;padding:10px 12px;text-align:left;cursor:pointer;display:flex;flex-direction:column;justify-content:center;gap:4px;overflow-wrap:anywhere;hyphens:auto}
-.geg .tile.on{background:var(--acc);border-color:var(--acc);color:var(--on-acc)}
-.geg .tile.voor{border-color:var(--warn);border-style:dashed}
-.geg .tile small{font-size:12px;font-weight:800;color:var(--warn)}
-.geg .vx{grid-column:1/-1;display:grid;gap:6px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:10px 12px}
-.geg .vx b{font-size:14px}.geg .vx input{min-height:44px;font-size:15px}
-.geg .vgg{margin:12px 0 4px;font-weight:800;color:var(--mute,#A7ADB8)}
-.geg .vgr{border-top:1px solid var(--track);padding:6px 0}
-.geg .vgr label{display:flex;gap:10px;align-items:center;min-height:44px;font-size:16px}
-.geg .vgr input[type=checkbox]{width:24px;height:24px;min-height:0;accent-color:var(--acc)}
-.geg .vgr .vx{margin:4px 0 4px 34px}
-.geg .vgok{width:100%;min-height:60px;font-size:18px;margin-top:16px}
-.geg .vgok.af{background:var(--ok,#22C55E);border-color:var(--ok,#22C55E);color:#0b1a10}
+:is(.geg,.gin) .gh{flex:none;display:flex;align-items:center;gap:8px;padding:calc(4px + env(safe-area-inset-top)) calc(14px + env(safe-area-inset-right)) 6px calc(6px + env(safe-area-inset-left));border-bottom:1px solid var(--line,#2E323A)}
+:is(.geg,.gin) .gh h2{flex:1;min-width:0;margin:0;font-size:18px;font-weight:800;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+:is(.geg,.gin) .gst{font-weight:800;font-size:15px;white-space:nowrap}
+:is(.geg,.gin) .gb{flex:1;overflow-y:auto;padding:12px calc(14px + env(safe-area-inset-right)) 24px calc(14px + env(safe-area-inset-left))}
+:is(.geg,.gin) .gf{flex:none;padding:10px calc(14px + env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom)) calc(14px + env(safe-area-inset-left));border-top:1px solid var(--line,#2E323A);background:var(--bg,#121418)}
+:is(.geg,.gin) .gf .btn{width:100%;min-height:54px}
+:is(.geg,.gin) .gdoc{display:flex;align-items:center;gap:10px;color:var(--mute,#A7ADB8);font-size:15px}
+:is(.geg,.gin) .gdoc i{flex:1;height:6px;border-radius:3px;background:var(--track);overflow:hidden}:is(.geg,.gin) .gdoc i b{display:block;height:100%;background:var(--prog-doc)}
+:is(.geg,.gin) .wrn{color:var(--warn)}:is(.geg,.gin) .okk{color:var(--ok,#22C55E)}
+:is(.geg,.gin) .gseg{display:flex;background:var(--card);border:1px solid var(--line);border-radius:var(--r-pill,999px);padding:3px;margin-bottom:12px}
+:is(.geg,.gin) .gseg button{flex:1;min-height:44px;border:0;border-radius:var(--r-pill,999px);background:transparent;color:var(--ink);font-weight:600;font-size:15px;cursor:pointer}
+:is(.geg,.gin) .gseg button.on{background:var(--acc);color:var(--on-acc);font-weight:800}
+:is(.geg,.gin) .gmom{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 2px 10px;color:var(--mute);font-size:15px}
+:is(.geg,.gin) .gmom button{border:0;background:none;color:var(--ink);font-weight:700;font-size:15px;min-height:44px;padding:0 4px;cursor:pointer;text-decoration:underline}
+:is(.geg,.gin) .glist{background:var(--card);border:1px solid var(--line);border-radius:var(--r,20px);overflow:hidden}
+:is(.geg,.gin) .gsr{display:flex;align-items:center;gap:12px;width:100%;min-height:68px;padding:10px 14px;border:0;border-bottom:1px solid var(--line);background:transparent;color:var(--ink);text-align:left;cursor:pointer;font:inherit}
+:is(.geg,.gin) .gsr:last-child{border-bottom:0}:is(.geg,.gin) .gsr:active{background:var(--card2)}
+:is(.geg,.gin) .gsr .ic{flex:none;width:40px;height:40px;border-radius:12px;background:var(--well);display:grid;place-items:center;color:var(--mute)}
+:is(.geg,.gin) .gsr .nm{flex:1;min-width:0}:is(.geg,.gin) .gsr .nm b{display:block;font-size:17px;font-weight:700;line-height:1.2}
+:is(.geg,.gin) .gsr .nm small{display:block;color:var(--mute);font-size:14px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+:is(.geg,.gin) .gsr .sx{flex:none;font-weight:800;font-size:15px;white-space:nowrap}:is(.geg,.gin) .gsr .ch2{flex:none;color:var(--mute)}
+:is(.geg,.gin) .gleeg{background:var(--card);border:1px solid var(--line);border-radius:var(--r,20px);padding:18px;text-align:center}
+:is(.geg,.gin) .gleeg p{margin:0 0 12px;font-weight:700}:is(.geg,.gin) .gleeg .btn{width:100%}
+:is(.geg,.gin) .fr{background:var(--card,#1C1F25);border:1px solid var(--line,#2E323A);border-radius:var(--r,20px);padding:12px 14px;margin-bottom:8px}
+:is(.geg,.gin) .mist{border-color:var(--warn)}
+:is(.geg,.gin) .info{color:var(--mute,#A7ADB8);font-size:15px}
+:is(.geg,.gin) .fl{display:flex;align-items:center;gap:8px;font-weight:700;font-size:16px;margin-bottom:6px}
+:is(.geg,.gin) .fl span:first-child{flex:1}
+:is(.geg,.gin) .vink{flex:none;width:26px;height:26px;border-radius:50%;background:var(--ok,#22C55E);color:#0b1a10;font-style:normal;font-weight:800;font-size:16px;display:grid;place-items:center}
+:is(.geg,.gin) .vink[hidden]{display:none}
+:is(.geg,.gin) input,:is(.geg,.gin) textarea{display:block;box-sizing:border-box;max-width:100%;min-width:0;-webkit-appearance:none;appearance:none;width:100%;min-height:48px;border-radius:14px;border:1px solid var(--line2);background:var(--well,#121418);color:inherit;padding:0 12px;font-size:16px}
+:is(.geg,.gin) textarea{min-height:84px;padding:10px 12px;line-height:1.4;resize:vertical}
+:is(.geg,.gin) .ch{display:flex;flex-wrap:wrap;gap:6px}
+:is(.geg,.gin) .ch button{min-height:44px;padding:0 16px;border-radius:99px;border:1px solid var(--line2);background:transparent;color:inherit;font-size:16px;font-weight:600;cursor:pointer}
+:is(.geg,.gin) .ch button.on{background:var(--acc);border-color:var(--acc);color:var(--on-acc);font-weight:800}
+:is(.geg,.gin) .ft{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+:is(.geg,.gin) .ft img{width:120px;height:90px;object-fit:cover;border-radius:var(--r-thumb,14px);border:1px solid var(--line2)}
+:is(.geg,.gin) .ft .btn{min-height:44px}
+:is(.geg,.gin) .stp{display:flex;align-items:center;gap:10px}:is(.geg,.gin) .stp input{width:90px;flex:none;text-align:center;font-size:20px;font-weight:800}
+:is(.geg,.gin) .stp button{flex:none;width:48px;height:48px;border-radius:24px;border:1px solid var(--line2);background:var(--well);color:var(--ink);font-size:24px;font-weight:800;cursor:pointer;padding:0}
+:is(.geg,.gin) .zw{display:flex;align-items:center;gap:12px;min-height:56px;padding:8px 14px;font-weight:700;font-size:16px}
+:is(.geg,.gin) .zw span{flex:1}
+:is(.geg,.gin) .sw{flex:none;position:relative;width:56px;height:34px;border-radius:17px;border:1px solid var(--line2);background:var(--well);cursor:pointer;padding:0}
+:is(.geg,.gin) .sw i{position:absolute;top:3px;left:3px;width:26px;height:26px;border-radius:13px;background:var(--mute);transition:left .15s}
+:is(.geg,.gin) .sw[aria-checked="true"]{background:var(--acc);border-color:var(--acc)}:is(.geg,.gin) .sw[aria-checked="true"] i{left:25px;background:var(--on-acc)}
+:is(.geg,.gin) .ccard .cr{margin-top:8px}:is(.geg,.gin) .ccard .cr label{display:block;color:var(--mute);font-size:14px;font-weight:600;margin:0 0 4px}
+:is(.geg,.gin) .ccard .kies{margin-top:10px;width:100%;min-height:44px}
+:is(.geg,.gin) .gopt{display:flex;align-items:center;gap:10px;width:100%;min-height:52px;margin:14px 0 8px;border:1px solid var(--line);border-radius:var(--r-pill,999px);background:transparent;color:var(--ink);font-size:16px;font-weight:600;padding:0 18px;cursor:pointer;text-align:left}
+:is(.geg,.gin) .gopt span{flex:1}:is(.geg,.gin) .gopt svg{transition:transform .15s}:is(.geg,.gin) .gopt[aria-expanded="true"] svg{transform:rotate(90deg)}
+:is(.geg,.gin) .vgt{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+:is(.geg,.gin) .tile{position:relative;min-height:72px;border-radius:16px;border:1px solid var(--line2);background:var(--card);color:var(--ink);font-size:15px;font-weight:700;line-height:1.25;padding:10px 12px;text-align:left;cursor:pointer;display:flex;flex-direction:column;justify-content:center;gap:4px;overflow-wrap:anywhere;hyphens:auto}
+:is(.geg,.gin) .tile.on{background:var(--acc);border-color:var(--acc);color:var(--on-acc)}
+:is(.geg,.gin) .tile.voor{border-color:var(--warn);border-style:dashed}
+:is(.geg,.gin) .tile small{font-size:12px;font-weight:800;color:var(--warn)}
+:is(.geg,.gin) .vx{grid-column:1/-1;display:grid;gap:6px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:10px 12px}
+:is(.geg,.gin) .vx b{font-size:14px}:is(.geg,.gin) .vx input{min-height:44px;font-size:15px}
+:is(.geg,.gin) .vgg{margin:12px 0 4px;font-weight:800;color:var(--mute,#A7ADB8)}
+:is(.geg,.gin) .vgr{border-top:1px solid var(--track);padding:6px 0}
+:is(.geg,.gin) .vgr label{display:flex;gap:10px;align-items:center;min-height:44px;font-size:16px}
+:is(.geg,.gin) .vgr input[type=checkbox]{width:24px;height:24px;min-height:0;accent-color:var(--acc)}
+:is(.geg,.gin) .vgr .vx{margin:4px 0 4px 34px}
+:is(.geg,.gin) .vgok{width:100%;min-height:60px;font-size:18px;margin-top:16px}
+:is(.geg,.gin) .vgok.af{background:var(--ok,#22C55E);border-color:var(--ok,#22C55E);color:#0b1a10}
 .gbl{position:fixed;inset:0;z-index:72;background:rgba(0,0,0,.6);display:flex;align-items:flex-end;justify-content:center}
 .gblb{width:100%;max-width:560px;max-height:88vh;overflow-y:auto;background:var(--card,#1C1F25);color:var(--ink,#F3F4F6);border:1px solid var(--line,#2E323A);border-radius:var(--r,20px) var(--r,20px) 0 0;padding:18px calc(16px + env(safe-area-inset-right)) calc(18px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left));display:flex;flex-direction:column;gap:10px}
 .gblb h3{margin:0;font-size:21px}.gblb p{margin:0;color:var(--mute)}
@@ -82,7 +82,7 @@
 .gblb label{display:block;font-weight:700;margin:4px 0 4px}
 .gblb input{display:block;box-sizing:border-box;width:100%;min-width:0;min-height:48px;border-radius:14px;border:1px solid var(--line2);background:var(--well);color:inherit;padding:0 12px;font-size:16px;-webkit-appearance:none;appearance:none}
 .gblb img{width:100%;max-height:160px;object-fit:cover;border-radius:var(--r-thumb,14px)}
-@media (prefers-reduced-motion:reduce){.geg .gopt svg,.geg .sw i{transition:none}}`;
+@media (prefers-reduced-motion:reduce){:is(.geg,.gin) .gopt svg,:is(.geg,.gin) .sw i{transition:none}}`;
   function css(){if(document.getElementById('gegcss'))return;const s=document.createElement('style');s.id='gegcss';s.textContent=CSS;document.head.appendChild(s);}
 
   let st=null;
@@ -96,14 +96,21 @@
     const root=document.createElement('div');root.className='geg';root.setAttribute('role','dialog');root.setAttribute('aria-label','Gegevens');document.body.appendChild(root);
     st={s:survey,opts,root,fotos,urls:[],filter:opts.filter==='alles'?'alles':'todo',moment:opts.moment||null,sec:null,optOpen:false,vgMeer:false};
     root.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();terug();}});
+    // terug-gebaar/terugknop van de telefoon: stap terug binnen het scherm
+    history.pushState({...(history.state||{}),geg:1},'');st.diepte=1;
     if(opts.sectie&&Velden.SECTIES.some(x=>x.id===opts.sectie))openSectie(opts.sectie);else lijst();
   }
   function close(silent){if(!st)return;const me=st;clearTimeout(svT);if(svP)Store.surveys.put(me.s);st.urls.forEach(u=>URL.revokeObjectURL(u));st.root.remove();st=null;if(!silent&&me.opts.onClose)me.opts.onClose();}
-  function terug(){if(!st)return;if(st.sec)lijst();else{save(true);close();}}
+  function terug(){if(!st)return;if(st.sec)naarLijst();else sluit();}
+  function naarLijst(){if(!st)return;save(true);if(st.diepte===2)history.back();else lijst();}
+  function sluit(){if(!st)return;save(true);const d=st.diepte||0;st.diepte=0;close();if(d)history.go(-d);}
+  addEventListener('popstate',e=>{if(!st||!st.diepte)return;const g=(e.state&&e.state.geg)||0;
+    if(g>=2)return;if(g===1){st.diepte=1;save(true);lijst();return;}
+    st.diepte=0;save(true);close();});
   let svT=null,svP=false;
   function save(now){clearTimeout(svT);svP=true;const go=async()=>{svP=false;if(!st)return;const me=st;await Store.surveys.put(me.s);if(me.opts.onChange)me.opts.onChange(me.s);};if(now)return go();svT=setTimeout(go,350);}
   const kant=()=>st.moment==='vooraf'?'in':undefined;
-  const secties=()=>Velden.secties(st.s,st.fotos,{moment:st.moment,kant:kant()});
+  const secties=()=>Velden.secties(st.s,st.fotos,{moment:st.moment,kant:kant(),zonder:st.opts.zonder});
   const docTxt=()=>{const v=Velden.voortgang(st.s,st.fotos,'uit');return `<div class="gdoc"><span>Document ${v.klaar} van ${v.totaal} compleet</span><i><b style="width:${v.pct}%"></b></i></div>`;};
   function sub(x){const s=st.s;
     if(x.sc.id==='loc'&&Velden.zelfdeAan(s,'loc_zelfde'))return 'Zelfde als klant'+(Velden.waarde(s,'loc_gebouw')?' · '+Velden.waarde(s,'loc_gebouw'):'');
@@ -115,14 +122,14 @@
   function lijst(){
     st.sec=null;const R=st.root,L=secties(),n=L.reduce((t,x)=>t+x.open.length,0);
     const toon=st.filter==='todo'?L.filter(x=>x.open.length):L;
-    R.innerHTML=`<div class="gh"><button class="back bpill" id="gX">${svg(TERUG,18)}Klaar</button><h2>Gegevens</h2></div>
+    R.innerHTML=`<div class="gh"><button class="back bpill" id="gX">${svg(TERUG,18)}Terug</button><h2>Gegevens</h2></div>
     <div class="gb">
       <div class="gseg" role="group" aria-label="Filter"><button data-f="todo" class="${st.filter==='todo'?'on':''}" aria-pressed="${st.filter==='todo'}">Nog te doen (${n})</button><button data-f="alles" class="${st.filter==='alles'?'on':''}" aria-pressed="${st.filter==='alles'}">Alles</button></div>
       ${st.moment?`<div class="gmom"><span>Alleen wat je ${esc(Velden.MOMENT[st.moment])} invult</span><button id="gAlle">Alle secties</button></div>`:''}
       ${toon.length?`<div class="glist">${toon.map(x=>`<button class="gsr" data-sc="${x.sc.id}"><span class="ic">${svg(x.sc.ic||'')}</span><span class="nm"><b>${esc(x.sc.kort)}</b><small>${esc(sub(x))}</small></span>${x.open.length?`<span class="sx wrn">${x.open.length} open</span>`:'<span class="sx okk" aria-label="compleet">✓</span>'}<span class="ch2">${svg(VERDER,18)}</span></button>`).join('')}</div>`
         :`<div class="gleeg"><p>${st.moment==='vooraf'?'Alles wat je vooraf nodig hebt, is ingevuld.':'Alles wat nodig is, is ingevuld.'}</p><button class="btn" id="gToon">Alles bekijken</button></div>`}
     </div><div class="gf">${docTxt()}</div>`;
-    R.querySelector('#gX').onclick=()=>{save(true);close();};
+    R.querySelector('#gX').onclick=sluit;
     R.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{st.filter=b.dataset.f;lijst();});
     R.querySelectorAll('[data-sc]').forEach(b=>b.onclick=()=>openSectie(b.dataset.sc));
     const al=R.querySelector('#gAlle');if(al)al.onclick=()=>{st.moment=null;lijst();};
@@ -131,7 +138,7 @@
   }
 
   /* ---------- niveau 2: één sectie ---------- */
-  function openSectie(id){st.sec=id;st.optOpen=false;st.vgMeer=false;sectie();const b=st.root.querySelector('.gb');if(b)b.scrollTop=0;}
+  function openSectie(id){if(st.diepte===1){history.pushState({...(history.state||{}),geg:2},'');st.diepte=2;}st.sec=id;st.optOpen=false;st.vgMeer=false;sectie();const b=st.root.querySelector('.gb');if(b)b.scrollTop=0;}
   function items(x){ // velden van de sectie, met contactkaarten samengevoegd; verborgen "zelfde als"-velden weg
     const c=Velden.cfg(),s=st.s,gezien={},out=[];
     x.velden.forEach(f=>{if(f.schakel||Velden.verborgen(s,f))return;
@@ -146,19 +153,19 @@
     const rest=L.slice(i+1).concat(L.slice(0,Math.max(i,0)));return rest.find(x=>x.open.length&&x.sc.id!==st.sec)||null;}
   function sectie(){
     const R=st.root,x=secties().find(y=>y.sc.id===st.sec);
-    if(!x){lijst();return;}
+    if(!x){naarLijst();return;}
     st.urls.forEach(u=>URL.revokeObjectURL(u));st.urls=[];
     const it=items(x),req=it.filter(i=>i.req),opt=it.filter(i=>!i.req),sch=x.velden.filter(f=>f.schakel),nx=volgende();
     const html=i=>i.ct?contact(i):i.f.t==='vg'?vgHtml(i.f):row(i.f);
-    R.innerHTML=`<div class="gh"><button class="back bpill" id="gX">${svg(TERUG,18)}Overzicht</button><h2>${esc(x.sc.kort)}</h2><span class="gst"></span></div>
+    R.innerHTML=`<div class="gh"><button class="back bpill" id="gX">${svg(TERUG,18)}Gegevens</button><h2>${esc(x.sc.kort)}</h2><span class="gst"></span></div>
     <div class="gb">
       ${sch.map(f=>{const on=Velden.zelfdeAan(st.s,f.k);return `<div class="fr zw"><span id="l_${f.k}">${esc(f.l)}</span><button class="sw" role="switch" aria-checked="${on}" aria-labelledby="l_${f.k}" data-sw="${f.k}"><i></i></button></div>`;}).join('')}
       ${req.map(html).join('')}
       ${opt.length?`<button class="gopt" id="gOpt" aria-expanded="${st.optOpen}"><span>Optioneel (${opt.length})</span>${svg(VERDER,18)}</button><div id="gOptL"${st.optOpen?'':' hidden'}>${opt.map(html).join('')}</div>`:''}
       ${!req.length&&!opt.length?'<p class="info">Hier hoef je nu niets in te vullen.</p>':''}
-    </div><div class="gf"><button class="btn pri" id="gNx">${nx?'Volgende sectie: '+esc(nx.sc.kort):'Terug naar overzicht'}</button></div>`;
-    R.querySelector('#gX').onclick=()=>{save(true);lijst();};
-    R.querySelector('#gNx').onclick=()=>{save(true);const n=volgende();if(n)openSectie(n.sc.id);else lijst();};
+    </div><div class="gf"><button class="btn pri" id="gNx">${nx?'Volgende sectie: '+esc(nx.sc.kort):'Terug naar gegevens'}</button></div>`;
+    R.querySelector('#gX').onclick=naarLijst;
+    R.querySelector('#gNx').onclick=()=>{save(true);const n=volgende();if(n)openSectie(n.sc.id);else naarLijst();};
     const go=R.querySelector('#gOpt');if(go)go.onclick=()=>{st.optOpen=!st.optOpen;go.setAttribute('aria-expanded',st.optOpen);R.querySelector('#gOptL').hidden=!st.optOpen;};
     bind();upd();
   }
@@ -324,5 +331,51 @@
 .tdth img{flex:none;width:36px;height:36px;object-fit:cover;border-radius:8px;border:1px solid var(--line2)}
 .tdth b{font-size:13px;color:var(--mute);margin-left:2px}`;
   { const st0=document.createElement('style');st0.textContent=TDCSS;document.head.appendChild(st0); }
-  window.Gegevens={open,close:()=>close(),naKast,vraag,todoHtml,todoBind,bron:null};
+  /* ---------- velden direct op een scherm (bijv. gegevens kast, tellers binnen) ---------- */
+  function inline(el,s,keys,o={}){css();
+    const F=keys.map(k=>Velden.VELDEN.find(f=>f.k===k)).filter(f=>f&&Velden.actief(s,f));
+    const c=Velden.cfg();
+    const inv=f=>{const v=Velden.waarde(s,f.k),id='gi_'+f.k;
+      if(f.t==='keuze'||f.t==='janee')return `<div class="ch" role="group">${(f.t==='janee'?['Ja','Nee']:f.opties).map(x=>`<button data-ik="${f.k}" data-v="${esc(x)}" class="${v===x?'on':''}" aria-pressed="${v===x}">${esc(x)}</button>`).join('')}</div>`;
+      if(f.stap)return `<div class="stp"><button data-istp="${f.k}" data-d="-1" aria-label="Eén minder">−</button><input id="${id}" data-ik="${f.k}" data-num="1" inputmode="numeric" value="${esc(v==null?'':v)}" placeholder="0"><button data-istp="${f.k}" data-d="1" aria-label="Eén meer">+</button></div>`;
+      if(f.t==='lang')return `<textarea id="${id}" data-ik="${f.k}" placeholder="${esc(f.vb?'bijv. '+f.vb:'')}">${esc(v||'')}</textarea>`;
+      if(f.t==='teller')return `<input id="${id}" data-ik="${f.k}" data-num="1" inputmode="decimal" value="${esc(v==null?'':v)}" placeholder="0">`;
+      return `<input id="${id}" type="${{getal:'number',tel:'tel',mail:'email',datum:'date'}[f.t]||'text'}" data-ik="${f.k}" value="${esc(v==null?'':v)}" placeholder="${esc(f.vb?'bijv. '+f.vb:'')}">`;};
+    el.classList.add('gin');
+    el.innerHTML=F.map(f=>`<div class="fr" data-ir="${f.k}"><label class="fl" for="gi_${f.k}"><span>${esc(f.kort||f.l)}</span><i class="vink" role="img" aria-label="ingevuld" hidden>✓</i></label>${inv(f)}</div>`).join('');
+    let t=null;const bewaar=now=>{clearTimeout(t);const go=async()=>{await Store.surveys.put(s);if(o.onChange)o.onChange(s);};if(now)go();else t=setTimeout(go,350);};
+    const zet=(f,v)=>{if(f.t==='teller')s.tellers={...(s.tellers||{}),[f.teller]:v===''?0:v};else Velden.zet(s,f.k,v);};
+    const upd=()=>F.forEach(f=>{const r=el.querySelector(`[data-ir="${f.k}"]`),vol=Velden.gevuld(s,f,[]);r.querySelector('.vink').hidden=!vol;r.classList.toggle('mist',!vol&&Velden.nodig(c,f,o.kant));});
+    el.querySelectorAll('input[data-ik],textarea[data-ik]').forEach(e=>e.oninput=()=>{const f=F.find(x=>x.k===e.dataset.ik);let v=e.value;
+      if(e.dataset.num){const n=parseFloat(v.replace(',','.'));v=v.trim()===''?'':isFinite(n)?n:v;}zet(f,v);bewaar();upd();});
+    el.querySelectorAll('[data-istp]').forEach(b=>b.onclick=()=>{const f=F.find(x=>x.k===b.dataset.istp),n=Math.max(0,(parseFloat(Velden.waarde(s,f.k))||0)+(+b.dataset.d));
+      zet(f,n);el.querySelector(`input[data-ik="${f.k}"]`).value=n;bewaar(true);upd();});
+    el.querySelectorAll('.ch button').forEach(b=>b.onclick=()=>{const f=F.find(x=>x.k===b.dataset.ik),on=Velden.waarde(s,f.k)===b.dataset.v;zet(f,on?'':b.dataset.v);
+      el.querySelectorAll(`.ch button[data-ik="${f.k}"]`).forEach(x=>{const a=!on&&x===b;x.classList.toggle('on',a);x.setAttribute('aria-pressed',a);});bewaar(true);upd();});
+    upd();return{bewaar:()=>bewaar(true)};
+  }
+
+  /* ---------- vakken op het schouwscherm: Informatie, Foto's buiten (alleen OFFNET), Foto's binnen ---------- */
+  let vkUrls=[];
+  function vakkenHtml(s,fotos,kant){css();const V=Velden.vakken(s,fotos,kant),on=Velden.onnet(s);
+    vkUrls.forEach(u=>URL.revokeObjectURL(u));vkUrls=[];
+    const sec=fs=>[...new Set(fs.map(f=>f.t==='teller'||f.t==='foto'||f.t==='fotos'?(f.kort||f.l):(Velden.SECTIES.find(x=>x.id===Velden.groep(f))||{}).kort))].join(' · ');
+    const sub=fs=>fs.length?`${fs.length} nog te doen · ${esc(sec(fs))}`:'<span class="okk">✓ Compleet</span>';
+    const ok=(fotos||[]).filter(p=>p.status!=='vervallen'&&p.blob);
+    const thumbs=x=>{const L=ok.filter(p=>(p.sectie||'buiten')===x),max=7;if(!L.length)return'';
+      return `<span class="tdth">${L.slice(0,max).map(p=>{const u=URL.createObjectURL(p.blob);vkUrls.push(u);return `<img src="${u}" alt="">`;}).join('')}${L.length>max?`<b>+${L.length-max}</b>`:''}</span>`;};
+    const n=x=>ok.filter(p=>(p.sectie||'buiten')===x).length;
+    const pijl=svg('M9 5l7 7-7 7',18);
+    const vk=(id,ic,titel,fs,extra)=>`<button class="tdr tdfo${fs.length?' wrn':''}" data-vk="${id}" aria-label="${esc(titel)}: ${fs.length?fs.length+' nog te doen':'compleet'}"><span class="tdk"><span class="tdi">${ic}</span><span class="tdt"><b>${titel}</b><small>${sub(fs)}</small></span><span class="tdp">${pijl}</span></span>${extra||''}</button>`;
+    const dot=x=>`<i class="dot" style="background:var(--sec-${x});width:12px;height:12px;border-radius:50%;display:block"></i>`;
+    return `<div class="tdo">${vk('info',svg(ICI,20),'Informatie',V.info)}
+      ${on?'':vk('buiten',dot('buiten'),`Foto's buiten · ${n('buiten')}`,V.buiten,thumbs('buiten'))}
+      ${vk('binnen',dot('binnen'),`Foto's binnen · ${n('binnen')}`,V.binnen,thumbs('binnen'))}</div>`;}
+  function vakkenBind(el,s,klaar,o={}){
+    el.querySelectorAll('[data-vk]').forEach(b=>b.onclick=async()=>{const x=b.dataset.vk;
+      if(x==='info'){const fo=await Store.photos.bySurvey(s.id,true),V=Velden.vakken(s,fo,o.kant);
+        open(s,{filter:V.info.length?'todo':'alles',zonder:['buiten','binnen','afw'],onClose:klaar});}
+      else if(o.naar)o.naar(x);});
+  }
+  window.Gegevens={open,close:()=>close(),naKast,vraag,todoHtml,todoBind,inline,vakkenHtml,vakkenBind,bron:null};
 })();

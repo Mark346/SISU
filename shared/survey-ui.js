@@ -90,6 +90,15 @@
 .sui .snext .btn{flex:none;min-height:48px;padding:0 16px;font-size:15px}
 .sstat{display:flex;flex-direction:column;gap:8px;margin-top:6px}
 .sui .stodo{margin-top:4px}
+.sui .kastk{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:10px}
+.sui .kastk.wrn{border-color:var(--warn)}
+.sui .kastk .kh{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:17px}
+.sui .kastk img{width:100%;max-height:200px;object-fit:cover;border-radius:var(--r-thumb,14px)}
+.sui .kastk .row{margin:0}.sui .kastk .row .btn{flex:1}
+.sui .kastk .gopt{margin:0}
+.sui .vink2{width:26px;height:26px;border-radius:50%;background:var(--ok);color:#0b1a10;font-style:normal;font-weight:800;display:grid;place-items:center}
+.sui .wrn2{color:var(--warn);font-weight:700;font-size:14px}
+.sui #bVeld .fr,.sui #kVeld .fr{margin-bottom:8px}
 .sui .sect{display:flex;align-items:center;gap:10px;margin-top:16px}.sui .sect>span{color:var(--mute);font-size:15px;white-space:nowrap}
 .sui .sect .seg{flex:1;display:flex;background:var(--card);border:1px solid var(--line);border-radius:var(--r-pill);padding:3px}
 .sui .sect button{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;min-height:44px;border:0;border-radius:var(--r-pill);background:transparent;color:var(--ink);font-weight:600;font-size:15px;cursor:pointer}
@@ -102,7 +111,7 @@
 .sconfb .btn{width:100%}
 .sconfb .sdanger{border-color:var(--warn);color:var(--warn)}.sconfb .sdanger.sure{background:var(--warn);color:var(--on-acc)}
 .stoast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:90;background:var(--ink);color:#111;font-weight:700;padding:12px 18px;border-radius:14px;max-width:92vw;box-shadow:0 8px 24px #000a}`;
-  let cfg=null,survey=null,urls={},main=null,showDone=false,showArch=false,newOpen=false;
+  let cfg=null,survey=null,urls={},main=null,showDone=false,showArch=false,newOpen=false,view=null; // view: null = schouw, 'buiten'/'binnen' = fotoscherm
   /* "vandaag", "gisteren", "24 nov" of "24 nov 2025" */
   function relD(d){if(!d)return'';const t=new Date(d),n=new Date();if(isNaN(t))return'';
     const dag=x=>new Date(x.getFullYear(),x.getMonth(),x.getDate()).getTime(),v=Math.round((dag(n)-dag(t))/864e5);
@@ -128,8 +137,10 @@
     try{await start();}catch(e){main.innerHTML=`<p class="note">Kon de opslag niet openen: ${esc(e.message||e)}</p>`;}
   }
   async function start(){
+    view=null;
     const want=new URLSearchParams(location.search).get('survey');
-    if(want){const s=await Store.surveys.get(want);if(s)return show(s);}
+    if(want){const s=await Store.surveys.get(want);if(s){const zf=new URLSearchParams(location.search).get('fotos')||(history.state&&history.state.zf);
+      if(cfg.fotoVakken&&(zf==='buiten'||zf==='binnen'))view=zf;return show(s);}}
     const all=await Store.surveys.list(),st=x=>Velden.statusOf(x);
     const arch=all.filter(x=>Velden.gearchiveerd(x)),rest=all.filter(x=>!Velden.gearchiveerd(x));
     const open=rest.filter(x=>st(x)!=='klaar'),done=rest.filter(x=>st(x)==='klaar'),lastOpen=open[0];
@@ -231,13 +242,16 @@
     let kaart='';
     if(cur==='klaar'){const vo=Velden.voortgang(s,ph,'uit');
       if(vo.mist.length)kaart=`<div class="snext wrn"><div class="t"><b>Klaar · ${vo.mist.length} open</b><small>Document ${vo.klaar} van ${vo.totaal} compleet</small></div><a class="btn" href="shared/storyline.html?survey=${encodeURIComponent(s.id)}">Aanvullen</a></div>`;}
-    else{kaart=`<div class="stodo">${Gegevens.todoHtml(s,ph,cur==='afronding'?'uit':undefined)}</div>`;
+    if(cfg.fotoVakken)kaart+=`<div class="stodo">${Gegevens.vakkenHtml(s,ph,cur==='afronding'?'uit':undefined)}</div>`;
+    else if(cur!=='klaar'){kaart=`<div class="stodo">${Gegevens.todoHtml(s,ph,cur==='afronding'?'uit':undefined)}</div>`;}
+    if(cur!=='klaar'&&!cfg.fotoVakken){
       if(cur==='afronding'){const vo=Velden.voortgang(s,ph,'uit');kaart+=`<div class="snext"><div class="t"><b>Document ${vo.klaar} van ${vo.totaal} compleet</b></div><a class="btn pri" href="shared/storyline.html?survey=${encodeURIComponent(s.id)}">Naar controle &amp; aanvullen</a></div>`;}}
     el.innerHTML=`<div class="sstat"><div class="shd" id="sbH" tabindex="0" role="group" aria-label="Status ${esc(Velden.statusMeta(cur).naam)}, stap ${idx+1} van ${Velden.STATUS.length}. Lang drukken om de status terug te zetten.">
       <div class="sht"><b>${esc(s.adres||'Schouw')}</b><span>stap ${idx+1} van ${Velden.STATUS.length}</span></div>
       <ol class="sstep" aria-hidden="true">${Velden.STATUS.map((x,i)=>`<li class="${i===idx?'nu':''}"><i style="${i<=idx?'background:'+x.kleur:''}"></i><span>${esc(x.naam)}</span></li>`).join('')}</ol></div>${kaart}</div>`;
     if(!el.isConnected)return;langDruk(el.querySelector('#sbH'),()=>terugBlad(s,reopen));
-    const td=el.querySelector('.stodo');if(td)Gegevens.todoBind(td,s,reopen,{kant:cur==='afronding'?'uit':undefined,camera:()=>{const a=(cfg.acties(s,0)||[]).find(x=>x.pri);if(a)a.fn(s);else document.querySelector('.sacts .btn.pri')?.click();}});
+    const td=el.querySelector('.stodo');if(td&&cfg.fotoVakken)Gegevens.vakkenBind(td,s,reopen,{kant:cur==='afronding'?'uit':undefined,naar:naarFotos});
+    else if(td)Gegevens.todoBind(td,s,reopen,{kant:cur==='afronding'?'uit':undefined,camera:()=>{const a=(cfg.acties(s,0)||[]).find(x=>x.pri);if(a)a.fn(s);else document.querySelector('.sacts .btn.pri')?.click();}});
   }
   /* knop "Schouw verwijderen" (verhuisd van het startscherm naar de schouw): twee keer tikken */
   function bindDel(btn,s,voor){if(!btn)return;let t=null;const lab=btn.textContent;btn.onclick=async()=>{
@@ -254,11 +268,12 @@
     return T;
   }
   async function show(s){
-    survey=s;history.replaceState(null,'','?survey='+encodeURIComponent(s.id));title(s.adres||cfg.naam);
+    survey=s;history.replaceState(view?{zf:view,via:!!(history.state&&history.state.via)}:null,'','?survey='+encodeURIComponent(s.id));title(s.adres||cfg.naam);
     // een schouw uit een andere variant gaat vanaf nu verder in deze variant (terugknoppen en 'Doorgaan met' volgen dat)
     if(s.variant!==cfg.variant){const was=NAMEN[s.variant]||s.variant;s.variant=cfg.variant;await Store.surveys.put(s);if(was)toast(`Deze schouw gaat nu verder in ${cfg.naam} (was ${was})`);}
     // in de hoofdapp (Veeg & Klik) alleen het adres; in de andere varianten met de naam erachter
-    title(cfg.variant==='veeg'?(s.adres||cfg.naam):(s.adres||cfg.naam)+' · '+cfg.naam);if(cfg.onScreen)cfg.onScreen('survey');
+    if(view==='buiten'&&Velden.onnet(s))view=null;
+    title(view?(view==='buiten'?"Foto's buiten":"Foto's binnen"):cfg.variant==='veeg'?(s.adres||cfg.naam):(s.adres||cfg.naam)+' · '+cfg.naam);if(cfg.onScreen)cfg.onScreen(view?'fotos':'survey');
     if(cfg.eigenScherm)return cfg.eigenScherm(s); // variant met een eigen schouwscherm (Loop-spoor)
     const ph=await Store.photos.bySurvey(s.id,true),ok=ph.filter(p=>p.status!=='vervallen');
     Object.values(urls).forEach(u=>URL.revokeObjectURL(u));urls={};ph.forEach(p=>urls[p.id]=URL.createObjectURL(p.blob));
@@ -266,8 +281,11 @@
     for(const p of naarBinnen)await Store.photos.put(p);
     if(wijz)await Store.surveys.put(s);
     const on=Velden.onnet(s);
+    if(cfg.fotoVakken&&view){await fotoScherm(s,view,ph);return;}
     const T=await recount(),acts=cfg.acties(s,ok.length);
     const seg=binnenAan()&&!on?`<div class="sect" role="group" aria-label="Foto's voor"><span>Foto's voor</span><div class="seg">${['buiten','binnen'].map(x=>`<button data-sect="${x}" class="${(s.sectie||'buiten')===x?'on':''}" aria-pressed="${(s.sectie||'buiten')===x}"><i class="dot" style="background:var(--sec-${x})"></i>${x==='buiten'?'Buiten':'Binnen'}</button>`).join('')}</div></div>`:'';
+    if(cfg.fotoVakken){ // schouwscherm met vakken: foto's maken zit in Foto's buiten / Foto's binnen
+      main.innerHTML=`<div id="stblk"></div>${voet(s)}`;statusBlock($('stblk'),s);bindVoet(s);window.scrollTo(0,0);return;}
     main.innerHTML=`
      <div id="stblk"></div>
      ${(()=>{ // hoofdactie als grote pil met camera, "uit galerij" als ronde knop ernaast, de rest eronder
@@ -287,11 +305,7 @@
        <div class="r"><div class="l">Boringen/persingen</div><button class="step" id="bm" aria-label="Eén minder">−</button><span class="v" id="tb">${T.boringen||0}</span><button class="step" id="bp" aria-label="Eén meer">+</button></div>`}
        ${binnenAan()||on?`<div class="r"><div class="l"><label for="tmb" style="margin:0">Meters binnen tracé</label><small>Zelf invullen.</small></div><input id="tmb" inputmode="decimal" value="${esc(T.metersBinnen!=null?T.metersBinnen:'')}" placeholder="0"></div>`:''}
      </div>
-     <div class="sfoot">
-       <a class="btn pri" href="shared/storyline.html?survey=${encodeURIComponent(s.id)}">Naar controle &amp; aanvullen</a>
-       <button class="slink" id="other">Andere schouw</button>
-       <button class="btn sdelx" id="sdel">Schouw verwijderen</button>
-     </div>`;
+     ${voet(s)}`;
     statusBlock($('stblk'),s);
     bindDel($('sdel'),s);
     main.querySelectorAll('[data-sect]').forEach(b=>b.onclick=async()=>{s.sectie=b.dataset.sect;await Store.surveys.put(s);main.querySelectorAll('[data-sect]').forEach(x=>{x.classList.toggle('on',x===b);x.setAttribute('aria-pressed',x===b);});toast("Nieuwe foto's: "+(s.sectie==='binnen'?'binnen':'buiten'));});
@@ -302,8 +316,71 @@
     if($('tm'))$('tm').onchange=async()=>{const v=parseFloat($('tm').value.replace(',','.'));survey.tellers={...survey.tellers,meters:isFinite(v)?v:0};await Store.surveys.put(survey);toast('Opgeslagen');};
     const step=async d=>{const n=Math.max(0,(survey.tellers.boringen||0)+d);survey.tellers={...survey.tellers,boringen:n};$('tb').textContent=n;await Store.surveys.put(survey);};
     if($('bm')){$('bm').onclick=()=>step(-1);$('bp').onclick=()=>step(1);}
-    $('other').onclick=()=>{history.replaceState(null,'',location.pathname);start();};
+    bindVoet(s);
+  }
+  const voet=s=>`<div class="sfoot">
+       <a class="btn pri" href="shared/storyline.html?survey=${encodeURIComponent(s.id)}">Naar controle &amp; aanvullen</a>
+       <button class="slink" id="other">Andere schouw</button>
+       <button class="btn sdelx" id="sdel">Schouw verwijderen</button>
+     </div>`;
+  function bindVoet(s){bindDel($('sdel'),s);$('other').onclick=()=>{history.replaceState(null,'',location.pathname);start();};}
+
+  /* ---------- fotoscherm buiten / binnen (hoofdapp) ---------- */
+  function naarFotos(x){if(!survey)return;view=x;history.pushState({zf:x,via:1},'','?survey='+encodeURIComponent(survey.id));show(survey);}
+  /* terugknop bovenin: van fotoscherm naar de schouw, van de schouw naar de lijst */
+  function terug(){if(view){if(history.state&&history.state.zf&&history.length>1&&history.state.via)history.back();else{view=null;show(survey);}return;}
+    history.replaceState(null,'',location.pathname);start();}
+  addEventListener('popstate',e=>{if(!cfg||!cfg.fotoVakken||!survey)return;const st=e.state||{};if(st.geg)return;
+    const v=st.zf||null;if(v!==view){view=v;show(survey);}});
+  async function fotoScherm(s,x,ph){
+    const ok=ph.filter(p=>p.status!=='vervallen'),L=ph.filter(p=>(p.sectie||'buiten')===x),T=await recount();
+    const acts=cfg.acties(s,ok.length),pri=acts.find(a=>a.pri),gal=acts.find(a=>/galerij/i.test(a.label)&&!a.pri);
+    const V=Velden.vakken(s,ph,Velden.statusOf(s)==='afronding'?'uit':undefined)[x];
+    const kast=x==='binnen'; // afwerkpunt (kast) hoort bij binnen
+    const kb=(s.bijlagen||{}).afw_foto,ku=kb?URL.createObjectURL(kb):'';if(ku)urls._kast=ku;
+    const kOpen=['afw_plaats','afw_ruimte','afw_kast','afw_apparatuur'].filter(k=>!Velden.gevuld(s,Velden.VELDEN.find(f=>f.k===k),ph)).length;
+    main.innerHTML=`
+     ${V.length?`<div class="snext wrn"><div class="t"><b>${V.length} nog te doen</b><small>${esc([...new Set(V.map(f=>f.kort||f.l))].join(' · '))}</small></div></div>`:'<div class="snext"><div class="t"><b style="color:var(--ok)">✓ Compleet</b><small>Alles wat verplicht is, is er.</small></div></div>'}
+     <div class="sacts">${pri?`<button class="btn pri" id="fCam">${ICO.camera}${esc(pri.label)}</button>`:''}${gal?`<button class="btn rnd" id="fGal" aria-label="${esc(gal.label)}">${ICO.galerij}</button>`:''}</div>
+     <div class="fhead"><h2>Foto's ${x}</h2>${L.length?`<span>${L.filter(p=>p.status!=='vervallen').length} in document</span>`:''}</div>
+     ${L.length?`<div class="strip">${L.map(p=>{const i=ph.indexOf(p);return `<button class="th${p.status==='vervallen'?' vv':''}" data-id="${p.id}" aria-label="Foto ${i+1}${p.status==='vervallen'?', vervalt':''}"><img src="${urls[p.id]}" alt=""><span>${i+1}${p.status==='vervallen'?' · vervalt':''}</span></button>`;}).join('')}</div>
+     <p class="note">Tik om te bewerken. Lang drukken: vervalt of terugzetten.</p>`:`<p class="note">Nog geen foto's ${x}.</p>`}
+     ${kast?`<h2>Afwerkpunt (kast)</h2>
+     <div class="kastk${kb&&!kOpen?'':' wrn'}">
+       <div class="kh"><b>Afbeelding kast</b>${kb?'<i class="vink2">✓</i>':'<span class="wrn2">verplicht</span>'}</div>
+       ${kb?`<img src="${ku}" alt="Afbeelding kast">`:''}
+       <div class="row"><button class="btn" id="kCam">${kb?'Nieuwe foto':'Foto maken'}</button><button class="btn" id="kGal">Uit galerij</button></div>
+       <div class="gin"><button class="gopt" id="kMeer" aria-expanded="false"><span>Gegevens kast${kOpen?` · ${kOpen} open`:' · ✓'}</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button></div>
+       <div id="kVeld" hidden></div>
+     </div>`:''}
+     <h2>Tellers ${x}</h2>
+     ${x==='buiten'?`<div class="tel">
+       ${cfg.metersZelf
+         ?`<div class="r"><div class="l"><label for="tm" style="margin:0">Meters buiten tracé</label><small>Zelf invullen.</small></div><input id="tm" inputmode="decimal" value="${esc(T.meters||'')}" placeholder="0"></div>`
+         :`<div class="r"><div class="l">Meters buiten tracé<small>${esc(T.metersNote||'')}</small></div><span class="v" id="tmv">${nl1(T.meters||0)} m</span></div>`}
+       <div class="r"><div class="l">Invoeringen<small>${esc(cfg.invoerUitleg||'Telt de app.')}</small></div><span class="v" id="ti">${T.invoeringen||0}</span></div>
+       <div class="r"><div class="l">Boringen/persingen</div><button class="step" id="bm" aria-label="Eén minder">−</button><span class="v" id="tb">${T.boringen||0}</span><button class="step" id="bp" aria-label="Eén meer">+</button></div></div>`
+      :`<div id="bVeld"></div>`}
+     <div class="sfoot"><button class="btn" id="fTerug">Terug naar de schouw</button></div>`;
+    window.scrollTo(0,0);
+    const neem=async a=>{s.sectie=x;await Store.surveys.put(s);a.fn(s);};
+    if($('fCam'))$('fCam').onclick=()=>neem(pri);if($('fGal'))$('fGal').onclick=()=>neem(gal);
+    main.querySelectorAll('.th').forEach(b=>Editor.stripBind(b,b.dataset.id,id=>cfg.openFoto(survey,id),()=>ph.find(p=>p.id===b.dataset.id),async p=>{
+      await Store.photos.put(p);toast(p.status==='vervallen'?'Foto vervalt: telt niet mee en komt niet in het document':'Foto teruggezet');show(survey);}));
+    $('fTerug').onclick=terug;
+    if(kast){
+      const kf=g=>Camera.take({galerij:g}).then(async r=>{if(!r||!r.blob)return;s.bijlagen={...(s.bijlagen||{}),afw_foto:r.blob};s.kastGevraagd=true;await Store.surveys.put(s);toast('Afbeelding kast opgeslagen');show(s);});
+      $('kCam').onclick=()=>kf(false);$('kGal').onclick=()=>kf(true);
+      const km=$('kMeer'),kv=$('kVeld');
+      const KK=['afw_plaats','afw_ruimte','afw_kast','afw_apparatuur'];
+      Gegevens.inline(kv,s,KK,{kant:'uit',onChange:()=>{const n=KK.filter(k=>!Velden.gevuld(s,Velden.VELDEN.find(f=>f.k===k),ph)).length;km.querySelector('span').textContent='Gegevens kast'+(n?` · ${n} open`:' · ✓');}});
+      km.onclick=()=>{const o=kv.hidden;kv.hidden=!o;km.setAttribute('aria-expanded',o);};
+    }
+    if(x==='binnen')Gegevens.inline($('bVeld'),s,['binnen_meters','binnen_kabelgoot','binnen_brandwerend','binnen_stroom'],{kant:'uit'});
+    if($('tm'))$('tm').onchange=async()=>{const v=parseFloat($('tm').value.replace(',','.'));s.tellers={...s.tellers,meters:isFinite(v)?v:0};await Store.surveys.put(s);toast('Opgeslagen');};
+    const step=async d=>{const n=Math.max(0,(s.tellers.boringen||0)+d);s.tellers={...s.tellers,boringen:n};$('tb').textContent=n;await Store.surveys.put(s);};
+    if($('bm')){$('bm').onclick=()=>step(-1);$('bp').onclick=()=>step(1);}
   }
   if(window.Gegevens)Gegevens.bron=id=>survey&&survey.id===id?survey:null;
-  window.SurveyUI={init,naFoto,statusBlock,binnenAan,bindDel,show:s=>show(s||survey),start:()=>{history.replaceState(null,'',location.pathname);return start();},recount,toast,current:()=>survey};
+  window.SurveyUI={init,naFoto,terug,statusBlock,binnenAan,bindDel,show:s=>show(s||survey),start:()=>{history.replaceState(null,'',location.pathname);return start();},recount,toast,current:()=>survey};
 })();

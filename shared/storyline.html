@@ -99,6 +99,8 @@ async function load(){
   const cur=Velden.statusOf(S);if(S.status!==cur){S.status=cur;ch=true;}
   if(cur==='uitwerking'&&P.some(p=>p.status!=='vervallen')){S.status='afronding';if(!S.eersteFoto)S.eersteFoto=new Date().toISOString();ch=true;}
   if(ch)await Store.surveys.put(S);
+  // terug: naar de schouw (in de variant waarin hij gemaakt is)
+  $('back').href='../'+({richt:'richt.html',loop:'loop.html'}[S.variant]||'index.html')+'?survey='+encodeURIComponent(S.id);
   // volgorde netjes doornummeren (1, 2, 3 …)
   for(let i=0;i<P.length;i++)if(P[i].volgorde!==i+1){P[i].volgorde=i+1;await Store.photos.put(P[i]);}
   await recount();render();
@@ -154,13 +156,14 @@ function edit(i){
 }
 /* gegevens voor het document: wat ontbreekt nog, en direct invullen */
 function renderGeg(){
-  const vo=Velden.voortgang(S,P,'uit'),klaar=async()=>{await recount();render();};
+  const vo=Velden.voortgang(S,P,'uit'),klaar=async()=>{await recount();render();},vakken=!['richt','loop'].includes(S.variant);
   $('geg2').innerHTML=`<div class="gk"><div class="gt"><h2>Nog te doen</h2><span class="${vo.mist.length?'mis':'ok'}">Document ${vo.klaar} van ${vo.totaal} compleet</span></div>
     <div class="gbar"><i style="width:${vo.pct}%"></i></div>
-    <div id="gTodo">${Gegevens.todoHtml(S,P,'uit')}</div>
+    <div id="gTodo">${vakken?Gegevens.vakkenHtml(S,P,'uit'):Gegevens.todoHtml(S,P,'uit')}</div>
     <button class="btn" id="gOpen">Alle gegevens</button></div>`;
   // foto's toevoegen: terug naar het schouwscherm van de variant
-  Gegevens.todoBind($('gTodo'),S,klaar,{kant:'uit',camera:()=>{location.href='../'+({richt:'richt.html',loop:'loop.html'}[S.variant]||'index.html')+'?survey='+encodeURIComponent(S.id);}});
+  if(vakken)Gegevens.vakkenBind($('gTodo'),S,klaar,{kant:'uit',naar:x=>{location.href='../index.html?survey='+encodeURIComponent(S.id)+'&fotos='+x;}});
+  else Gegevens.todoBind($('gTodo'),S,klaar,{kant:'uit',camera:()=>{location.href='../'+({richt:'richt.html',loop:'loop.html'}[S.variant]||'index.html')+'?survey='+encodeURIComponent(S.id);}});
   $('gOpen').onclick=()=>Gegevens.open(S,{filter:'alles',onClose:klaar});
   // hoofdknop: compleet = "Document maken", anders "Toch afronden (X open)"
   if(Velden.statusOf(S)!=='klaar'&&vo.mist.length)$('make').textContent=`Toch afronden (${vo.mist.length} open)`;else $('make').textContent='Document maken';

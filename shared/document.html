@@ -52,7 +52,7 @@
 </style>
 </head>
 <body>
-<header class="bar"><a class="back" href="../index.html">‹ Hoofdmenu</a><h1>Zo komt het in het document</h1></header>
+<header class="bar"><a class="back" id="dBack" href="../index.html">‹ Hoofdmenu</a><h1>Zo komt het in het document</h1></header>
 <main class="page">
   <div class="ctl">
     <select id="sel" aria-label="Kies een schouw"></select>
@@ -154,5 +154,7 @@ $('share').addEventListener('click',async()=>{
 fill().then(bindPdf).catch(e=>msg('Kon de opslag niet openen: '+(e&&e.message||e)));
 if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('../sw.js').catch(()=>{});
 </script>
+<script>/* terug naar waar je vandaan kwam (storyline of startscherm) */
+(()=>{try{const r=document.referrer,b=document.getElementById('dBack');if(r&&new URL(r).origin===location.origin&&!/document\.html/.test(r)){b.href=r;b.textContent=/storyline/.test(r)?'‹ Controle':'‹ Terug';}}catch(e){}})();</script>
 </body>
 </html>

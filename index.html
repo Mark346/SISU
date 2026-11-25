@@ -44,9 +44,9 @@ function edit(survey,id){
   }).catch(e=>SurveyUI.toast('Kon de foto niet openen: '+(e.message||e)));
 }
 SurveyUI.init({
-  variant:'veeg',naam:'Veeg & Klik',startTitel:'Zoofi',metersZelf:true,typeKiezen:true,
+  variant:'veeg',naam:'Veeg & Klik',startTitel:'Zoofi',metersZelf:true,typeKiezen:true,fotoVakken:true,
   startExtra:'<a class="slink" href="opties.html">Andere opties</a>',
-  onScreen:w=>{const $=id=>document.getElementById(id),st=w==="start",b=$("hb");b.hidden=st;$("hlogo").hidden=!st;$("hset").hidden=!st;$("hband").hidden=false;$("hbar").classList.toggle("start",st);b.onclick=()=>SurveyUI.start();},
+  onScreen:w=>{const $=id=>document.getElementById(id),st=w==="start",b=$("hb");b.hidden=st;$("hlogo").hidden=!st;$("hset").hidden=!st;$("hband").hidden=false;$("hbar").classList.toggle("start",st);b.lastChild.textContent=w==="fotos"?"Schouw":"Schouwen";b.onclick=()=>SurveyUI.terug();},
   invoerUitleg:"Telt de app: IN-symbolen op geldige foto's.",
   acties:(s,n)=>[{label:`Foto ${n+1} maken`,pri:1,fn:s=>newPhoto(s,false)},{label:'Foto uit galerij',fn:s=>newPhoto(s,true)}],
   tellen:(s,ph)=>({invoeringen:ph.reduce((n,p)=>n+(((p.ann&&p.ann.syms)||[]).filter(x=>x.t==='dv').length),0)}),
