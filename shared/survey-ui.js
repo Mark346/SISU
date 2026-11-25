@@ -351,7 +351,7 @@
     const kOpen=['afw_plaats','afw_ruimte','afw_kast','afw_apparatuur'].filter(k=>!Velden.gevuld(s,Velden.VELDEN.find(f=>f.k===k),ph)).length;
     main.innerHTML=`
      ${V.length?`<div class="snext wrn"><div class="t"><b>${V.length} nog te doen</b><small>${esc([...new Set(V.map(f=>f.kort||f.l))].join(' · '))}</small></div></div>`:'<div class="snext"><div class="t"><b style="color:var(--ok)">✓ Compleet</b><small>Alles wat verplicht is, is er.</small></div></div>'}
-     <div class="sacts">${pri?`<button class="btn pri" id="fCam">${ICO.camera}${esc(pri.label)}</button>`:''}${gal?`<button class="btn rnd" id="fGal" aria-label="${esc(gal.label)}">${ICO.galerij}</button>`:''}</div>
+     <div class="sacts">${pri?`<button class="btn pri" id="fCam" style="flex:1;width:100%">${ICO.camera}${esc(pri.label)}</button>`:''}</div>
      ${(()=>{const R=Velden.ROLLEN(s).filter(f=>f.sectie===x);if(!R.length&&!kast)return'';
        return `<h2>Verplichte foto's</h2><div class="rolg">${R.map(f=>{const p=ph.find(q=>q.status!=='vervallen'&&q.rol===f.rol);
          return `<button class="rolk${p?'':' wrn'}" data-rol="${f.k}"><span class="rt">${p?`<img src="${urls[p.id]}" alt="">`:'<i class="uitr" aria-hidden="true">!</i>'}</span><span class="rn"><b>${esc(f.kort||f.l)}</b><small>${p?'✓ Foto '+(ph.indexOf(p)+1):'Ontbreekt · tik om te maken of te kiezen'}</small></span>${ICO.pijl}</button>`;}).join('')}</div>`;})()}

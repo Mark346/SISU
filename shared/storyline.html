@@ -59,6 +59,16 @@
 .pc .pa .del.sure{background:#dc2626;border-color:#dc2626;color:#fff}
 .vgl{margin:0;padding-left:18px;font-size:15px;line-height:1.45}
 .mk{width:100%;margin:6px 0 10px;min-height:48px;border-radius:99px;border:1px solid #111;background:#fff;color:#111;font-weight:800;font-size:15px;cursor:pointer}
+.de{padding:10px;border-bottom:1px solid #ccc;background:#fff8f0;box-shadow:inset 4px 0 0 #FF7A1A}
+.de .l{display:block;font-weight:800;font-size:15px;margin-bottom:6px;color:#111}
+.de input,.de textarea{display:block;box-sizing:border-box;width:100%;min-width:0;min-height:48px;border:1px solid #999;border-radius:8px;padding:0 10px;font-size:17px;color:#111;background:#fff;-webkit-appearance:none;appearance:none}
+.de textarea{min-height:90px;padding:8px 10px;line-height:1.4}
+.dch{display:flex;flex-wrap:wrap;gap:6px}
+.dch button{min-height:44px;padding:0 16px;border-radius:99px;border:1px solid #999;background:#fff;color:#111;font-size:16px;font-weight:700;cursor:pointer}
+.dch button.on{background:#111;border-color:#111;color:#fff}
+.deb{display:flex;gap:8px;margin-top:10px}
+.deb button{flex:1;min-height:48px;border-radius:99px;border:1px solid #999;background:#fff;color:#111;font-size:16px;font-weight:800;cursor:pointer}
+.deb button.pri{background:#111;border-color:#111;color:#fff}
 .flash{animation:fl 1.2s ease-out}@keyframes fl{0%{box-shadow:0 0 0 4px #FF7A1A}100%{box-shadow:0 0 0 0 transparent}}
 @media (prefers-reduced-motion:reduce){.flash{animation:none}}
 .foot{position:sticky;bottom:0;margin:20px -16px 0;padding:12px 16px calc(12px + env(safe-area-inset-bottom));background:var(--bg);border-top:1px solid var(--line);display:flex;gap:10px}
@@ -134,6 +144,7 @@ function render(){
     <div class="prog"><span class="${vo.mist.length?'mis':'ok'}">Document ${vo.klaar} van ${vo.totaal} compleet</span><i><b style="width:${vo.pct}%"></b></i></div>
     ${vo.mist.length?`<button class="btn naar" id="naar">${UIT.replace('class="ui"','class="ui" style="background:var(--warn);color:#1a1400"')}Naar eerste ontbrekende (${vo.mist.length})</button>`:''}
     <p class="hint">Zo komt het in het document. Tik op een regel of foto om aan te passen.</p>`;
+  volg=[];open=[];
   const sectieHtml=sc=>{
     const fs=Velden.VELDEN.filter(f=>f.s===sc.id&&c[f.k].uit!=='nee'&&!f.schakel&&!(f.als&&f.als.niet!=null&&!Velden.actief(S,f)));
     if(!fs.length)return'';
@@ -159,8 +170,10 @@ function render(){
         case 'vg':{flush();const it=(v&&v.items)||{},A=Velden.VG.filter(a=>it[a.id]&&it[a.id].aan);
           out+=`<div class="rows"><button class="dr${mist?' mist':''}" data-sec="vg"><span class="l">${mist?ONT+' · V&amp;G nog niet nagelopen':A.length?`<ul class="vgl">${A.map(a=>`<li>${esc(a.aspect)}</li>`).join('')}</ul>`:'V&amp;G nagelopen: geen bijzonderheden'}</span></button></div>`;break;}
         case 'legenda':flush();out+='<p class="leeg" style="font-size:14px">De legenda komt automatisch in het document.</p>';break;
-        default:{const t=f.t==='datum'?fmtD(v):(v==null?'':String(v));
-          rij.push(`<button class="dr${mist?' mist':''}" data-sec="${Velden.groep(f)}"><span class="l">${lab}</span><span class="v">${vol?esc(t):mist?ONT:'<span class="leeg">—</span>'}</span></button>`);}
+        default:{const t=f.t==='datum'?fmtD(v):(v==null?'':String(v)),hier=kanHier(f);
+          if(hier){volg.push(f.k);if(mist)open.push(f.k);}
+          if(bewerk===f.k&&hier){rij.push(editor(f,v));break;}
+          rij.push(`<button class="dr${mist?' mist':''}" ${hier?`data-k="${f.k}"`:`data-sec="${Velden.groep(f)}"`}><span class="l">${lab}</span><span class="v">${vol?esc(t):mist?ONT:'<span class="leeg">—</span>'}</span></button>`);}
       }
     }
     flush();
@@ -183,9 +196,37 @@ function kaart(p,i,nr,binnen){
       ${binnen?`<button class="sct${sx==='binnen'?' binnen':''}" data-sct="${i}" aria-label="Naar ${sx==='binnen'?'buiten':'binnen'}">${sx==='binnen'?'Binnen':'Buiten'}</button>`:''}<button data-vv="${i}">${vv?'Terugzetten':'Vervalt'}</button><button class="del" data-del="${i}">Verwijderen</button></div>
   </article>`;
 }
+/* direct in de afronding invullen: één regel tegelijk, met "Volgende" naar het volgende lege verplichte veld */
+let bewerk=null,volg=[],open=[],svT=null;
+const kanHier=f=>!Velden.verborgen(S,f)&&['text','lang','datum','tel','mail','getal','keuze','janee'].includes(f.t);
+function editor(f,v){
+  const id='e_'+f.k,ph=esc(f.vb?'bijv. '+f.vb:'');
+  const inv=f.t==='keuze'||f.t==='janee'?`<div class="dch" role="group" aria-labelledby="l_${f.k}">${(f.t==='janee'?['Ja','Nee']:f.opties).map(o=>`<button data-kz="${esc(o)}" class="${v===o?'on':''}" aria-pressed="${v===o}">${esc(o)}</button>`).join('')}</div>`
+    :f.t==='lang'?`<textarea id="${id}" data-ein placeholder="${ph}">${esc(v||'')}</textarea>`
+    :`<input id="${id}" data-ein type="${{datum:'date',tel:'tel',mail:'email',getal:'number'}[f.t]||'text'}" value="${esc(v==null?'':v)}" placeholder="${ph}" enterkeyhint="next"${f.t==='getal'?' inputmode="numeric"':''}>`;
+  return `<div class="de" data-ek="${f.k}"><label class="l" id="l_${f.k}" for="${id}">${esc(f.l)}</label>${inv}
+    <div class="deb"><button data-ed2="klaar">Klaar</button><button class="pri" data-ed2="volg">Volgende ›</button></div></div>`;
+}
+function opslaanNu(){clearTimeout(svT);svT=null;return S?Store.surveys.put(S):null;}
+function bewerkOpen(k){bewerk=k;render();const el=document.querySelector(`.de[data-ek="${k}"]`);if(!el)return;
+  el.scrollIntoView({block:'center',behavior:'smooth'});const i=el.querySelector('[data-ein]');if(i)i.focus({preventScroll:true});}
+async function volgende(){const k=bewerk;await opslaanNu();bewerk=null;render(); // eerst opnieuw tellen wat nog leeg is
+  const pos=volg.indexOf(k),na=open.find(x=>volg.indexOf(x)>pos)||open.find(x=>x!==k);
+  if(na)bewerkOpen(na);else{msg('Alle tekstvelden zijn ingevuld.');const m=document.querySelector('#doc .mist');if(m)m.scrollIntoView({block:'center',behavior:'smooth'});}}
+function bindEditor(){const el=document.querySelector('.de');if(!el)return;const k=el.dataset.ek,f=Velden.VELDEN.find(x=>x.k===k);
+  const i=el.querySelector('[data-ein]');
+  if(i){i.oninput=()=>{Velden.zet(S,k,i.value);clearTimeout(svT);svT=setTimeout(opslaanNu,400);};
+    i.onkeydown=e=>{if(e.key==='Enter'&&f.t!=='lang'){e.preventDefault();volgende();}};}
+  el.querySelectorAll('[data-kz]').forEach(b=>b.onclick=async()=>{const on=Velden.waarde(S,k)===b.dataset.kz;Velden.zet(S,k,on?'':b.dataset.kz);await opslaanNu();
+    if(on){bewerkOpen(k);}else volgende();});
+  el.querySelector('[data-ed2="klaar"]').onclick=async()=>{await opslaanNu();bewerk=null;render();};
+  el.querySelector('[data-ed2="volg"]').onclick=volgende;
+}
 function bind(){
+  bindEditor();
+  document.querySelectorAll('.dr[data-k]').forEach(b=>b.onclick=async()=>{if(bewerk)await opslaanNu();bewerkOpen(b.dataset.k);});
   const opnieuw=async()=>{P=await Store.photos.bySurvey(S.id,true);await recount();render();};
-  if($('naar'))$('naar').onclick=()=>{const m=document.querySelector('#doc .mist');if(m){m.scrollIntoView({block:'center',behavior:'smooth'});m.classList.remove('flash');void m.offsetWidth;m.classList.add('flash');}};
+  if($('naar'))$('naar').onclick=()=>{const m=document.querySelector('#doc .mist');if(m&&m.dataset.k){bewerkOpen(m.dataset.k);return;}if(m){m.scrollIntoView({block:'center',behavior:'smooth'});m.classList.remove('flash');void m.offsetWidth;m.classList.add('flash');}};
   document.querySelectorAll('[data-sec]').forEach(b=>b.onclick=()=>Gegevens.open(S,{filter:'alles',sectie:b.dataset.sec,onClose:opnieuw}));
   document.querySelectorAll('[data-rol]').forEach(b=>b.onclick=()=>{const f=Velden.VELDEN.find(v=>v.k===b.dataset.rol);
     Gegevens.rolBlad(S,f,{klaar:opnieuw,maak:g=>Camera.take({galerij:g}).then(async r=>{if(!r||!r.blob)return;
@@ -233,7 +274,7 @@ function binnenAan(){const c=Velden.cfg().binnen_fotos;return c.in!=='nee'||c.ui
 /* Document maken: compleet -> status Klaar en naar het document; niet compleet -> één keer bevestigen, dan Klaar met de lijst wat open is */
 $('make').onclick=async()=>{
   const a=document.activeElement;if(a&&a.dataset&&a.dataset.tx!=null)await saveText(+a.dataset.tx,a.value);
-  S=Gegevens.bron(S.id)||S;
+  await opslaanNu();S=Gegevens.bron(S.id)||S;
   const vo=Velden.voortgang(S,P,'uit');
   if(vo.mist.length){
     if(Velden.statusOf(S)!=='klaar'){
