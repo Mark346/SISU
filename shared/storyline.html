@@ -159,7 +159,8 @@ function renderGeg(){
     <div class="gbar"><i style="width:${vo.pct}%"></i></div>
     <div id="gTodo">${Gegevens.todoHtml(S,P,'uit')}</div>
     <button class="btn" id="gOpen">Alle gegevens</button></div>`;
-  Gegevens.todoBind($('gTodo'),S,klaar);
+  // foto's toevoegen: terug naar het schouwscherm van de variant
+  Gegevens.todoBind($('gTodo'),S,klaar,{kant:'uit',camera:()=>{location.href='../'+({richt:'richt.html',loop:'loop.html'}[S.variant]||'index.html')+'?survey='+encodeURIComponent(S.id);}});
   $('gOpen').onclick=()=>Gegevens.open(S,{filter:'alles',onClose:klaar});
   // hoofdknop: compleet = "Document maken", anders "Toch afronden (X open)"
   if(Velden.statusOf(S)!=='klaar'&&vo.mist.length)$('make').textContent=`Toch afronden (${vo.mist.length} open)`;else $('make').textContent='Document maken';

@@ -280,24 +280,49 @@
   }
   /* blok "nog te doen": informatie en foto's apart. html(s,fotos,kant) + bind(el,s,klaar) */
   const ICI='M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M12 11v5 M12 8v.01',ICF='M4 8h3l2-3h6l2 3h3v11H4z M12 17a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z';
+  let tdUrls=[];
   function todoHtml(s,fotos,kant){css();const T=Velden.todo(s,fotos,kant);
+    tdUrls.forEach(u=>URL.revokeObjectURL(u));tdUrls=[];
     const sec=fs=>[...new Set(fs.map(f=>f.t==='teller'?(f.kort||f.l):(Velden.SECTIES.find(x=>x.id===Velden.groep(f))||{}).kort))].join(' · ');
     const fotoNm=fs=>fs.map(f=>f.kort||f.l).join(' · ');
-    const rij=(ic,titel,fs,txt,knop)=>`<div class="tdr${fs.length?' wrn':''}"><span class="tdi">${svg(ic,20)}</span><div class="tdt"><b>${titel}</b><small>${fs.length?`${fs.length} nog te doen · ${esc(txt)}`:'<span class="okk">✓ Compleet</span>'}</small></div>${fs.length&&knop?knop:''}</div>`;
-    const bijl=T.fotos.find(f=>f.t==='foto');
-    return `<div class="tdo">${rij(ICI,'Informatie',T.info,sec(T.info),'<button class="btn pri" data-td="info">Invullen</button>')}
-      ${rij(ICF,"Foto's",T.fotos,fotoNm(T.fotos),bijl?`<button class="btn" data-td="foto" data-sec="${Velden.groep(bijl)}">Toevoegen</button>`:'')}</div>`;}
-  function todoBind(el,s,klaar){
-    el.querySelectorAll('[data-td]').forEach(b=>b.onclick=()=>open(s,{filter:'todo',sectie:b.dataset.sec,onClose:klaar}));}
+    const sub=(fs,txt)=>fs.length?`${fs.length} nog te doen · ${esc(txt)}`:'<span class="okk">✓ Compleet</span>';
+    // kleine foto's van wat er al is, per sectie (buiten alleen bij OFFNET of als er buitenfoto's zijn)
+    const ok=(fotos||[]).filter(p=>p.status!=='vervallen'&&p.blob),on=Velden.onnet(s);
+    const groep=x=>ok.filter(p=>(p.sectie||'buiten')===x);
+    const strip=x=>{const L=groep(x);if(x==='buiten'&&on&&!L.length)return'';const max=6;
+      return `<span class="tdf"><span class="tdl"><i class="dot" style="background:var(--sec-${x})"></i>${x==='buiten'?'Buiten':'Binnen'} · ${L.length}</span><span class="tdth">${L.slice(0,max).map(p=>{const u=URL.createObjectURL(p.blob);tdUrls.push(u);return `<img src="${u}" alt="">`;}).join('')}${L.length>max?`<b>+${L.length-max}</b>`:''}</span></span>`;};
+    const pijl=svg('M9 5l7 7-7 7',18);
+    return `<div class="tdo">
+      <button class="tdr${T.info.length?' wrn':''}" data-td="info" aria-label="Informatie: ${T.info.length?T.info.length+' nog te doen':'compleet'}. Tik om in te vullen."><span class="tdi">${svg(ICI,20)}</span><span class="tdt"><b>Informatie</b><small>${sub(T.info,sec(T.info))}</small></span><span class="tdp">${pijl}</span></button>
+      <button class="tdr tdfo${T.fotos.length?' wrn':''}" data-td="foto" aria-label="Foto's: ${T.fotos.length?T.fotos.length+' nog te doen':'compleet'}. Tik om foto's toe te voegen."><span class="tdk"><span class="tdi">${svg(ICF,20)}</span><span class="tdt"><b>Foto's</b><small>${sub(T.fotos,fotoNm(T.fotos))}</small></span><span class="tdp">${pijl}</span></span>
+        ${(on?['binnen']:['buiten','binnen']).map(strip).join('')}</button></div>`;}
+  /* tik op Informatie: gegevens invullen; tik op Foto's: ontbrekende losse foto (bijv. kast) of de camera */
+  function todoBind(el,s,klaar,o={}){
+    const inf=el.querySelector('[data-td=info]'),ft=el.querySelector('[data-td=foto]');
+    if(inf)inf.onclick=async()=>{const fo=await Store.photos.bySurvey(s.id,true),T=Velden.todo(s,fo,o.kant);open(s,{filter:T.info.length?'todo':'alles',onClose:klaar});};
+    if(ft)ft.onclick=async()=>{const fo=await Store.photos.bySurvey(s.id,true),T=Velden.todo(s,fo,o.kant);
+      const bijl=T.fotos.find(f=>f.t==='foto'),reeks=T.fotos.find(f=>f.t==='fotos');
+      if(bijl&&!reeks){open(s,{filter:'todo',sectie:Velden.groep(bijl),onClose:klaar});return;}
+      if(reeks&&!Velden.onnet(s)){s.sectie=reeks.sectie;await Store.surveys.put(s);}
+      if(o.camera)o.camera();else if(bijl)open(s,{filter:'todo',sectie:Velden.groep(bijl),onClose:klaar});};
+  }
   const TDCSS=`.tdo{display:flex;flex-direction:column;gap:8px}
-.tdr{display:flex;align-items:center;gap:12px;background:var(--card,#1C1F25);border:1px solid var(--line,#2E323A);border-radius:16px;padding:10px 10px 10px 12px}
+.tdr{display:flex;align-items:center;gap:12px;width:100%;background:var(--card,#1C1F25);border:1px solid var(--line,#2E323A);border-radius:16px;padding:12px;color:var(--ink,#F3F4F6);font:inherit;text-align:left;cursor:pointer;min-height:64px}
+.tdr:active{background:var(--card2)}
 .tdr.wrn{border-color:var(--warn)}
+.tdfo{flex-direction:column;align-items:stretch;gap:10px}.tdk{display:flex;align-items:center;gap:12px}
 .tdi{flex:none;width:36px;height:36px;border-radius:10px;background:var(--well);display:grid;place-items:center;color:var(--mute)}
 .tdr.wrn .tdi{color:var(--warn)}
 .tdt{flex:1;min-width:0}.tdt b{display:block;font-size:16px;font-weight:800;line-height:1.2}
 .tdt small{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;color:var(--mute);font-size:14px;margin-top:2px;line-height:1.3}
 .tdt .okk{color:var(--ok,#22C55E);font-weight:700}
-.tdr .btn{flex:none;min-height:44px;padding:0 14px;font-size:15px;width:auto}`;
+.tdp{flex:none;color:var(--mute)}
+.tdf{display:flex;align-items:center;gap:10px}
+.tdl{flex:none;width:84px;display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:var(--mute)}
+.tdl .dot{width:9px;height:9px;border-radius:50%;flex:none}
+.tdth{flex:1;min-width:0;display:flex;gap:4px;align-items:center;overflow:hidden}
+.tdth img{flex:none;width:36px;height:36px;object-fit:cover;border-radius:8px;border:1px solid var(--line2)}
+.tdth b{font-size:13px;color:var(--mute);margin-left:2px}`;
   { const st0=document.createElement('style');st0.textContent=TDCSS;document.head.appendChild(st0); }
   window.Gegevens={open,close:()=>close(),naKast,vraag,todoHtml,todoBind,bron:null};
 })();

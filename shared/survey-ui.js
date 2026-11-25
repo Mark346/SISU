@@ -26,7 +26,8 @@
 .sui .snew{width:100%;min-height:60px;font-size:19px}
 .sui .snp{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px}
 .sui .snp label{margin:0 0 8px}
-.sui .snp .styp{display:block;font-weight:700;margin:14px 0 8px}
+.sui .snp .styp{display:block;font-weight:700;margin:0 0 8px}
+.sui .snp .tseg{margin-bottom:16px}
 .sui .snp .tseg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .sui .snp .tseg button{min-height:60px;border-radius:16px;border:1px solid var(--line2);background:transparent;color:var(--ink);font-size:17px;font-weight:800;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
 .sui .snp .tseg button small{font-size:13px;font-weight:600;color:var(--mute)}
@@ -146,10 +147,10 @@
      <div class="shead"><h2>Schouwen</h2>${open.length?`<span>${open.length} bezig</span>`:''}</div>
      <button class="btn pri snew" id="new" aria-expanded="${newOpen}" aria-controls="snp"${newOpen?' hidden':''}>${ICO.plus}Nieuwe schouw</button>
      <div class="snp" id="snp"${newOpen?'':' hidden'}>
+       ${cfg.typeKiezen?`<span class="styp" id="stypL">Type aansluiting</span><div class="tseg" role="group" aria-labelledby="stypL"><button data-typ="OFFNET" aria-pressed="false">OFFNET<small>buiten en binnen</small></button><button data-typ="ONNET" aria-pressed="false">ONNET<small>alleen binnen</small></button></div>`:''}
        <label for="adr">Adres van de nieuwe schouw</label>
        <input class="f" id="adr" autocomplete="street-address" placeholder="Straat en huisnummer, plaats">
        ${lastOpen&&lastOpen.adres?`<button class="btn take" id="take"><span>Adres overnemen:</span>${esc(lastOpen.adres)}</button>`:''}
-       ${cfg.typeKiezen?`<span class="styp" id="stypL">Type aansluiting</span><div class="tseg" role="group" aria-labelledby="stypL"><button data-typ="OFFNET" aria-pressed="false">OFFNET<small>buiten en binnen</small></button><button data-typ="ONNET" aria-pressed="false">ONNET<small>alleen binnen</small></button></div>`:''}
        <div class="row">${all.length?'<button class="btn" id="cancel">Annuleren</button>':''}<button class="btn pri" id="go" style="flex:1.4">Start schouw</button></div>
      </div>
      ${open.length?`<div class="surv">${open.map(x=>`<button class="sv" data-id="${esc(x.id)}"><span><b>${esc(x.adres||'zonder adres')}</b>${sst(x)}${docr(x)}</span><span class="go">${ICO.pijl}</span></button>`).join('')}</div>`
@@ -171,7 +172,7 @@
     if($('fold'))$('fold').onclick=()=>{showDone=!showDone;start();};
     if($('foldA'))$('foldA').onclick=()=>{showArch=!showArch;start();};
     // Nieuwe schouw: de knop klapt het adresblok open (geen los blad onderin: op de iPhone schuift het toetsenbord daar overheen)
-    $('new').onclick=()=>{newOpen=true;$('new').hidden=true;$('new').setAttribute('aria-expanded','true');$('snp').hidden=false;$('adr').focus();};
+    $('new').onclick=()=>{newOpen=true;$('new').hidden=true;$('new').setAttribute('aria-expanded','true');$('snp').hidden=false;(main.querySelector('[data-typ]')||$('adr')).focus();};
     if($('cancel'))$('cancel').onclick=()=>{newOpen=false;$('adr').value='';$('snp').hidden=true;$('new').hidden=false;$('new').setAttribute('aria-expanded','false');$('new').focus();};
     $('adr').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();$('go').click();}};
     if($('take'))$('take').onclick=()=>{$('adr').value=lastOpen.adres;};
@@ -236,7 +237,7 @@
       <div class="sht"><b>${esc(s.adres||'Schouw')}</b><span>stap ${idx+1} van ${Velden.STATUS.length}</span></div>
       <ol class="sstep" aria-hidden="true">${Velden.STATUS.map((x,i)=>`<li class="${i===idx?'nu':''}"><i style="${i<=idx?'background:'+x.kleur:''}"></i><span>${esc(x.naam)}</span></li>`).join('')}</ol></div>${kaart}</div>`;
     if(!el.isConnected)return;langDruk(el.querySelector('#sbH'),()=>terugBlad(s,reopen));
-    const td=el.querySelector('.stodo');if(td)Gegevens.todoBind(td,s,reopen);
+    const td=el.querySelector('.stodo');if(td)Gegevens.todoBind(td,s,reopen,{kant:cur==='afronding'?'uit':undefined,camera:()=>{const a=(cfg.acties(s,0)||[]).find(x=>x.pri);if(a)a.fn(s);else document.querySelector('.sacts .btn.pri')?.click();}});
   }
   /* knop "Schouw verwijderen" (verhuisd van het startscherm naar de schouw): twee keer tikken */
   function bindDel(btn,s,voor){if(!btn)return;let t=null;const lab=btn.textContent;btn.onclick=async()=>{
