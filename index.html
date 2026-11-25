@@ -14,7 +14,8 @@
 
 </head>
 <body>
-<header class="bar"><button class="back" id="hb" hidden>‹ Schouwen</button><img id="hlogo" class="hlogo" src="shared/icon-klein.svg" width="32" height="32" alt=""><h1 id="ttl">Zoofi</h1><a class="back" href="instellingen.html" id="hset" aria-label="Instellingen">Instellingen</a></header>
+<header class="bar start" id="hbar"><button class="back" id="hb" hidden>‹ Schouwen</button><img id="hlogo" class="hlogo" src="shared/icon-klein.svg" width="32" height="32" alt=""><h1 id="ttl">Zoofi</h1><a class="hbtn" href="instellingen.html" id="hset" aria-label="Instellingen"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2.2"/><circle cx="10" cy="17" r="2.2"/></svg></a></header>
+<div class="vezelband" id="hband" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
 <main class="page" id="main"></main>
 <script src="shared/store.js"></script>
 <script src="shared/legend.js"></script>
@@ -44,8 +45,8 @@ function edit(survey,id){
 }
 SurveyUI.init({
   variant:'veeg',naam:'Veeg & Klik',startTitel:'Zoofi',metersZelf:true,
-  startExtra:'<div class="row" style="margin-top:40px"><a class="btn" href="opties.html" style="flex:1">Andere opties</a></div>',
-  onScreen:w=>{const b=document.getElementById("hb");b.hidden=w==="start";document.getElementById("hlogo").hidden=w!=="start";document.getElementById("hset").hidden=w!=="start";b.onclick=()=>SurveyUI.start();},
+  startExtra:'<a class="slink" href="opties.html">Andere opties</a>',
+  onScreen:w=>{const $=id=>document.getElementById(id),st=w==="start",b=$("hb");b.hidden=st;$("hlogo").hidden=!st;$("hset").hidden=!st;$("hband").hidden=!st;$("hbar").classList.toggle("start",st);b.onclick=()=>SurveyUI.start();},
   invoerUitleg:"Telt de app: IN-symbolen op geldige foto's.",
   acties:(s,n)=>[{label:`Foto ${n+1} maken`,pri:1,fn:s=>newPhoto(s,false)},{label:'Foto uit galerij',fn:s=>newPhoto(s,true)}],
   tellen:(s,ph)=>({invoeringen:ph.reduce((n,p)=>n+(((p.ann&&p.ann.syms)||[]).filter(x=>x.t==='dv').length),0)}),

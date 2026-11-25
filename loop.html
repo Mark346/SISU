@@ -297,6 +297,7 @@ async function refresh(){
    <div class="set"><label for="stp">Staplengte (reserve)</label><input id="stp" inputmode="decimal" value="${String(stepLen).replace('.',',')}"><span>m</span></div>
    <div class="row" style="margin-top:20px"><a class="btn pri" href="shared/document.html?survey=${encodeURIComponent(S.id)}">Naar document</a></div>
    <div class="row"><button class="btn" id="other">Andere schouw</button></div>
+   <div class="row"><button class="btn sdelx" id="sdel">Schouw verwijderen</button></div>
    ${SIM?`<div class="sim"><b>Proefstand</b> (zonder lopen)<div class="row"><button class="btn" data-sim="1">+1 m</button><button class="btn" data-sim="5">+5 m</button><button class="btn" data-sim="L">Links 90°</button><button class="btn" data-sim="R">Rechts 90°</button></div><div class="row"><button class="btn" data-sim="bad">Gps slecht/goed</button></div></div>`:''}`;
   main.querySelectorAll('.sp .im').forEach(el=>{const p=photos[+el.dataset.i];if(p.ann)Legend.render(el,p.ann,.8);});
   const on=(id,f)=>{const e=$(id);if(e)e.onclick=f;};
@@ -304,6 +305,7 @@ async function refresh(){
   on('tipX',()=>{showTip=false;refresh();});on('rr',()=>{pickMode=!pickMode;refresh();});
   on('perm',async()=>{const r=await Sensors.request();toast(Sensors.summary(r));if(r.pos)onFix(r.pos.lat,r.pos.lon,r.pos.acc,Date.now());startGps();});
   on('other',()=>{stopGps();letSleep();S=null;SurveyUI.start();});
+  SurveyUI.bindDel($('sdel'),S,()=>{stopGps();letSleep();S=null;});
   on('bm',()=>stepT(-1));on('bp',()=>stepT(1));
   const st=$('stp');if(st)st.onchange=()=>{const v=parseFloat(st.value.replace(',','.'));if(v>=.3&&v<=1.2){stepLen=v;try{localStorage.setItem('sisu.loop.stap',v);}catch(e){}toast('Staplengte opgeslagen');}else st.value=String(stepLen).replace('.',',');};
   main.querySelectorAll('.sp').forEach(b=>Editor.stripBind(b,b.dataset.id,id=>{if(pickMode){const p=photos.find(q=>q.id===id);if(p.status==='vervallen'){toast('Kies een foto die nog meetelt');return;}reroute(id);return;}openEd(id);},
