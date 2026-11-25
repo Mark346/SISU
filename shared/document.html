@@ -155,6 +155,6 @@ fill().then(bindPdf).catch(e=>msg('Kon de opslag niet openen: '+(e&&e.message||e
 if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('../sw.js').catch(()=>{});
 </script>
 <script>/* terug naar waar je vandaan kwam (storyline of startscherm) */
-(()=>{try{const r=document.referrer,b=document.getElementById('dBack');if(r&&new URL(r).origin===location.origin&&!/document\.html/.test(r)){b.href=r;b.textContent=/storyline/.test(r)?'‹ Controle':'‹ Terug';}}catch(e){}})();</script>
+(()=>{try{const r=document.referrer,b=document.getElementById('dBack');if(r&&new URL(r).origin===location.origin&&!/document\.html/.test(r)){b.href=r;b.textContent=/storyline/.test(r)?'‹ Afronding':'‹ Terug';}}catch(e){}})();</script>
 </body>
 </html>

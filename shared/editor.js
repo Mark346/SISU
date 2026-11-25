@@ -215,7 +215,7 @@
   function build(){
     const ph=st.ph,n=st.siblings.findIndex(p=>p.id===ph.id)+1,tools=toolsOpVolgorde(),vv=ph.status==='vervallen',sec=ph.sectie;
     const on=t=>t.id===st.tool;
-    const foot=(st.opts.onDoc?'<button class="btn" id="vDoc">Controle &amp; aanvullen</button>':'')+(st.opts.onNext?`<button class="btn pri" id="vNext">${esc(st.opts.nextLabel||'Volgende foto')}</button>`:'');
+    const foot=(st.opts.onDoc?'<button class="btn" id="vDoc">Naar afronding</button>':'')+(st.opts.onNext?`<button class="btn pri" id="vNext">${esc(st.opts.nextLabel||'Volgende foto')}</button>`:'');
     st.root.innerHTML=`
     <div class="vscroll">
       <div class="vtop">

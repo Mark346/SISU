@@ -245,7 +245,7 @@
     if(cfg.fotoVakken)kaart+=`<div class="stodo">${Gegevens.vakkenHtml(s,ph,cur==='afronding'?'uit':undefined)}</div>`;
     else if(cur!=='klaar'){kaart=`<div class="stodo">${Gegevens.todoHtml(s,ph,cur==='afronding'?'uit':undefined)}</div>`;}
     if(cur!=='klaar'&&!cfg.fotoVakken){
-      if(cur==='afronding'){const vo=Velden.voortgang(s,ph,'uit');kaart+=`<div class="snext"><div class="t"><b>Document ${vo.klaar} van ${vo.totaal} compleet</b></div><a class="btn pri" href="shared/storyline.html?survey=${encodeURIComponent(s.id)}">Naar controle &amp; aanvullen</a></div>`;}}
+      if(cur==='afronding'){const vo=Velden.voortgang(s,ph,'uit');kaart+=`<div class="snext"><div class="t"><b>Document ${vo.klaar} van ${vo.totaal} compleet</b></div><a class="btn pri" href="shared/storyline.html?survey=${encodeURIComponent(s.id)}">Naar afronding</a></div>`;}}
     el.innerHTML=`<div class="sstat"><div class="shd" id="sbH" tabindex="0" role="group" aria-label="Status ${esc(Velden.statusMeta(cur).naam)}, stap ${idx+1} van ${Velden.STATUS.length}. Lang drukken om de status terug te zetten.">
       <div class="sht"><b>${esc(s.adres||'Schouw')}</b><span>stap ${idx+1} van ${Velden.STATUS.length}</span></div>
       <ol class="sstep" aria-hidden="true">${Velden.STATUS.map((x,i)=>`<li class="${i===idx?'nu':''}"><i style="${i<=idx?'background:'+x.kleur:''}"></i><span>${esc(x.naam)}</span></li>`).join('')}</ol></div>${kaart}</div>`;
@@ -319,7 +319,7 @@
     bindVoet(s);
   }
   const voet=s=>`<div class="sfoot">
-       <a class="btn pri" href="shared/storyline.html?survey=${encodeURIComponent(s.id)}">Naar controle &amp; aanvullen</a>
+       <a class="btn pri" href="shared/storyline.html?survey=${encodeURIComponent(s.id)}">Naar afronding</a>
        <button class="slink" id="other">Andere schouw</button>
        <button class="btn sdelx" id="sdel">Schouw verwijderen</button>
      </div>`;

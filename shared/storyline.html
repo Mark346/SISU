@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#121418">
-<title>Zoofi · Controle &amp; aanvullen</title>
+<title>Zoofi · Afronding</title>
 <link rel="manifest" href="../manifest.webmanifest">
 <link rel="apple-touch-icon" href="../apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="32x32" href="../favicon-32.png">
@@ -52,7 +52,7 @@ h2{font-size:22px;font-weight:800;margin:24px 0 10px}
 </style>
 </head>
 <body>
-<header class="bar"><a class="back bpill" id="back" href="../index.html"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>Terug</a><h1>Controle &amp; aanvullen</h1></header>
+<header class="bar"><a class="back bpill" id="back" href="../index.html"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>Terug</a><h1>Afronding</h1></header>
 <main class="page">
   <div id="top"></div>
   <section class="geg2" id="geg2" aria-label="Gegevens voor het document"></section>
@@ -92,7 +92,7 @@ async function load(){
   S=await Store.surveys.get(id);if(!S){$('story').innerHTML='<p class="note">Deze schouw is niet gevonden.</p>';$('make').disabled=true;return;}
   $('back').href='../'+(PAGE[S.variant]||'index.html')+'?survey='+encodeURIComponent(S.id);
   P=await Store.photos.bySurvey(S.id,true);
-  // naar controle & aanvullen = status Afronding (vanaf Uitwerking, als er foto's zijn)
+  // naar afronding = status Afronding (vanaf Uitwerking, als er foto's zijn)
   let ch=Velden.migreer(S);
   for(const p of Velden.onnetFix(S,P)){await Store.photos.put(p);ch=true;} // ONNET: geen buiten tracé
   if(S.status==='archief'&&S.gearchiveerd==null){S.gearchiveerd=true;ch=true;}
