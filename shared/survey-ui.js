@@ -14,7 +14,7 @@
   const fmtD=d=>d?new Date(d).toLocaleDateString('nl-NL',{day:'numeric',month:'long',year:'numeric'}):'';
   const nl1=v=>(Math.round(v*10)/10).toLocaleString('nl-NL',{minimumFractionDigits:1,maximumFractionDigits:1});
   const CSS=`
-.sui h2{font-size:22px;margin:22px 0 10px}
+.sui h2{font-size:22px;font-weight:800;margin:24px 0 10px}
 .sui label{display:block;font-weight:700;margin:14px 0 6px}
 .sui input.f{width:100%;min-height:54px;border-radius:14px;border:1px solid var(--line2);background:var(--well);padding:0 16px;font-size:17px}
 .sui .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}.sui .row .btn{flex:1}
@@ -40,17 +40,24 @@
 .sui .ring svg{flex:none}.sui .ring b{display:block;color:var(--ink);font-size:16px;font-weight:800}
 .sui .slink{display:flex;justify-content:center;align-items:center;min-height:44px;margin:18px auto 0;color:var(--mute);font-weight:600;font-size:15px;text-decoration:none}
 .sui .sleeg{color:var(--mute);margin:14px 2px 0}
-.sui .strip{display:flex;gap:8px;overflow-x:auto;padding:4px 0 8px}
-.sui .th{position:relative;flex:none;width:96px;height:72px;border-radius:12px;overflow:hidden;border:2px solid var(--line);background:#000;padding:0;cursor:pointer}
-.sui .th img{width:100%;height:100%;object-fit:cover;display:block}.sui .th.vv img{filter:grayscale(1) brightness(.45)}
-.sui .th span{position:absolute;left:5px;bottom:3px;font-weight:800;color:#fff;text-shadow:0 1px 3px #000}
-.sui .th em{position:absolute;inset:auto 0 0 0;font-style:normal;font-size:12px;font-weight:800;background:#000b;color:#fff;text-align:center}
-.sui .tel{display:flex;flex-direction:column;border:2px solid var(--line);border-radius:var(--r);overflow:hidden}
-.sui .tel .r{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--line);min-height:64px}.sui .tel .r:last-child{border-bottom:0}
-.sui .tel .r .l{flex:1}.sui .tel .r .l small{display:block;color:var(--mute);font-size:14px}
-.sui .tel input{width:96px;min-height:48px;border-radius:12px;border:2px solid var(--line);background:var(--card);text-align:right;padding:0 10px;font-size:18px}
-.sui .tel .v{min-width:48px;text-align:center;font-size:22px;font-weight:800;white-space:nowrap}
-.sui .step{width:48px;height:48px;border-radius:12px;border:2px solid var(--line);background:var(--card);font-size:24px;font-weight:800;cursor:pointer}
+/* schouwoverzicht (Glasvezel) */
+.sui .fhead{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:24px 0 10px}.sui .fhead h2{margin:0}.sui .fhead span{color:var(--mute);font-size:14px}
+.sui .strip{display:flex;gap:8px;overflow-x:auto;padding:2px 0 8px}
+.sui .th{position:relative;flex:none;width:104px;height:78px;border-radius:var(--r-thumb);overflow:hidden;border:0;background:var(--card);padding:0;cursor:pointer}
+.sui .th img{width:100%;height:100%;object-fit:cover;display:block}
+.sui .th.vv{outline:1px dashed var(--line2);outline-offset:-1px}.sui .th.vv img{filter:grayscale(1) brightness(.4)}
+.sui .th span{position:absolute;left:6px;bottom:6px;height:22px;min-width:22px;border-radius:11px;background:var(--overlay);color:#fff;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;padding:0 7px;white-space:nowrap}
+.sui .tel{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.sui .tel .r{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--line);min-height:68px}.sui .tel .r:last-child{border-bottom:0}
+.sui .tel .r .l{flex:1;font-weight:600}.sui .tel .r .l small{display:block;color:var(--mute);font-size:14px;font-weight:400}
+.sui .tel input{width:92px;min-height:46px;border-radius:14px;border:1px solid var(--line2);background:var(--well);text-align:right;padding:0 12px;font-size:18px;font-weight:800}
+.sui .tel .v{min-width:40px;text-align:center;font-size:22px;font-weight:800;white-space:nowrap}
+.sui .step{flex:none;width:44px;height:44px;border-radius:22px;border:1px solid var(--line2);background:var(--well);font-size:22px;font-weight:800;cursor:pointer;padding:0}
+.sui .step:active{background:var(--card2)}
+.sui .sacts{display:flex;gap:8px;margin-top:14px}.sui .sacts .btn.pri{flex:1;min-height:60px;font-size:19px}
+.sui .sacts .rnd{flex:none;width:60px;min-height:60px;padding:0;border-radius:30px;background:var(--card);border-color:var(--line)}
+.sui .sfoot{display:flex;flex-direction:column;gap:8px;margin-top:22px}.sui .sfoot .btn{width:100%}
+.sui button.slink{border:0;background:none;cursor:pointer;margin:0 auto}
 .sui .sdel2,.sui .sdelx{border-color:var(--red)}
 .sui .sdel2.sure,.sui .sdelx.sure{background:var(--red);border-color:var(--red);color:#fff}
 .sui .sfold{display:flex;align-items:center;gap:10px;width:100%;min-height:56px;margin-top:14px;border:1px solid var(--line);border-radius:var(--r-pill);background:transparent;color:var(--ink);font-size:16px;font-weight:600;padding:0 18px;cursor:pointer;text-align:left}
@@ -60,19 +67,21 @@
 .sui .sdone{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px}
 .sui .sdone .sh b{display:block;font-size:18px;font-weight:600;line-height:1.2}
 .sui .sdone .sb{display:flex;gap:8px;margin-top:10px}.sui .sdone .sb .btn{flex:1;min-height:48px;padding:0 8px}
-.sui .spb i{display:block;height:6px;border-radius:3px;background:var(--track);overflow:hidden}.sui .spb i b{display:block;height:100%;background:var(--prog-in)}
 @media (prefers-reduced-motion:reduce){.sui .sfold svg{transition:none}}
-.sui .sblk{background:var(--card);border:2px solid var(--line);border-radius:var(--r);padding:12px;margin-top:4px}
-.sui .sstep{display:flex;list-style:none;margin:0 0 10px;padding:0;gap:4px}
-.sui .sstep li{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:12px;color:var(--mute);text-align:center;line-height:1.15}
+.sui .sblk{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-top:4px}
+.sui .sstep{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));list-style:none;margin:0 0 14px;padding:0;gap:4px}
+.sui .sstep li{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:13px;color:var(--mute);text-align:center;line-height:1.15}
 .sui .sstep li i{display:block;width:100%;height:6px;border-radius:3px;background:var(--track)}
 .sui .sstep li.nu{color:var(--ink);font-weight:800}
-.sui .spb{display:grid;grid-template-columns:84px 1fr auto;gap:10px;align-items:center;width:100%;min-height:48px;margin-top:6px;border:0;background:var(--bg);border-radius:12px;color:var(--ink);font-size:16px;font-weight:700;padding:0 12px;cursor:pointer;text-align:left}
-.sui .spb i{height:10px;border-radius:5px}
-.sui .smist{margin:6px 2px 0;font-size:14px;color:var(--warn)}
-.sui .sect{display:flex;align-items:center;gap:6px;margin-top:12px}.sui .sect span{font-weight:700;color:var(--mute);margin-right:4px}
-.sui .sect button{flex:1;min-height:44px;border-radius:12px;border:2px solid var(--line);background:var(--card);color:var(--ink);font-weight:800;font-size:16px;cursor:pointer}
-.sui .sect button.on{background:var(--acc);border-color:var(--acc);color:var(--on-acc)}
+.sui .sprg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.sui .spb{display:flex;align-items:center;min-height:72px;border:0;border-radius:16px;background:var(--well);color:var(--ink);padding:0 12px;cursor:pointer;text-align:left;font:inherit}
+.sui .spb:active{background:var(--card2)}.sui .spb .ring b{font-size:18px}
+.sui .smist{margin:12px 2px 0;font-size:14px;line-height:1.4;color:var(--warn)}
+.sui .sblk .row{margin-top:14px;flex-wrap:nowrap}.sui .sblk .row .btn{flex:1;min-width:0;min-height:50px;font-size:15px;padding:0 10px;white-space:nowrap}
+.sui .sect{display:flex;align-items:center;gap:10px;margin-top:16px}.sui .sect>span{color:var(--mute);font-size:15px;white-space:nowrap}
+.sui .sect .seg{flex:1;display:flex;background:var(--card);border:1px solid var(--line);border-radius:var(--r-pill);padding:3px}
+.sui .sect button{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;min-height:44px;border:0;border-radius:var(--r-pill);background:transparent;color:var(--ink);font-weight:600;font-size:15px;cursor:pointer}
+.sui .sect button.on{background:var(--acc);color:var(--on-acc);font-weight:800}
 .stoast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:90;background:var(--ink);color:#111;font-weight:700;padding:12px 18px;border-radius:14px;max-width:92vw;box-shadow:0 8px 24px #000a}`;
   let cfg=null,survey=null,urls={},main=null,showDone=false,showArch=false,newOpen=false;
   /* "vandaag", "gisteren", "24 nov" of "24 nov 2025" */
@@ -81,11 +90,13 @@
     if(v===0)return'vandaag';if(v===1)return'gisteren';
     return t.toLocaleDateString('nl-NL',t.getFullYear()===n.getFullYear()?{day:'numeric',month:'short'}:{day:'numeric',month:'short',year:'numeric'});}
   /* voortgangsring (Intake / Document) */
-  function ring(lab,v,kleur){const len=v.totaal?v.pct/100*125.66:0;
-    return `<span class="ring"><svg width="44" height="44" viewBox="0 0 50 50" aria-hidden="true"><circle cx="25" cy="25" r="20" fill="none" style="stroke:var(--track)" stroke-width="6"/>${len>0?`<circle cx="25" cy="25" r="20" fill="none" style="stroke:${kleur}" stroke-width="6" stroke-linecap="round" stroke-dasharray="${len.toFixed(1)} 200" transform="rotate(-90 25 25)"/>`:''}</svg><span>${lab}<b>${v.totaal?v.klaar+'/'+v.totaal:'–'}</b></span></span>`;}
+  function ring(lab,v,kleur,maat){const len=v.totaal?v.pct/100*125.66:0,m=maat||44;
+    return `<span class="ring"><svg width="${m}" height="${m}" viewBox="0 0 50 50" aria-hidden="true"><circle cx="25" cy="25" r="20" fill="none" style="stroke:var(--track)" stroke-width="6"/>${len>0?`<circle cx="25" cy="25" r="20" fill="none" style="stroke:${kleur}" stroke-width="6" stroke-linecap="round" stroke-dasharray="${len.toFixed(1)} 200" transform="rotate(-90 25 25)"/>`:''}</svg><span>${lab}<b>${v.totaal?v.klaar+'/'+v.totaal:'–'}</b></span></span>`;}
   const ICO={
     plus:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M12 4v16M4 12h16"/></svg>',
-    pijl:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>'
+    pijl:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>',
+    camera:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h4l2-3h6l2 3h4v11H3z"/><circle cx="12" cy="13" r="3.6"/></svg>',
+    galerij:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M3 16l5-5 4 4 3-3 6 6"/><circle cx="16" cy="9" r="1.6"/></svg>'
   };
   function css(){if($('suicss'))return;const s=document.createElement('style');s.id='suicss';s.textContent=CSS;document.head.appendChild(s);}
   let tT=null;
@@ -158,15 +169,13 @@
     const vi=Velden.voortgang(s,ph,'in'),vo=Velden.voortgang(s,ph,'uit');
     if(cur==='new'&&vi.totaal&&vi.mist.length===0){s.status='intake';await Store.surveys.put(s);toast('Intake compleet');return statusBlock(el,s,na);}
     const idx=Velden.STATUS.findIndex(x=>x.id===cur);
-    const knop={new:{l:'Intake afronden',to:'intake',check:'in'},intake:{l:'Schouw gelopen',to:'gelopen'},gelopen:{l:'Schouw afronden (klaar)',to:'klaar',check:'uit'},klaar:{l:'Archiveren',to:'archief'},archief:{l:'Terugzetten naar Klaar',to:'klaar'}}[cur];
+    const knop={new:{l:'Intake afronden',to:'intake',check:'in'},intake:{l:'Schouw gelopen',to:'gelopen'},gelopen:{l:'Afronden (klaar)',to:'klaar',check:'uit'},klaar:{l:'Archiveren',to:'archief'},archief:{l:'Terugzetten',to:'klaar'}}[cur];
     const terug={intake:'new',gelopen:'intake',klaar:'gelopen'}[cur];
     const mist=v=>v.mist.length?`<p class="smist">Nog verplicht: ${v.mist.slice(0,6).map(f=>esc(f.l)).join(', ')}${v.mist.length>6?' en '+(v.mist.length-6)+' meer':''}</p>`:'';
     el.innerHTML=`<div class="sblk">
       <ol class="sstep" aria-label="Status">${Velden.STATUS.map((x,i)=>`<li class="${i<idx?'af':i===idx?'nu':''}" ${i===idx?'aria-current="step"':''}><i style="${i<=idx?'background:'+x.kleur:''}"></i><span>${esc(x.naam)}</span></li>`).join('')}</ol>
-      <button class="spb" id="sbI"><span>Intake</span><i><b style="width:${vi.pct}%"></b></i><span>${vi.klaar}/${vi.totaal}</span></button>
-      ${cur==='new'?mist(vi):''}
-      <button class="spb" id="sbO"><span>Document</span><i><b style="width:${vo.pct}%"></b></i><span>${vo.klaar}/${vo.totaal}</span></button>
-      ${cur==='gelopen'?mist(vo):''}
+      <div class="sprg"><button class="spb" id="sbI">${ring('Intake',vi,'var(--prog-in)',48)}</button><button class="spb" id="sbO">${ring('Document',vo,'var(--prog-doc)',48)}</button></div>
+      ${cur==='new'?mist(vi):''}${cur==='gelopen'?mist(vo):''}
       <div class="row">${terug?`<button class="btn" id="sbB">‹ ${esc(Velden.statusMeta(terug).naam)}</button>`:''}<button class="btn pri" id="sbN">${esc(knop.l)}</button></div></div>`;
     const reopen=()=>{if(na)na();else show(s);};
     $('sbI').onclick=()=>Gegevens.open(s,'intake',{onClose:reopen});
@@ -195,17 +204,21 @@
     survey=s;history.replaceState(null,'','?survey='+encodeURIComponent(s.id));title(s.adres||cfg.naam);
     // een schouw uit een andere variant gaat vanaf nu verder in deze variant (terugknoppen en 'Doorgaan met' volgen dat)
     if(s.variant!==cfg.variant){const was=NAMEN[s.variant]||s.variant;s.variant=cfg.variant;await Store.surveys.put(s);if(was)toast(`Deze schouw gaat nu verder in ${cfg.naam} (was ${was})`);}
-    title((s.adres||cfg.naam)+' · '+cfg.naam);if(cfg.onScreen)cfg.onScreen('survey');
+    // in de hoofdapp (Veeg & Klik) alleen het adres; in de andere varianten met de naam erachter
+    title(cfg.variant==='veeg'?(s.adres||cfg.naam):(s.adres||cfg.naam)+' · '+cfg.naam);if(cfg.onScreen)cfg.onScreen('survey');
     if(cfg.eigenScherm)return cfg.eigenScherm(s); // variant met een eigen schouwscherm (Loop-spoor)
     const ph=await Store.photos.bySurvey(s.id,true),ok=ph.filter(p=>p.status!=='vervallen');
     Object.values(urls).forEach(u=>URL.revokeObjectURL(u));urls={};ph.forEach(p=>urls[p.id]=URL.createObjectURL(p.blob));
     const T=await recount(),acts=cfg.acties(s,ok.length);
     main.innerHTML=`
      <div id="stblk"></div>
-     ${binnenAan()?`<div class="sect" role="group" aria-label="Foto's voor"><span>Foto's voor</span>${['buiten','binnen'].map(x=>`<button data-sect="${x}" class="${(s.sectie||'buiten')===x?'on':''}" aria-pressed="${(s.sectie||'buiten')===x}">${x==='buiten'?'Buiten':'Binnen'}</button>`).join('')}</div>`:''}
-     ${acts.map((a,i)=>`<div class="row"${i?'':' style="margin-top:4px"'}><button class="btn${a.pri?' pri big':''}" data-a="${i}">${esc(a.label)}</button></div>`).join('')}
-     <h2>Foto's</h2>
-     ${ph.length?`<div class="strip">${ph.map((p,i)=>`<button class="th${p.status==='vervallen'?' vv':''}" data-id="${p.id}" aria-label="Foto ${i+1}${p.status==='vervallen'?', vervalt':''}"><img src="${urls[p.id]}" alt=""><span>${i+1}${p.sectie==='binnen'?' · binnen':''}</span>${p.status==='vervallen'?'<em>vervalt</em>':''}</button>`).join('')}</div>
+     ${binnenAan()?`<div class="sect" role="group" aria-label="Foto's voor"><span>Foto's voor</span><div class="seg">${['buiten','binnen'].map(x=>`<button data-sect="${x}" class="${(s.sectie||'buiten')===x?'on':''}" aria-pressed="${(s.sectie||'buiten')===x}"><i class="dot" style="background:var(--sec-${x})"></i>${x==='buiten'?'Buiten':'Binnen'}</button>`).join('')}</div></div>`:''}
+     ${(()=>{ // hoofdactie als grote pil met camera, "uit galerij" als ronde knop ernaast, de rest eronder
+        const isGal=a=>/galerij/i.test(a.label),boven=acts.map((a,i)=>({a,i})).filter(x=>x.a.pri||isGal(x.a)),onder=acts.map((a,i)=>({a,i})).filter(x=>!x.a.pri&&!isGal(x.a));
+        return (boven.length?`<div class="sacts">${boven.map(({a,i})=>a.pri?`<button class="btn pri" data-a="${i}">${ICO.camera}${esc(a.label)}</button>`:`<button class="btn rnd" data-a="${i}" aria-label="${esc(a.label)}">${ICO.galerij}</button>`).join('')}</div>`:'')
+          +onder.map(({a,i})=>`<div class="row"><button class="btn" data-a="${i}">${esc(a.label)}</button></div>`).join('');})()}
+     <div class="fhead"><h2>Foto's</h2>${ph.length?`<span>${ok.length} van ${ph.length} in document</span>`:''}</div>
+     ${ph.length?`<div class="strip">${ph.map((p,i)=>`<button class="th${p.status==='vervallen'?' vv':''}" data-id="${p.id}" aria-label="Foto ${i+1}${p.sectie==='binnen'?', binnen':''}${p.status==='vervallen'?', vervalt':''}"><img src="${urls[p.id]}" alt=""><span>${i+1}${p.sectie==='binnen'?' · binnen':''}${p.status==='vervallen'?' · vervalt':''}</span></button>`).join('')}</div>
      <p class="note">Tik om te bewerken. Lang drukken: vervalt (ander tracé) of terugzetten.</p>`:'<p class="note">Nog geen foto\'s. Begin bij de aansluiting op het netwerk.</p>'}
      <h2>Tellers</h2>
      <div class="tel">
@@ -215,9 +228,11 @@
        <div class="r"><div class="l">Invoeringen<small>${esc(cfg.invoerUitleg||'Telt de app.')}</small></div><span class="v" id="ti">${T.invoeringen||0}</span></div>
        <div class="r"><div class="l">Boringen/persingen</div><button class="step" id="bm" aria-label="Eén minder">−</button><span class="v" id="tb">${T.boringen||0}</span><button class="step" id="bp" aria-label="Eén meer">+</button></div>
      </div>
-     <div class="row" style="margin-top:20px"><a class="btn pri" href="shared/storyline.html?survey=${encodeURIComponent(s.id)}">Naar document</a></div>
-     <div class="row"><button class="btn" id="other">Andere schouw</button></div>
-     <div class="row"><button class="btn sdelx" id="sdel">Schouw verwijderen</button></div>`;
+     <div class="sfoot">
+       <a class="btn pri" href="shared/storyline.html?survey=${encodeURIComponent(s.id)}">Naar document</a>
+       <button class="slink" id="other">Andere schouw</button>
+       <button class="btn sdelx" id="sdel">Schouw verwijderen</button>
+     </div>`;
     statusBlock($('stblk'),s);
     bindDel($('sdel'),s);
     main.querySelectorAll('[data-sect]').forEach(b=>b.onclick=async()=>{s.sectie=b.dataset.sect;await Store.surveys.put(s);main.querySelectorAll('[data-sect]').forEach(x=>{x.classList.toggle('on',x===b);x.setAttribute('aria-pressed',x===b);});toast("Nieuwe foto's: "+(s.sectie==='binnen'?'binnen':'buiten'));});
