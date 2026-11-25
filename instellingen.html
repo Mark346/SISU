@@ -11,6 +11,7 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="stylesheet" href="shared/base.css">
 <style>
+.versie{font-size:14px;font-weight:700;color:var(--mute);white-space:nowrap;padding-right:4px}
 .uitleg{color:var(--mute);margin:4px 0 12px}
 .uitleg b{color:var(--ink)}
 .lg{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;font-size:15px;color:var(--mute);margin-bottom:8px}
@@ -33,7 +34,7 @@
 </style>
 </head>
 <body>
-<header class="bar"><a class="back" href="index.html">‹ Terug</a><h1>Instellingen</h1></header>
+<header class="bar"><a class="back" href="index.html">‹ Terug</a><h1>Instellingen</h1><span class="versie" id="versie"></span></header>
 <main class="page">
   <p class="uitleg">Alle onderdelen van het site survey document. Kies per onderdeel wat er nodig is bij de <b>input</b> (de intake, vóór je gaat lopen) en bij de <b>output</b> (het document). Tik op een knop om te wisselen: Verplicht → Wenselijk → Nee.</p>
   <div class="lg"><b>Verplicht</b><span>Moet ingevuld zijn. Input: nodig voor "intake compleet". Output: nodig voor "klaar".</span>
@@ -43,6 +44,7 @@
   <div id="lijst"></div>
   <div class="foot"><button class="btn" id="reset">Standaard herstellen</button><a class="btn pri" href="index.html">Klaar</a></div>
 </main>
+<script src="shared/versie.js"></script>
 <script src="shared/velden.js"></script>
 <script>
 const $=id=>document.getElementById(id);
@@ -65,6 +67,7 @@ let sure=null;
 $('reset').onclick=()=>{const b=$('reset');if(!sure){b.textContent='Zeker? Tik nog eens';sure=setTimeout(()=>{b.textContent='Standaard herstellen';sure=null;},3000);return;}
   clearTimeout(sure);sure=null;b.textContent='Standaard herstellen';Velden.resetCfg();render();};
 render();
+$('versie').textContent='Versie '+SISU_VERSIE.nummer+' · '+SISU_VERSIE.datum;
 if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
 </body>
