@@ -15,21 +15,18 @@
 .uitleg b{color:var(--ink)}
 .lg{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;font-size:15px;color:var(--mute);margin-bottom:8px}
 .lg b{color:var(--ink)}
-.sec{margin-top:22px}
-.sec h2{font-size:20px;margin:0 0 8px;position:sticky;top:57px;background:var(--bg);padding:6px 0;z-index:2}
-.veld{background:var(--card);border:2px solid var(--line);border-radius:14px;padding:10px 12px;margin-bottom:8px}
-.veld .nm{font-weight:700;font-size:16px}
-.veld .vb{color:var(--mute);font-size:14px;margin-top:2px}
-.kn{display:flex;gap:8px;margin-top:10px}
-.cyc{flex:1;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;min-height:56px;border-radius:12px;border:2px solid transparent;padding:4px 12px;cursor:pointer;text-align:left}
-.cyc small{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;opacity:.8}
-.cyc b{font-size:17px;display:flex;align-items:center;gap:6px;width:100%}
-.cyc b::after{content:"↻";margin-left:auto;font-weight:400;opacity:.7}
+.sec{margin-top:14px}
+.veld{display:grid;grid-template-columns:1fr 80px 80px;gap:6px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:6px 6px 6px 12px;margin-bottom:6px}
+.veld .nm{font-weight:700;font-size:15px;line-height:1.25}
+.veld .vb{color:var(--mute);font-size:13px;font-weight:400;margin-top:1px}
+.cyc{width:80px;min-height:44px;border-radius:10px;border:2px solid transparent;padding:0 4px;cursor:pointer;font-size:14px;font-weight:800;text-align:center}
 .cyc.verplicht{background:#FF7A1A;color:#141414}
 .cyc.wenselijk{background:#2563eb;color:#fff}
 .cyc.nee{background:#0d0f12;color:#b9bec6;border-color:#3a3f47}
-.cyc[disabled]{opacity:.45;cursor:default}.cyc[disabled] b::after{content:""}
-.dots{display:flex;gap:4px;margin-top:3px}.dots i{width:7px;height:7px;border-radius:50%;background:currentColor;opacity:.3}.dots i.on{opacity:1}
+.cyc[disabled]{opacity:.45;cursor:default}
+.kop{display:grid;grid-template-columns:1fr 80px 80px;gap:6px;align-items:end;position:sticky;top:57px;background:var(--bg);padding:8px 6px 6px 0;z-index:2}
+.kop h2{font-size:19px;margin:0}
+.kop span{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--mute);text-align:center}
 .tot{display:flex;gap:10px;margin:6px 0 4px;flex-wrap:wrap}
 .tot span{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:4px 12px;font-size:14px;font-weight:700}
 .foot{margin:24px 0 10px;display:flex;gap:10px}.foot .btn{flex:1}
@@ -53,14 +50,13 @@ const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;',
 const OPT=[['verplicht','Verplicht'],['wenselijk','Wenselijk'],['nee','Nee']];
 const VOLG=['verplicht','wenselijk','nee'],NAAM={verplicht:'Verplicht',wenselijk:'Wenselijk',nee:'Nee'};
 function btn(f,kant,v){const vast=kant==='in'&&f.vast==='in',w=kant==='in'?'Input':'Output';
-  return `<button class="cyc ${v}" data-k="${f.k}" data-kant="${kant}" ${vast?'disabled':''} aria-label="${w} voor ${esc(f.l)}: ${NAAM[v]}${vast?'':'. Tik om te wisselen'}"><small>${w}</small><b>${NAAM[v]}</b><span class="dots" aria-hidden="true">${VOLG.map(x=>`<i class="${x===v?'on':''}"></i>`).join('')}</span></button>`;}
+  return `<button class="cyc ${v}" data-k="${f.k}" data-kant="${kant}" ${vast?'disabled':''} aria-label="${w} voor ${esc(f.l)}: ${NAAM[v]}${vast?'':'. Tik om te wisselen'}">${NAAM[v]}</button>`;}
 function totaal(){const c=Velden.cfg(),n=(k,v)=>Velden.VELDEN.filter(f=>c[f.k][k]===v).length;
   $('tot').innerHTML=`<span>Input: ${n('in','verplicht')} verplicht · ${n('in','wenselijk')} wenselijk</span><span>Output: ${n('uit','verplicht')} verplicht · ${n('uit','wenselijk')} wenselijk</span>`;}
 function render(){
   const c=Velden.cfg();totaal();
   $('lijst').innerHTML=Velden.SECTIES.map(sc=>{const fs=Velden.VELDEN.filter(f=>f.s===sc.id);if(!fs.length)return'';
-    return `<section class="sec"><h2>${esc(sc.naam)}</h2>${fs.map(f=>`<div class="veld"><div class="nm">${esc(f.l)}</div>${f.vb?`<div class="vb">Bijv. ${esc(f.vb)}</div>`:''}${f.als?'<div class="vb">Alleen als de klant geen eigenaar is.</div>':''}
-      <div class="kn">${['in','uit'].map(kant=>btn(f,kant,c[f.k][kant])).join('')}</div></div>`).join('')}</section>`;}).join('');
+    return `<section class="sec"><div class="kop"><h2>${esc(sc.naam)}</h2><span>Input</span><span>Output</span></div>${fs.map(f=>`<div class="veld"><div class="nm">${esc(f.l)}${f.vb?`<div class="vb">Bijv. ${esc(f.vb)}</div>`:''}${f.als?'<div class="vb">Alleen als de klant geen eigenaar is.</div>':''}</div>${['in','uit'].map(kant=>btn(f,kant,c[f.k][kant])).join('')}</div>`).join('')}</section>`;}).join('');
 }
 $('lijst').addEventListener('click',e=>{const b=e.target.closest('.cyc');if(!b||b.disabled)return;
   const f=Velden.VELDEN.find(x=>x.k===b.dataset.k),kant=b.dataset.kant,nv=VOLG[(VOLG.indexOf(Velden.cfg()[f.k][kant])+1)%3];
