@@ -9,6 +9,18 @@
     {k:'dv',short:'Invoer gevel',text:'Nieuwe invoer in de gevel'},
     {k:'best',short:'Bestaand tracé',text:'Vervolg in bestaand tracé'},
     {k:'lo',short:'Let op',text:'Let op: '},
+    {k:'kb',short:'Bestaande koppeling',text:'Op bestaande koppeling',bij:'kb'},
+    {k:'hb',short:'Bestaande handhole',text:'Via bestaande handhole',bij:'hb'},
+    {k:'mantel',short:'Mantelbuis',text:'Mantelbuis, persing of boring',bij:'mantel'},
+    {k:'gmb',short:'Boring met mantelbuis',text:'Boring met mantelbuis',bij:'gmb'},
+    {k:'gzb',short:'Boring zonder buis',text:'Boring zonder buis',bij:'gzb'},
+    {k:'p',short:'Persing',text:'Persing',bij:'p'},
+    {k:'l',short:'Leggen mantelbuis',text:'Leggen mantelbuis',bij:'l'},
+    {k:'bb',short:'Boogboring',text:'Boogboring',bij:'bb'},
+    {k:'bw',short:'Doorvoer brandwerend',text:'Invoer / doorvoer brandwerend afdichten',bij:'bw'},
+    {k:'cpe',short:'CPE + WODF',text:'Plaatsen CPE en WODF op 19” legbord',bij:'cpe'},
+    {k:'fdb',short:'FDB lasbox',text:'Plaatsen FDB lasbox',bij:'fdb'},
+    {k:'sk',short:'Serverkast',text:'In de serverkast',bij:'sk'},
     {k:'r1',short:'Door bestrating',text:'Door bestrating',route:1},
     {k:'r2',short:'Door groen',text:'Door groen',route:1},
     {k:'r3',short:'Langs parkeervakken',text:'Langs parkeervakken',route:1},
@@ -16,23 +28,33 @@
     {k:'r5',short:'Langs de gevel',text:'Langs de gevel',route:1},
     {k:'r6',short:'Gemeentegrond',text:'Gemeentegrond',route:1}
   ];
+  /* alle onderdelen uit de legenda; volgorde = standaard, daarna op hoe vaak je ze gebruikt */
   const TOOLS=[
-    {id:'nieuw',name:'Nieuw tracé',draw:1},
-    {id:'buis',name:'Bestaande buis',draw:1},
-    {id:'k',name:'Koppeling',nb:1},
-    {id:'h',name:'Handhole',nb:1},
-    {id:'dv',name:'Invoer'},
-    {id:'lo',name:'Let op'}
+    {id:'nieuw',name:'Nieuw tracé',draw:1,key:'arrow',mini:{arrow:[[8,18],[82,18]]}},
+    {id:'buis',name:'Bestaande buis',draw:1,key:'buis',mini:{buis:[[8,18],[82,18]]}},
+    {id:'kn',name:'Nieuwe koppeling'},
+    {id:'hn',name:'Nieuwe handhole'},
+    {id:'dv',name:'Invoer (IN)'},
+    {id:'kb',name:'Bestaande koppeling'},
+    {id:'hb',name:'Bestaande handhole'},
+    {id:'lo',name:'Let op'},
+    {id:'mantel',name:'Mantelbuis / boring',draw:1,key:'mantel',mini:{mantel:[[10,18],[80,18]]}},
+    {id:'gmb',name:'Boring met mantelbuis'},
+    {id:'p',name:'Persing'},
+    {id:'gzb',name:'Boring zonder buis'},
+    {id:'bb',name:'Boogboring'},
+    {id:'l',name:'Leggen mantelbuis'},
+    {id:'bw',name:'Doorvoer brandwerend'},
+    {id:'cpe',name:'CPE + WODF'},
+    {id:'fdb',name:'FDB lasbox'},
+    {id:'sk',name:'Serverkast'}
   ];
-  const C={green:'#2BB24C',red:'#D7261E',teal:'#0E7C86',yellow:'#F2D024',brown:'#8B2E16'};
-  const mini={
-    nieuw:`<svg width="40" height="16" viewBox="0 0 40 16" aria-hidden="true"><path d="M3 8H28" stroke="${C.green}" stroke-width="8" stroke-linecap="round"/><path d="M3 8H28" stroke="${C.red}" stroke-width="4" stroke-linecap="round"/><path d="M38 8L27 1.5V14.5Z" fill="${C.red}" stroke="${C.green}" stroke-width="2" stroke-linejoin="round"/></svg>`,
-    buis:`<svg width="40" height="16" viewBox="0 0 40 16" aria-hidden="true"><path d="M4 8H36" stroke="${C.yellow}" stroke-width="8" stroke-linecap="round"/><path d="M4 8H36" stroke="${C.teal}" stroke-width="4" stroke-linecap="round"/></svg>`,
-    k:nb=>`<svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="8.5" fill="${nb?C.teal:C.brown}" stroke="${nb?C.yellow:C.green}" stroke-width="3"/></svg>`,
-    h:nb=>`<svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><rect x="2.5" y="2.5" width="17" height="17" rx="1.5" fill="${nb?C.teal:C.brown}" stroke="${nb?C.yellow:C.green}" stroke-width="3"/></svg>`,
-    dv:`<svg width="38" height="22" viewBox="0 0 38 22" aria-hidden="true"><rect x="1.5" y="1.5" width="35" height="19" rx="9.5" fill="${C.brown}" stroke="${C.green}" stroke-width="3"/><text x="19" y="15" font-size="11" font-weight="800" text-anchor="middle" fill="#fff" font-family="system-ui,sans-serif">IN</text></svg>`,
-    lo:`<svg width="52" height="22" viewBox="0 0 52 22" aria-hidden="true"><rect x="1.5" y="1.5" width="49" height="19" rx="9.5" fill="#F2B705" stroke="#1a1a1a" stroke-width="3"/><text x="26" y="15" font-size="10" font-weight="800" text-anchor="middle" fill="#1a1a1a" font-family="system-ui,sans-serif">LET OP</text></svg>`
-  };
+  const LINES=['arrow','buis','mantel'];
+  const GKEY='sisu.gebruik';
+  const gebruik=()=>{try{return JSON.parse(localStorage.getItem(GKEY)||'{}');}catch(e){return{};}};
+  function telGebruik(id){const g=gebruik();g[id]=(g[id]||0)+1;try{localStorage.setItem(GKEY,JSON.stringify(g));}catch(e){}}
+  function toolsOpVolgorde(){const g=gebruik();return TOOLS.map((t,i)=>({t,i,n:g[t.id]||0})).sort((a,b)=>b.n-a.n||a.i-b.i).map(x=>x.t);}
+  const miniOf=t=>Legend.mini(t.mini||{syms:[{t:t.id,x:45,y:18}]},64,26,.9).replace('<svg ','<svg aria-hidden="true" ');
   const CSS=`
 .ved{position:fixed;inset:0;z-index:50;background:var(--bg,#0d0f12);color:var(--ink,#f5f6f7);display:flex;flex-direction:column;overflow:hidden}
 .ved .vbar{flex:none;display:flex;align-items:center;gap:8px;padding:calc(4px + env(safe-area-inset-top)) calc(10px + env(safe-area-inset-right)) 4px calc(6px + env(safe-area-inset-left));border-bottom:1px solid var(--line,#33383f)}
@@ -48,11 +70,8 @@
 .ved .sm{min-height:44px;padding:0 12px;border-radius:12px;border:2px solid var(--line,#33383f);background:transparent;color:inherit;font-weight:700;font-size:16px;cursor:pointer}
 .ved .vtools{display:flex;gap:8px;padding:10px 12px;overflow-x:auto;scrollbar-width:none}
 .ved .vtools::-webkit-scrollbar{display:none}
-.ved .tl{flex:none;min-width:88px;min-height:64px;border-radius:14px;border:2px solid var(--line,#33383f);background:var(--card,#181b20);color:inherit;font-size:15px;font-weight:700;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:6px 8px;cursor:pointer}
+.ved .tl{flex:none;min-width:84px;max-width:110px;min-height:68px;font-size:13px;line-height:1.15;text-align:center;border-radius:14px;border:2px solid var(--line,#33383f);background:var(--card,#181b20);color:inherit;font-size:15px;font-weight:700;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:6px 8px;cursor:pointer}
 .ved .tl.on{border-color:var(--acc,#FF7A1A);background:var(--card2,#22262d)}
-.ved .nbsw{display:flex;gap:4px;margin:0 12px 6px;padding:3px;border-radius:14px;background:var(--card,#181b20);width:max-content}
-.ved .nbsw button{min-height:44px;padding:0 16px;border-radius:11px;border:0;background:transparent;color:var(--mute,#b9bec6);font-weight:700;font-size:16px;cursor:pointer}
-.ved .nbsw button.on{background:var(--ink,#f5f6f7);color:#111}
 .ved .vlab{padding:8px 14px 0;font-size:14px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--mute,#b9bec6)}
 .ved .chips{display:flex;flex-wrap:wrap;gap:8px;padding:8px 12px}
 .ved .chip{min-height:44px;padding:0 14px;border-radius:99px;border:2px solid #3c434c;background:var(--card,#181b20);color:inherit;font-size:16px;font-weight:600;cursor:pointer}
@@ -114,6 +133,8 @@
     if(has('kn'))out.push('kn');if(has('hn'))out.push('hn');if(has('dv'))out.push('dv');
     if(ann&&ann.buis&&ann.buis.length>1&&!has('kn'))out.push('best');
     if(has('lo'))out.push('lo');
+    ['kb','hb','gmb','gzb','p','l','bb','bw','cpe','fdb','sk'].forEach(t=>{if(has(t))out.push(t);});
+    if(ann&&ann.mantel&&ann.mantel.length>1)out.push('mantel');
     return out;
   }
   function capOf(ph){
@@ -169,8 +190,7 @@
     <div class="vscroll">
       <div class="vph${ph.status==='vervallen'?' grey':''}" id="vPh"><img src="${st.url}" alt="Foto ${n}"><svg class="leg"></svg><svg class="hnd"></svg></div>
       <div class="vhint"><p></p><button class="sm" id="vUndo">Ongedaan</button><button class="sm" id="vWipe">Wis foto</button></div>
-      <div class="vtools" role="toolbar" aria-label="Gereedschap">${TOOLS.map(t=>`<button class="tl${t.id===st.tool?' on':''}" data-t="${t.id}" aria-pressed="${t.id===st.tool}">${typeof mini[t.id]==='function'?mini[t.id](st.nb==='best'):mini[t.id]}<span>${t.name}</span></button>`).join('')}</div>
-      <div class="nbsw" id="vNb" role="group" aria-label="Nieuw of bestaand" ${TOOLS.find(t=>t.id===st.tool).nb?'':'hidden'}><button data-nb="nieuw" class="${st.nb==='nieuw'?'on':''}" aria-pressed="${st.nb==='nieuw'}">Nieuw</button><button data-nb="best" class="${st.nb==='best'?'on':''}" aria-pressed="${st.nb==='best'}">Bestaand</button></div>
+      <div class="vtools" role="toolbar" aria-label="Legenda">${toolsOpVolgorde().map(t=>`<button class="tl${t.id===st.tool?' on':''}" data-t="${t.id}" aria-pressed="${t.id===st.tool}">${miniOf(t)}<span>${t.name}</span></button>`).join('')}</div>
       <div class="vlab">Bijschrift</div>
       <div id="vCap"></div>
       <div class="vlab">Foto's van deze schouw</div>
@@ -183,9 +203,7 @@
     if(q('#vRest'))q('#vRest').onclick=()=>setStatus(st.ph,'ok');
     q('#vUndo').onclick=undo;
     q('#vWipe').onclick=()=>{const a=st.ph.ann;if(!(a.arrow||a.buis||(a.syms&&a.syms.length))){toast('Er staat nog niets op deze foto.');return;}remember();st.ph.ann={orient:a.orient};st.sel=null;save(true);redraw();renderCaption();toast('Tekening gewist. Ongedaan zet hem terug.');};
-    R.querySelectorAll('.tl').forEach(b=>b.onclick=()=>{st.tool=b.dataset.t;st.sel=null;R.querySelectorAll('.tl').forEach(x=>{x.classList.toggle('on',x===b);x.setAttribute('aria-pressed',x===b);});q('#vNb').hidden=!TOOLS.find(t=>t.id===st.tool).nb;toast('');redraw();});
-    R.querySelectorAll('#vNb button').forEach(b=>b.onclick=()=>{st.nb=b.dataset.nb;R.querySelectorAll('#vNb button').forEach(x=>{x.classList.toggle('on',x===b);x.setAttribute('aria-pressed',x===b);});
-      R.querySelector('.tl[data-t=k]').firstElementChild.outerHTML=mini.k(st.nb==='best');R.querySelector('.tl[data-t=h]').firstElementChild.outerHTML=mini.h(st.nb==='best');});
+    R.querySelectorAll('.tl').forEach(b=>b.onclick=()=>{st.tool=b.dataset.t;st.sel=null;R.querySelectorAll('.tl').forEach(x=>{x.classList.toggle('on',x===b);x.setAttribute('aria-pressed',x===b);});toast('');redraw();});
     if(q('#vNext'))q('#vNext').onclick=()=>{save(true);st.opts.onNext(st.ph);}; // geen await: de camera moet binnen de tik openen
     if(q('#vDoc'))q('#vDoc').onclick=async()=>{await save(true);st.opts.onDoc(st.ph);};
     bindPointer(q('#vPh'));
@@ -224,7 +242,7 @@
       // 2. symbool
       const S=a.syms||[];for(let i=S.length-1;i>=0;i--){if(dist([S[i].x,S[i].y],p)<24*k){g.kind='sym';g.i=i;g.off=[S[i].x-p[0],S[i].y-p[1]];armLong(g,()=>popDelete(e.clientX,e.clientY,()=>{remember();a.syms.splice(i,1);afterChange('Symbool verwijderd.');}));return;}}
       // 3. lijn (pijl of buis)
-      for(const key of ['arrow','buis']){if(a[key]&&lineDist(p,a[key])<18*k){g.kind='line';g.key=key;armLong(g,()=>popDelete(e.clientX,e.clientY,()=>{remember();delete a[key];if(st.sel===key)st.sel=null;afterChange(key==='arrow'?'Pijl verwijderd.':'Buis verwijderd.');}));break;}}
+      for(const key of LINES){if(a[key]&&lineDist(p,a[key])<18*k){g.kind='line';g.key=key;armLong(g,()=>popDelete(e.clientX,e.clientY,()=>{remember();delete a[key];if(st.sel===key)st.sel=null;afterChange(key==='arrow'?'Pijl verwijderd.':key==='buis'?'Buis verwijderd.':'Mantelbuis verwijderd.');}));break;}}
       if(!g.kind)g.kind='bg';
     });
     el.addEventListener('pointermove',e=>{
@@ -261,18 +279,18 @@
   function undoNoop(){const s=stacks[st.ph.id];if(s&&s.length){const top=JSON.parse(s[s.length-1]);if(JSON.stringify(top.ann)===JSON.stringify(st.ph.ann))s.pop();}}
   function armLong(g,fn){g.lt=setTimeout(()=>{if(!g.moved){g.long=true;if(navigator.vibrate)navigator.vibrate(15);fn();}},550);}
   function placeSym(t,p){
-    const type=t.id==='k'?(st.nb==='best'?'kb':'kn'):t.id==='h'?(st.nb==='best'?'hb':'hn'):t.id;
+    const type=t.id;telGebruik(t.id);
     remember();const a=st.ph.ann;a.syms=(a.syms||[]).concat([{t:type,x:Math.round(p[0]),y:Math.round(p[1])}]);
-    afterChange(`${t.name}${t.nb?(st.nb==='best'?' (bestaand)':' (nieuw)'):''} geplaatst. Sleep om te verschuiven.`);
+    afterChange(`${t.name} geplaatst. Sleep om te verschuiven.`);
     if(type==='lo'){renderCaption();setTimeout(()=>{const i=st&&st.root.querySelector('#vLo');if(i)i.focus();},50);}
   }
   function finishDraw(){
     const raw=st.raw;st.raw=null;
     if(!raw||pathLen(raw)<30){redraw();toast('Te kort, veeg een langere lijn');return;}
     const P=tidy(raw);if(P.length<2){redraw();toast('Te kort, veeg een langere lijn');return;}
-    remember();const key=st.tool==='buis'?'buis':'arrow';st.ph.ann[key]=P;
+    const tt=TOOLS.find(x=>x.id===st.tool);remember();const key=tt.key||'arrow';st.ph.ann[key]=P;telGebruik(tt.id);
     const n=P.length-2;
-    afterChange(key==='buis'?(n<=0?'Bestaande buis netjes gelegd: recht.':`Bestaande buis netjes gelegd: ${n} ${n===1?'knik':'knikken'}.`)
+    afterChange(key!=='arrow'?(n<=0?`${tt.name} netjes gelegd: recht.`:`${tt.name} netjes gelegd: ${n} ${n===1?'knik':'knikken'}.`)
       :(n<=0?'Netjes gemaakt: rechte pijl':n===1?'Netjes gemaakt: pijl met 1 knik':`Netjes gemaakt: pijl met ${n} knikken`));
   }
   function afterChange(msg){save(true);redraw();renderCaption();if(msg)toast(msg);}
@@ -297,7 +315,8 @@
     const idx=st.siblings.filter(p=>p.status!=='vervallen');const me=idx.findIndex(p=>p.id===ph.id);
     const prev=me>0?idx[me-1]:null,same=prev&&cur.text&&cur.text===(prev.bijschrift||'');
     const chip=x=>`<button class="chip${cur.sel.includes(x.k)?' on':''}" data-k="${x.k}" aria-pressed="${cur.sel.includes(x.k)}">${esc(x.short)}</button>`;
-    box.innerHTML=`<div class="chips">${CH.filter(x=>!x.route).map(chip).join('')}</div>
+    const an=ph.ann||{},heeft=t=>t==='mantel'?!!(an.mantel&&an.mantel.length>1):((an.syms||[]).some(x=>x.t===t));
+    box.innerHTML=`<div class="chips">${CH.filter(x=>!x.route&&(!x.bij||heeft(x.bij)||cur.sel.includes(x.k))).map(chip).join('')}</div>
       ${cur.sel.includes('lo')?`<input class="vin" id="vLo" placeholder="Let op: waarop?" value="${esc(c.lo||'')}" aria-label="Tekst bij Let op">`:''}
       ${same?`<div class="same">Zelfde als vorige foto. Iets toevoegen?</div>`:''}
       <div class="vlab" style="padding-top:2px">Route</div>

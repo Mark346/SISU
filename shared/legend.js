@@ -26,6 +26,14 @@
     for(const part of [p.body,p.head])if(part&&part.length>2)o+=`<polygon points="${pts(part)}" fill="${C.red}" stroke="${C.green}" stroke-width="${3*k}" stroke-linejoin="round"/>`;
     return o;
   }
+  /* mantelbuis, persing of boring: bruine band met groene rand */
+  function mantelSvg(P,k){
+    if(!P||P.length<2)return'';
+    return `<polyline points="${pts(P)}" fill="none" stroke="${C.green}" stroke-width="${16*k}" stroke-linecap="butt" stroke-linejoin="miter"/>`+
+      `<polyline points="${pts(P)}" fill="none" stroke="${C.brown}" stroke-width="${11*k}" stroke-linecap="butt" stroke-linejoin="miter"/>`;
+  }
+  function rondTekst(x,y,t,k){const r=15*k,fs=(t.length>2?9:t.length>1?11:14)*k;
+    return `<circle cx="${x}" cy="${y}" r="${r}" fill="${C.brown}" stroke="${C.green}" stroke-width="${3*k}"/><text x="${x}" y="${y+fs*.36}" font-size="${fs}" font-weight="800" text-anchor="middle" fill="#fff" font-family="${FONT}">${t}</text>`;}
   function buisSvg(P,k){
     if(!P||P.length<2)return'';
     return `<polyline points="${pts(P)}" fill="none" stroke="${C.yellow}" stroke-width="${12*k}" stroke-linecap="round" stroke-linejoin="round"/>`+
@@ -47,6 +55,15 @@
       case 'dv':return pill(x,y,'IN',C.brown,C.green,C.white,k);
       case 'lb':return pill(x,y,s.label||'label',C.label,C.green,C.white,k);
       case 'lo':return pill(x,y,'LET OP',C.letop,C.dark,C.dark,k);
+      case 'gmb':return rondTekst(x,y,'GmB',k);
+      case 'gzb':return rondTekst(x,y,'GzB',k);
+      case 'p':return rondTekst(x,y,'P',k);
+      case 'l':return rondTekst(x,y,'L',k);
+      case 'bb':return rondTekst(x,y,'BB',k);
+      case 'bw':o=`<circle cx="${x}" cy="${y}" r="${r*.85}" fill="${C.brown}" stroke="${C.green}" stroke-width="${2.5*k}" stroke-dasharray="${2.5*k} ${2*k}"/>`;break;
+      case 'cpe':return pill(x,y,'CPE + WODF',C.brown,C.green,C.white,k).replace(/rx="[^"]*"/,`rx="${2*k}"`);
+      case 'fdb':o=`<rect x="${x-r*.8}" y="${y-r*1.15}" width="${1.6*r}" height="${2.3*r}" fill="${C.brown}" stroke="${C.green}" stroke-width="${sw}"/><text x="${x}" y="${y-r*.45}" font-size="${10*k}" font-weight="800" text-anchor="middle" fill="#fff" font-family="${FONT}">FDB</text>`;break;
+      case 'sk':o=`<rect x="${x-r*.9}" y="${y-r*1.1}" width="${1.8*r}" height="${2.2*r}" fill="none" stroke="${C.green}" stroke-width="${sw*1.2}"/>`;break;
       default:return'';
     }
     if(s.label)o+=`<text x="${x}" y="${y+r+15*k}" font-size="${13*k}" font-weight="800" text-anchor="middle" fill="${C.white}" stroke="${C.dark}" stroke-width="${3*k}" paint-order="stroke" font-family="${FONT}">${esc(s.label)}</text>`;
@@ -55,7 +72,7 @@
   /* SVG-tekst van de annotaties. schaal maakt lijnen en symbolen dikker of dunner (standaard 1). */
   function svgString(ann,schaal){
     const k=schaal||1,[W,H]=size(ann),a=ann||{};
-    const body=buisSvg(a.buis,k)+polySvg(a.poly,k)+arrowSvg(a.arrow,k)+(a.syms||[]).map(s=>symSvg(s,k)).join('');
+    const body=mantelSvg(a.mantel,k)+buisSvg(a.buis,k)+polySvg(a.poly,k)+arrowSvg(a.arrow,k)+(a.syms||[]).map(s=>symSvg(s,k)).join('');
     return `<svg xmlns="${NS}" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" preserveAspectRatio="none">${body}</svg>`;
   }
   /* Tekent de legenda in een bestaande <svg> of in een <div> (daar komt een <svg> in, over de hele div). */
@@ -86,17 +103,29 @@
     }finally{URL.revokeObjectURL(u);}
   }
   /* legenda-items als kleine losse SVG's (90 x 36), voor het document */
+  /* volledige legenda, in de volgorde van het Sisu-template; plus IN en Let op */
   const LEG=[
-    ['Nieuw tracé',{arrow:[[8,18],[82,18]]}],
-    ['Bestaande buis',{buis:[[8,18],[82,18]]}],
-    ['Nieuwe koppeling',{syms:[{t:'kn',x:45,y:18}]}],
-    ['Bestaande koppeling',{syms:[{t:'kb',x:45,y:18}]}],
-    ['Nieuwe handhole',{syms:[{t:'hn',x:45,y:18}]}],
     ['Bestaande handhole',{syms:[{t:'hb',x:45,y:18}]}],
-    ['Invoer / doorvoer',{syms:[{t:'dv',x:45,y:18}]}],
-    ['Label (bijv. CPE + WODF)',{syms:[{t:'lb',x:45,y:18,label:'CPE'}]}],
+    ['Bestaande koppeling',{syms:[{t:'kb',x:45,y:18}]}],
+    ['Bestaande buis',{buis:[[8,18],[82,18]]}],
+    ['Nieuwe handhole',{syms:[{t:'hn',x:45,y:18}]}],
+    ['Nieuwe koppeling',{syms:[{t:'kn',x:45,y:18}]}],
+    ['Nieuw tracé',{arrow:[[8,18],[82,18]]}],
+    ['Mantelbuis, persing of boring',{mantel:[[10,18],[80,18]]}],
+    ['Boring met mantelbuis',{syms:[{t:'gmb',x:45,y:18}]}],
+    ['Boring zonder buis',{syms:[{t:'gzb',x:45,y:18}]}],
+    ['Persing',{syms:[{t:'p',x:45,y:18}]}],
+    ['Leggen mantelbuis',{syms:[{t:'l',x:45,y:18}]}],
+    ['Boogboring',{syms:[{t:'bb',x:45,y:18}]}],
+    ['Invoer / doorvoer brandwerend',{syms:[{t:'bw',x:45,y:18}]}],
+    ['CPE en WODF gemonteerd op 19” legbord',{syms:[{t:'cpe',x:45,y:18}]}],
+    ['FDB lasbox',{syms:[{t:'fdb',x:45,y:18}]}],
+    ['Serverkast',{syms:[{t:'sk',x:45,y:18}]}],
+    ['Nieuwe invoer (IN)',{syms:[{t:'dv',x:45,y:18}]}],
     ['Let op',{syms:[{t:'lo',x:45,y:18}]}]
   ];
-  function legendaItems(){return LEG.map(([naam,a])=>({naam,svg:svgString({orient:'liggend',...a},.8).replace(/viewBox="[^"]*" width="\d+" height="\d+"/,'viewBox="0 0 90 36" width="90" height="36"')}));}
-  window.Legend={render,burnIn,svgString,size,legendaItems,COLORS:C};
+  /* klein plaatje van één onderdeel (voor knoppen en de legenda) */
+  function mini(a,w,h,k){return svgString({orient:'liggend',...a},k||.8).replace(/viewBox="[^"]*" width="\d+" height="\d+"/,`viewBox="0 0 90 36" width="${w||90}" height="${h||36}"`);}
+  function legendaItems(){return LEG.map(([naam,a])=>({naam,svg:mini(a)}));}
+  window.Legend={render,burnIn,svgString,size,legendaItems,mini,COLORS:C};
 })();
