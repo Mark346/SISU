@@ -96,6 +96,8 @@
 .sui .kastk img{width:100%;max-height:200px;object-fit:cover;border-radius:var(--r-thumb,14px)}
 .sui .kastk .row{margin:0}.sui .kastk .row .btn{flex:1}
 .sui .kastk .gopt{margin:0}
+.sui .gopt.gw{border-color:var(--warn)}
+.sui .kveld{margin-top:8px}
 .sui .vink2{width:26px;height:26px;border-radius:50%;background:var(--ok);color:#0b1a10;font-style:normal;font-weight:800;display:grid;place-items:center}
 .sui .wrn2{color:var(--warn);font-weight:700;font-size:14px}
 .sui .rolg{display:flex;flex-direction:column;gap:8px}
@@ -355,13 +357,9 @@
      ${(()=>{const R=Velden.ROLLEN(s).filter(f=>f.sectie===x);if(!R.length&&!kast)return'';
        return `<h2>Verplichte foto's</h2><div class="rolg">${R.map(f=>{const p=ph.find(q=>q.status!=='vervallen'&&q.rol===f.rol);
          return `<button class="rolk${p?'':' wrn'}" data-rol="${f.k}"><span class="rt">${p?`<img src="${urls[p.id]}" alt="">`:'<i class="uitr" aria-hidden="true">!</i>'}</span><span class="rn"><b>${esc(f.kort||f.l)}</b><small>${p?'✓ Foto '+(ph.indexOf(p)+1):'Ontbreekt · tik om te maken of te kiezen'}</small></span>${ICO.pijl}</button>`;}).join('')}</div>`;})()}
-     ${kast?`<div class="kastk${kb&&!kOpen?'':' wrn'}" style="margin-top:8px">
-       <div class="kh"><b>Afwerkpunt klantlocatie (kast)</b>${kb?'<i class="vink2">✓</i>':'<span class="wrn2">verplicht</span>'}</div>
-       ${kb?`<img src="${ku}" alt="Afbeelding kast">`:'<div class="kleeg"><i class="uitr" aria-hidden="true">!</i><span>Nog geen foto van de kast</span></div>'}
-       <div class="row"><button class="btn" id="kCam">${kb?'Nieuwe foto':'Foto maken'}</button><button class="btn" id="kGal">Uit galerij</button></div>
-       <div class="gin"><button class="gopt" id="kMeer" aria-expanded="false"><span>Gegevens kast${kOpen?` · ${kOpen} open`:' · ✓'}</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button></div>
-       <div id="kVeld" hidden></div>
-     </div>`:''}
+     ${kast?`<div class="rolg" style="margin-top:8px"><button class="rolk${kb?'':' wrn'}" id="kSlot"><span class="rt">${kb?`<img src="${ku}" alt="">`:'<i class="uitr" aria-hidden="true">!</i>'}</span><span class="rn"><b>Afwerkpunt klantlocatie (kast)</b><small>${kb?'✓ Foto van de kast':'Ontbreekt · tik om te maken of te kiezen'}</small></span>${ICO.pijl}</button></div>
+     <div class="gin" style="margin-top:8px"><button class="gopt${kOpen?' gw':''}" id="kMeer" aria-expanded="false" style="margin:0"><span>Gegevens kast${kOpen?` · ${kOpen} open`:' · ✓'}</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button></div>
+     <div id="kVeld" class="kveld" hidden></div>`:''}
      <div class="fhead"><h2>Foto's ${x}</h2>${L.length?`<span>${L.filter(p=>p.status!=='vervallen').length} in document</span>`:''}</div>
      ${L.length?`<div class="strip">${L.map(p=>{const i=ph.indexOf(p);return `<button class="th${p.status==='vervallen'?' vv':''}" data-id="${p.id}" aria-label="Foto ${i+1}${p.status==='vervallen'?', vervalt':''}"><img src="${urls[p.id]}" alt=""><span>${i+1}${p.status==='vervallen'?' · vervalt':''}</span></button>`;}).join('')}</div>
      <p class="note">Tik om te bewerken. Lang drukken: vervalt of terugzetten.</p>`:`<p class="note">Nog geen foto's ${x}.</p>`}
@@ -384,8 +382,9 @@
     main.querySelectorAll('[data-rol]').forEach(b=>b.onclick=()=>{const f=Velden.VELDEN.find(v=>v.k===b.dataset.rol);
       Gegevens.rolBlad(s,f,{klaar:()=>show(s),maak:g=>{const a=g?(gal||pri):pri;if(!a)return;wachtRol=f.rol;s.sectie=x;a.fn(s);Store.surveys.put(s);}});});
     if(kast){
-      const kf=g=>Camera.take({galerij:g}).then(async r=>{if(!r||!r.blob)return;s.bijlagen={...(s.bijlagen||{}),afw_foto:r.blob};s.kastGevraagd=true;await Store.surveys.put(s);toast('Afbeelding kast opgeslagen');show(s);});
-      $('kCam').onclick=()=>kf(false);$('kGal').onclick=()=>kf(true);
+      const kf=g=>Camera.take({galerij:g}).then(async r=>{if(!r||!r.blob)return;s.bijlagen={...(s.bijlagen||{}),afw_foto:r.blob};s.kastGevraagd=true;if(s.bijlageBron)delete s.bijlageBron.afw_foto;await Store.surveys.put(s);toast('Foto van de kast opgeslagen');show(s);});
+      // zelfde werking als de andere verplichte foto's: maken, uit galerij of kiezen uit de foto's binnen
+      $('kSlot').onclick=()=>Gegevens.rolBlad(s,Velden.VELDEN.find(v=>v.k==='afw_foto'),{klaar:()=>show(s),maak:g=>kf(g)});
       const km=$('kMeer'),kv=$('kVeld');
       const KK=['afw_plaats','afw_ruimte','afw_kast','afw_apparatuur'];
       Gegevens.inline(kv,s,KK,{kant:'uit',onChange:()=>{const n=KK.filter(k=>!Velden.gevuld(s,Velden.VELDEN.find(f=>f.k===k),ph)).length;km.querySelector('span').textContent='Gegevens kast'+(n?` · ${n} open`:' · ✓');}});

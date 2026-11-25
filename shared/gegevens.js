@@ -385,23 +385,32 @@
   /* ---------- verplichte foto met een rol kiezen (aansluitpunt, invoer pand, beginpunt) ---------- */
   async function zetRol(foto,rol,alle){for(const p of alle)if(p.rol===rol&&p.id!==foto.id){delete p.rol;await Store.photos.put(p);}
     foto.rol=rol;await Store.photos.put(foto);}
+  /* f is een foto met een rol (t:'rolfoto') of een losse foto-bijlage (t:'foto', bijv. de kast; die hoort bij binnen) */
   async function rolBlad(s,f,o={}){css();
-    const alle=await Store.photos.bySurvey(s.id,true),hier=alle.filter(p=>p.status!=='vervallen'&&(p.sectie||'buiten')===f.sectie),nu=hier.find(p=>p.rol===f.rol);
+    const bijl=f.t==='foto',sx=f.sectie||'binnen';
+    const alle=await Store.photos.bySurvey(s.id,true),hier=alle.filter(p=>p.status!=='vervallen'&&(p.sectie||'buiten')===sx);
+    const nu=bijl?hier.find(p=>p.id===(s.bijlageBron||{})[f.k]):hier.find(p=>p.rol===f.rol),heeft=bijl?!!(s.bijlagen||{})[f.k]:!!nu;
     const us=[];const u=b=>{const x=URL.createObjectURL(b);us.push(x);return x;};
     const d=document.createElement('div');d.className='gbl';d.setAttribute('role','dialog');d.setAttribute('aria-modal','true');d.setAttribute('aria-labelledby','grT');
     d.innerHTML=`<div class="gblb"><h3 id="grT">${esc(f.kort||f.l)}</h3><p>${esc(f.vb?hoofd(f.vb)+'.':'')}</p>
+      ${bijl&&heeft&&!nu?`<img src="${u(s.bijlagen[f.k])}" alt="Huidige foto">`:''}
       ${o.maak?`<button class="btn pri" data-r="cam">Foto maken</button><button class="btn" data-r="gal">Uit galerij</button>`:''}
-      ${hier.length?`<p>${o.maak?'Of kies':'Kies'} een foto die er al is:</p><div class="grk">${hier.map(p=>`<button data-p="${p.id}" class="${p===nu?'on':''}" aria-pressed="${p===nu}" aria-label="Foto ${hier.indexOf(p)+1}${p.rol&&p!==nu?' (al gebruikt als andere verplichte foto)':''}"><img src="${u(p.blob)}" alt=""><span>${hier.indexOf(p)+1}${p===nu?' ✓':''}</span></button>`).join('')}</div>`:`<p>Er zijn nog geen foto's ${esc(f.sectie)}.</p>`}
-      ${nu?'<button class="btn" data-r="weg">Niet meer als verplichte foto</button>':''}
+      ${hier.length?`<p>${o.maak?'Of kies':'Kies'} een foto die er al is:</p><div class="grk">${hier.map(p=>`<button data-p="${p.id}" class="${p===nu?'on':''}" aria-pressed="${p===nu}" aria-label="Foto ${hier.indexOf(p)+1}${p.rol&&p!==nu?' (al gebruikt als andere verplichte foto)':''}"><img src="${u(p.blob)}" alt=""><span>${hier.indexOf(p)+1}${p===nu?' ✓':''}</span></button>`).join('')}</div>`:`<p>Er zijn nog geen foto's ${esc(sx)}.</p>`}
+      ${heeft?`<button class="btn" data-r="weg">${bijl?'Foto weghalen':'Niet meer als verplichte foto'}</button>`:''}
       <button class="btn" data-r="x">Annuleren</button></div>`;
     document.body.appendChild(d);d.querySelector('button').focus();
     const dicht=r=>{us.forEach(x=>URL.revokeObjectURL(x));d.remove();if(r&&o.klaar)o.klaar();};
     d.addEventListener('click',e=>{if(e.target===d)dicht(false);});
     d.querySelectorAll('[data-r]').forEach(b=>b.onclick=async()=>{const r=b.dataset.r;
       if(r==='x')return dicht(false);
-      if(r==='weg'){delete nu.rol;await Store.photos.put(nu);return dicht(true);}
-      dicht(false);if(o.maak)o.maak(r==='gal');});
-    d.querySelectorAll('[data-p]').forEach(b=>b.onclick=async()=>{const p=hier.find(x=>x.id===b.dataset.p);await zetRol(p,f.rol,alle);dicht(true);});
+      if(r==='weg'){if(bijl){const bl={...(s.bijlagen||{})};delete bl[f.k];s.bijlagen=bl;if(s.bijlageBron)delete s.bijlageBron[f.k];await Store.surveys.put(s);}
+        else{delete nu.rol;await Store.photos.put(nu);}return dicht(true);}
+      dicht(false);if(o.maak)o.maak(r==='gal');}); // camera direct in de tik openen
+    d.querySelectorAll('[data-p]').forEach(b=>b.onclick=async()=>{const p=hier.find(x=>x.id===b.dataset.p);
+      if(bijl){s.bijlagen={...(s.bijlagen||{}),[f.k]:p.blob};s.bijlageBron={...(s.bijlageBron||{}),[f.k]:p.id};if(f.k==='afw_foto')s.kastGevraagd=true;
+        if(Velden.waarde(s,f.k)==='nvt')Velden.zet(s,f.k,'');await Store.surveys.put(s);}
+      else await zetRol(p,f.rol,alle);
+      dicht(true);});
   }
   window.Gegevens={open,close:()=>close(),naKast,vraag,todoHtml,todoBind,inline,vakkenHtml,vakkenBind,rolBlad,zetRol,bron:null};
 })();
