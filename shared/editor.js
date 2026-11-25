@@ -54,44 +54,62 @@
   const gebruik=()=>{try{return JSON.parse(localStorage.getItem(GKEY)||'{}');}catch(e){return{};}};
   function telGebruik(id){const g=gebruik();g[id]=(g[id]||0)+1;try{localStorage.setItem(GKEY,JSON.stringify(g));}catch(e){}}
   function toolsOpVolgorde(){const g=gebruik();return TOOLS.map((t,i)=>({t,i,n:g[t.id]||0})).sort((a,b)=>b.n-a.n||a.i-b.i).map(x=>x.t);}
-  const miniOf=t=>Legend.mini(t.mini||{syms:[{t:t.id,x:45,y:18}]},64,26,.9).replace('<svg ','<svg aria-hidden="true" ');
+  // k: hoe groot een symbool in het knopje staat (lijnen blijven .9, die vullen de breedte al)
+  const miniOf=(t,k)=>Legend.mini(t.mini||{syms:[{t:t.id,x:45,y:18}]},64,26,t.mini?.9:(k||.9)).replace('<svg ','<svg aria-hidden="true" ');
   const CSS=`
 .ved{position:fixed;inset:0;z-index:50;background:var(--bg,#121418);color:var(--ink,#F3F4F6);display:flex;flex-direction:column;overflow:hidden}
-.ved .vbar{flex:none;display:flex;align-items:center;gap:8px;padding:calc(4px + env(safe-area-inset-top)) calc(10px + env(safe-area-inset-right)) 4px calc(6px + env(safe-area-inset-left));border-bottom:1px solid var(--line,#2E323A)}
-.ved .vbar h2{flex:1;font-size:18px;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ved .vscroll{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:8px}
+.ved .vscroll{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:12px}
+/* Glasvezel: foto bovenaan zonder balk, knoppen erover, rail met snel gereedschap ernaast (niet erover, zodat je overal op de foto kunt tekenen) */
+.ved .vtop{display:flex;align-items:flex-start;background:#000;padding-top:env(safe-area-inset-top)}
+.ved .vcol{position:relative;flex:1;min-width:0;display:flex;justify-content:center}
 .ved .vph{position:relative;margin:0 auto;background:#000;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 .ved .vph img{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;display:block;pointer-events:none}
 .ved .vph svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 .ved .vph.grey img{filter:grayscale(1) brightness(.6)}
-.ved .vhint{display:flex;align-items:center;gap:8px;padding:6px 10px 6px 14px;min-height:64px;border-bottom:1px solid var(--line,#2E323A)}
+.ved .vov{position:absolute;left:10px;right:10px;top:10px;display:flex;align-items:center;gap:8px;pointer-events:none}
+.ved .vov button{pointer-events:auto}
+.ved .ovb{flex:none;width:44px;height:44px;border-radius:22px;border:0;background:var(--overlay,rgba(18,20,24,.72));color:#fff;display:flex;align-items:center;justify-content:center;padding:0;cursor:pointer}
+.ved .ovp{height:34px;border-radius:17px;background:var(--overlay,rgba(18,20,24,.72));color:#fff;display:flex;align-items:center;gap:7px;padding:0 12px;font-weight:600;font-size:15px;white-space:nowrap}
+.ved .ovp.r{margin-left:auto}
+.ved .dot{flex:none;width:9px;height:9px;border-radius:5px}
+.ved .vrail{flex:none;width:64px;display:flex;justify-content:center;padding:10px 0}
+.ved .vrail .in{display:flex;flex-direction:column;align-items:center;gap:6px;padding:6px;border-radius:28px;background:var(--card,#1C1F25)}
+.ved .vrail button{width:44px;height:44px;border-radius:22px;border:0;background:transparent;color:var(--ink,#F3F4F6);display:flex;align-items:center;justify-content:center;padding:0;cursor:pointer}
+.ved .vrail button:active{background:var(--card2,#2A2E35)}
+.ved .vrail .tl.on{background:var(--acc,#F3F4F6)}
+.ved .vrail .tl svg{width:34px;height:14px}
+.ved .vrail hr{width:24px;border:0;border-top:1px solid var(--line2,#3A3E46);margin:2px 0}
+.ved .vhint{display:flex;align-items:center;gap:8px;padding:8px 16px;min-height:52px}
 .ved .vhint p{flex:1;margin:0;font-size:16px;line-height:1.3;color:var(--mute,#A7ADB8)}
 .ved .vhint p.t{color:var(--warn,#FFD84D);font-weight:700}
-.ved .sm{min-height:44px;padding:0 12px;border-radius:12px;border:2px solid var(--line,#2E323A);background:transparent;color:inherit;font-weight:700;font-size:16px;cursor:pointer}
-.ved .vtools{display:flex;gap:8px;padding:10px 12px;overflow-x:auto;scrollbar-width:none}
+.ved .sm{min-height:44px;padding:0 14px;border-radius:22px;border:1px solid var(--line2,#3A3E46);background:transparent;color:inherit;font-weight:600;font-size:15px;cursor:pointer}
+.ved .vtools{display:flex;gap:8px;padding:2px 16px 12px;overflow-x:auto;scrollbar-width:none}
 .ved .vtools::-webkit-scrollbar{display:none}
-.ved .tl{flex:none;min-width:84px;max-width:110px;min-height:68px;font-size:13px;line-height:1.15;text-align:center;border-radius:14px;border:2px solid var(--line,#2E323A);background:var(--card,#1C1F25);color:inherit;font-size:15px;font-weight:700;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:6px 8px;cursor:pointer}
-.ved .tl.on{border-color:var(--acc,#F3F4F6);background:var(--card2,var(--track))}
-.ved .vlab{padding:8px 14px 0;font-size:14px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--mute,#A7ADB8)}
-.ved .chips{display:flex;flex-wrap:wrap;gap:8px;padding:8px 12px}
-.ved .chip{min-height:44px;padding:0 14px;border-radius:99px;border:2px solid var(--line2);background:var(--card,#1C1F25);color:inherit;font-size:16px;font-weight:600;cursor:pointer}
-.ved .chip.on{background:var(--acc,#F3F4F6);border-color:var(--acc,#F3F4F6);color:var(--on-acc)}
-.ved .vin{display:block;width:calc(100% - 24px);margin:4px 12px;min-height:48px;border-radius:12px;border:2px solid var(--line2);background:var(--card,#1C1F25);color:inherit;padding:0 12px;font-size:16px}
-.ved .cap{margin:6px 12px 0;padding:10px 12px;border-radius:12px;background:#f5f4f0;color:#16191d;font-size:16px;line-height:1.4;min-height:44px}
-.ved .cap.empty{color:#666}
-.ved .same{margin:8px 12px 0;padding:10px 12px;border-radius:12px;background:#2A2612;border:1px solid var(--warn,#FFD84D);color:var(--ink,#F3F4F6);font-size:16px}
-.ved .strip{display:flex;gap:8px;padding:10px 12px;overflow-x:auto}
-.ved .th{position:relative;flex:none;width:72px;height:56px;border-radius:10px;overflow:hidden;border:2px solid var(--line,#2E323A);background:#000;padding:0;cursor:pointer}
-.ved .th.on{border-color:var(--acc,#F3F4F6)}
+.ved .vtools .tl{flex:none;display:flex;align-items:center;gap:8px;min-height:46px;padding:0 14px 0 10px;border-radius:23px;border:1px solid var(--line,#2E323A);background:var(--card,#1C1F25);color:inherit;font-size:15px;font-weight:600;white-space:nowrap;cursor:pointer}
+.ved .vtools .tl svg{flex:none;width:40px;height:16px}
+.ved .vtools .tl.on{background:var(--acc,#F3F4F6);border-color:var(--acc,#F3F4F6);color:var(--on-acc,#121418)}
+.ved .vcard{margin:0 16px;background:var(--card,#1C1F25);border:1px solid var(--line,#2E323A);border-radius:var(--r,20px);padding:14px 0 8px}
+.ved .vlab{padding:0 14px;font-size:14px;font-weight:600;color:var(--mute,#A7ADB8)}
+.ved .vlab.o{padding:18px 16px 0}
+.ved .chips{display:flex;flex-wrap:wrap;gap:6px;padding:8px 14px}
+.ved .chip{min-height:44px;padding:0 14px;border-radius:22px;border:0;background:var(--card2,#2A2E35);color:inherit;font-size:15px;font-weight:600;cursor:pointer}
+.ved .chip.on{background:var(--acc,#F3F4F6);color:var(--on-acc,#121418)}
+.ved .chip.lo:not(.on){color:var(--warn,#FFD84D)}
+.ved .vin{display:block;width:calc(100% - 28px);margin:4px 14px;min-height:46px;border-radius:14px;border:1px solid var(--line2,#3A3E46);background:var(--well,#121418);color:inherit;padding:0 12px;font-size:16px}
+.ved .cap{margin:6px 14px 2px;font-size:18px;line-height:1.35;color:var(--ink,#F3F4F6)}
+.ved .cap.empty{color:var(--mute,#A7ADB8);font-size:16px}
+.ved .same{margin:8px 14px 0;padding:10px 12px;border-radius:12px;background:#2A2612;border:1px solid var(--warn,#FFD84D);color:var(--ink,#F3F4F6);font-size:15px}
+.ved .strip{display:flex;gap:8px;padding:10px 16px;overflow-x:auto}
+.ved .th{position:relative;flex:none;width:80px;height:60px;border-radius:12px;overflow:hidden;border:0;background:var(--card,#1C1F25);padding:0;cursor:pointer}
+.ved .th.on{box-shadow:0 0 0 2px var(--bg,#121418),0 0 0 4px var(--acc,#F3F4F6)}
 .ved .th img{width:100%;height:100%;object-fit:cover;display:block}
-.ved .th.vv img{filter:grayscale(1) brightness(.45)}
-.ved .th span{position:absolute;left:4px;bottom:2px;font-size:13px;font-weight:800;color:#fff;text-shadow:0 1px 2px #000}
-.ved .th em{position:absolute;inset:auto 0 0 0;font-style:normal;font-size:11px;font-weight:800;background:#000a;color:#fff;text-align:center}
-.ved .vfoot{flex:none;display:flex;gap:10px;padding:10px calc(12px + env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom)) calc(12px + env(safe-area-inset-left));border-top:1px solid var(--line,#2E323A);background:var(--bg,#121418)}
-.ved .vfoot .btn{flex:1}
-.vpop{position:fixed;z-index:60;display:flex;flex-direction:column;gap:6px;padding:8px;border-radius:14px;background:var(--card2);border:1px solid #444;box-shadow:0 10px 30px #000a;min-width:200px}
-.vpop button{min-height:48px;border-radius:10px;border:0;font-size:16px;font-weight:700;cursor:pointer;background:#2e333b;color:#fff;padding:0 14px;text-align:left}
-.vpop button.del{background:#D7261E;color:#fff}
+.ved .th.vv{outline:1px dashed var(--line2,#3A3E46);outline-offset:-1px}.ved .th.vv img{filter:grayscale(1) brightness(.4)}
+.ved .th span{position:absolute;left:5px;bottom:5px;height:20px;min-width:20px;border-radius:10px;background:var(--overlay,rgba(18,20,24,.72));color:#fff;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;padding:0 6px;white-space:nowrap}
+.ved .vfoot{flex:none;display:flex;gap:10px;padding:10px calc(16px + env(safe-area-inset-right)) calc(12px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left));background:var(--bg,#121418)}
+.ved .vfoot .btn{flex:1;min-width:0;min-height:56px;padding:0 14px;white-space:nowrap}.ved .vfoot .btn.pri{flex:1.2}
+.vpop{position:fixed;z-index:60;display:flex;flex-direction:column;gap:6px;padding:8px;border-radius:16px;background:var(--card2,#2A2E35);border:1px solid var(--line2,#3A3E46);box-shadow:0 10px 30px #000a;min-width:200px}
+.vpop button{min-height:48px;border-radius:12px;border:0;font:inherit;font-size:16px;font-weight:600;cursor:pointer;background:var(--card,#1C1F25);color:var(--ink,#F3F4F6);padding:0 14px;text-align:left}
+.vpop button.del{background:var(--red,#E4232B);color:#fff}
 `;
   function injectCss(){if(document.getElementById('vedcss'))return;const s=document.createElement('style');s.id='vedcss';s.textContent=CSS;document.head.appendChild(s);}
   const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -183,27 +201,48 @@
     if(st.sel)return'Sleep de rondjes om de lijn bij te stellen. Tik ernaast om te stoppen.';
     return t.draw?'Veeg met je vinger over de route.':`Tik op de foto om ${t.name.toLowerCase()} te zetten.`;}
 
+  const ICO={
+    terug:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>',
+    undo:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 010 12h-3"/></svg>',
+    gum:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.5 20H20"/><path d="M14.5 4.5l5 5-9.5 9.5H6l-2.5-2.5a1.4 1.4 0 010-2z"/><path d="M9.5 9.5l5 5"/></svg>'
+  };
   function build(){
-    const ph=st.ph,n=st.siblings.findIndex(p=>p.id===ph.id)+1;
+    const ph=st.ph,n=st.siblings.findIndex(p=>p.id===ph.id)+1,tools=toolsOpVolgorde(),vv=ph.status==='vervallen',sec=ph.sectie;
+    const on=t=>t.id===st.tool;
+    const foot=(st.opts.onDoc?'<button class="btn" id="vDoc">Naar document</button>':'')+(st.opts.onNext?`<button class="btn pri" id="vNext">${esc(st.opts.nextLabel||'Volgende foto')}</button>`:'');
     st.root.innerHTML=`
-    <div class="vbar"><button class="back" id="vBack">‹ Terug</button><h2>Foto ${n||''}</h2>${ph.status==='vervallen'?'<button class="sm" id="vRest">Terugzetten</button>':''}</div>
     <div class="vscroll">
-      <div class="vph${ph.status==='vervallen'?' grey':''}" id="vPh"><img src="${st.url}" alt="Foto ${n}"><svg class="leg"></svg><svg class="hnd"></svg></div>
-      <div class="vhint"><p></p><button class="sm" id="vUndo">Ongedaan</button><button class="sm" id="vWipe">Wis foto</button></div>
-      <div class="vtools" role="toolbar" aria-label="Legenda">${toolsOpVolgorde().map(t=>`<button class="tl${t.id===st.tool?' on':''}" data-t="${t.id}" aria-pressed="${t.id===st.tool}">${miniOf(t)}<span>${t.name}</span></button>`).join('')}</div>
-      <div class="vlab">Bijschrift</div>
-      <div id="vCap"></div>
-      <div class="vlab">Foto's van deze schouw</div>
+      <div class="vtop">
+        <div class="vcol">
+          <div class="vph${vv?' grey':''}" id="vPh"><img src="${st.url}" alt="Foto ${n}"><svg class="leg"></svg><svg class="hnd"></svg></div>
+          <div class="vov">
+            <button class="ovb" id="vBack" aria-label="Terug">${ICO.terug}</button>
+            <span class="ovp">Foto ${n||''}${st.siblings.length>1?' / '+st.siblings.length:''}</span>
+            ${sec?`<span class="ovp r"><i class="dot" style="background:var(--sec-${sec==='binnen'?'binnen':'buiten'})"></i>${sec==='binnen'?'Binnen':'Buiten'}</span>`:''}
+          </div>
+        </div>
+        <div class="vrail"><div class="in" role="toolbar" aria-label="Snel kiezen">
+          ${tools.slice(0,2).map(t=>`<button class="tl${on(t)?' on':''}" data-t="${t.id}" aria-pressed="${on(t)}" aria-label="${esc(t.name)}">${miniOf(t,1.4)}</button>`).join('')}
+          <hr>
+          <button id="vUndo" aria-label="Ongedaan maken">${ICO.undo}</button>
+          <button id="vWipe" aria-label="Wis foto (tekening wissen)">${ICO.gum}</button>
+        </div></div>
+      </div>
+      <div class="vhint"><p></p>${vv?'<button class="sm" id="vRest">Terugzetten</button>':''}</div>
+      <div class="vtools" role="toolbar" aria-label="Legenda">${tools.map(t=>`<button class="tl${on(t)?' on':''}" data-t="${t.id}" aria-pressed="${on(t)}">${miniOf(t,1.3)}<span>${t.name}</span></button>`).join('')}</div>
+      <div class="vcard"><div class="vlab">Bijschrift</div><div id="vCap"></div></div>
+      <div class="vlab o">Foto's van deze schouw</div>
       <div class="strip" id="vStrip"></div>
     </div>
-    <div class="vfoot">${st.opts.onNext?`<button class="btn pri" id="vNext">${esc(st.opts.nextLabel||'Volgende foto')}</button>`:''}${st.opts.onDoc?'<button class="btn" id="vDoc">Naar document</button>':''}</div>`;
+    ${foot?`<div class="vfoot">${foot}</div>`:''}`;
     const R=st.root,q=s=>R.querySelector(s);
     fitPhoto();
     q('#vBack').onclick=()=>{save(true);close();};
     if(q('#vRest'))q('#vRest').onclick=()=>setStatus(st.ph,'ok');
     q('#vUndo').onclick=undo;
     q('#vWipe').onclick=()=>{const a=st.ph.ann;if(!(a.arrow||a.buis||(a.syms&&a.syms.length))){toast('Er staat nog niets op deze foto.');return;}remember();st.ph.ann={orient:a.orient};st.sel=null;save(true);redraw();renderCaption();toast('Tekening gewist. Ongedaan zet hem terug.');};
-    R.querySelectorAll('.tl').forEach(b=>b.onclick=()=>{st.tool=b.dataset.t;st.sel=null;R.querySelectorAll('.tl').forEach(x=>{x.classList.toggle('on',x===b);x.setAttribute('aria-pressed',x===b);});toast('');redraw();});
+    // hetzelfde gereedschap staat in de rail én in de rij eronder: beide tegelijk aan/uit
+    R.querySelectorAll('.tl').forEach(b=>b.onclick=()=>{st.tool=b.dataset.t;st.sel=null;R.querySelectorAll('.tl').forEach(x=>{const a=x.dataset.t===st.tool;x.classList.toggle('on',a);x.setAttribute('aria-pressed',a);});toast('');redraw();});
     if(q('#vNext'))q('#vNext').onclick=()=>{save(true);st.opts.onNext(st.ph);}; // geen await: de camera moet binnen de tik openen
     if(q('#vDoc'))q('#vDoc').onclick=async()=>{await save(true);st.opts.onDoc(st.ph);};
     bindPointer(q('#vPh'));
@@ -212,7 +251,7 @@
   }
   function fitPhoto(){
     if(!st)return;const el=st.root.querySelector('#vPh');if(!el)return;const[W,H]=size();
-    const maxW=st.root.clientWidth,maxH=Math.max(220,Math.round(window.innerHeight*.58));
+    const col=st.root.querySelector('.vcol'),maxW=(col&&col.clientWidth)||st.root.clientWidth,maxH=Math.max(220,Math.round(window.innerHeight*.55));
     let w=maxW,h=w*H/W;if(h>maxH){h=maxH;w=h*W/H;}
     el.style.width=Math.round(w)+'px';el.style.height=Math.round(h)+'px';
   }
@@ -314,15 +353,16 @@
     const c=ph.cap||{auto:true,sel:[],lo:'',vrij:''},cur=capOf(ph);
     const idx=st.siblings.filter(p=>p.status!=='vervallen');const me=idx.findIndex(p=>p.id===ph.id);
     const prev=me>0?idx[me-1]:null,same=prev&&cur.text&&cur.text===(prev.bijschrift||'');
-    const chip=x=>`<button class="chip${cur.sel.includes(x.k)?' on':''}" data-k="${x.k}" aria-pressed="${cur.sel.includes(x.k)}">${esc(x.short)}</button>`;
+    const chip=x=>`<button class="chip${x.k==='lo'?' lo':''}${cur.sel.includes(x.k)?' on':''}" data-k="${x.k}" aria-pressed="${cur.sel.includes(x.k)}">${esc(x.short)}</button>`;
     const an=ph.ann||{},heeft=t=>t==='mantel'?!!(an.mantel&&an.mantel.length>1):((an.syms||[]).some(x=>x.t===t));
-    box.innerHTML=`<div class="chips">${CH.filter(x=>!x.route&&(!x.bij||heeft(x.bij)||cur.sel.includes(x.k))).map(chip).join('')}</div>
-      ${cur.sel.includes('lo')?`<input class="vin" id="vLo" placeholder="Let op: waarop?" value="${esc(c.lo||'')}" aria-label="Tekst bij Let op">`:''}
+    // de zin staat bovenaan in de kaart, de blokjes eronder
+    box.innerHTML=`<div class="cap${cur.text?'':' empty'}" id="vCapTxt">${esc(cur.text)||'Nog geen bijschrift. Veeg een pijl of tik een blokje.'}</div>
       ${same?`<div class="same">Zelfde als vorige foto. Iets toevoegen?</div>`:''}
-      <div class="vlab" style="padding-top:2px">Route</div>
+      <div class="chips">${CH.filter(x=>!x.route&&(!x.bij||heeft(x.bij)||cur.sel.includes(x.k))).map(chip).join('')}</div>
+      ${cur.sel.includes('lo')?`<input class="vin" id="vLo" placeholder="Let op: waarop?" value="${esc(c.lo||'')}" aria-label="Tekst bij Let op">`:''}
+      <div class="vlab" style="padding-top:4px">Route</div>
       <div class="chips">${CH.filter(x=>x.route).map(chip).join('')}</div>
-      <input class="vin" id="vVrij" placeholder="Eigen tekst (vrij)" value="${esc(c.vrij||'')}" aria-label="Eigen tekst bij het bijschrift">
-      <div class="cap${cur.text?'':' empty'}" id="vCapTxt">${esc(cur.text)||'Nog geen bijschrift. Veeg een pijl of tik een blokje.'}</div>`;
+      <input class="vin" id="vVrij" placeholder="Eigen tekst (vrij)" value="${esc(c.vrij||'')}" aria-label="Eigen tekst bij het bijschrift">`;
     box.querySelectorAll('.chip').forEach(b=>b.onclick=()=>{
       remember();const k=b.dataset.k,base=capOf(st.ph).sel.slice(),i=base.indexOf(k);if(i>=0)base.splice(i,1);else base.push(k);
       st.ph.cap={...(st.ph.cap||{lo:'',vrij:''}),auto:false,sel:base};save(true);renderCaption();
@@ -336,7 +376,7 @@
   /* ---- fotostrook ---- */
   function renderStrip(){
     if(!st)return;const box=st.root.querySelector('#vStrip');if(!box)return;
-    box.innerHTML=st.siblings.map((p,i)=>`<button class="th${p.id===st.ph.id?' on':''}${p.status==='vervallen'?' vv':''}" data-id="${p.id}" aria-label="Foto ${i+1}${p.status==='vervallen'?', vervalt':''}"><img src="${st.thumbs[p.id]}" alt=""><span>${i+1}</span>${p.status==='vervallen'?'<em>vervalt</em>':''}</button>`).join('')||'<p class="note">Nog geen foto\'s.</p>';
+    box.innerHTML=st.siblings.map((p,i)=>`<button class="th${p.id===st.ph.id?' on':''}${p.status==='vervallen'?' vv':''}" data-id="${p.id}" aria-label="Foto ${i+1}${p.status==='vervallen'?', vervalt':''}"><img src="${st.thumbs[p.id]}" alt=""><span>${i+1}${p.status==='vervallen'?' · vervalt':''}</span></button>`).join('')||'<p class="note">Nog geen foto\'s.</p>';
     box.querySelectorAll('.th').forEach(b=>stripBind(b,b.dataset.id,id=>{if(id!==st.ph.id){save(true);openEditor(id,st.opts);}},()=>st.siblings.find(p=>p.id===b.dataset.id),async p=>{if(p.id===st.ph.id){st.ph.status=p.status;await save(true);build();}else{await Store.photos.put(p);await loadSiblings();renderStrip();renderCaption();if(st.opts.onChange)st.opts.onChange(p);}}));
   }
   /* tik = openen, lang drukken = vervalt / terugzetten. Ook bruikbaar buiten de editor. */
