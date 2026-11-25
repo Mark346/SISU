@@ -16,9 +16,12 @@
 .geg .fr.mist{border-color:var(--warn);box-shadow:inset 0 0 0 1px var(--warn)}
 .geg .fl{display:flex;align-items:center;gap:8px;font-weight:700;font-size:16px;margin-bottom:6px}
 .geg .fl span:first-child{flex:1}.geg .fl .bd{flex:none}
+.geg .vink{flex:none;width:26px;height:26px;border-radius:50%;background:var(--ok,#22C55E);color:#0b1a10;font-style:normal;font-weight:800;font-size:16px;display:grid;place-items:center}
+.geg .vink[hidden]{display:none}
+.geg .fr.vol{border-color:color-mix(in srgb,var(--ok,#22C55E) 45%,var(--line,#2E323A))}
 .geg .bd{font-size:13px;font-weight:800;padding:2px 9px;border-radius:var(--r-pill,999px);text-transform:lowercase}
 .geg .bd.verplicht{background:var(--warn);color:var(--on-acc)}.geg .bd.wenselijk{background:var(--f1);color:#fff}
-.geg input,.geg textarea{width:100%;min-height:48px;border-radius:14px;border:1px solid var(--line2);background:var(--well,#121418);color:inherit;padding:0 12px;font-size:16px}
+.geg input,.geg textarea{display:block;box-sizing:border-box;max-width:100%;min-width:0;-webkit-appearance:none;appearance:none;width:100%;min-height:48px;border-radius:14px;border:1px solid var(--line2);background:var(--well,#121418);color:inherit;padding:0 12px;font-size:16px}
 .geg textarea{min-height:84px;padding:10px 12px;line-height:1.4;resize:vertical}
 .geg .ch{display:flex;flex-wrap:wrap;gap:6px}
 .geg .ch button{min-height:44px;padding:0 16px;border-radius:99px;border:1px solid var(--line2);background:transparent;color:inherit;font-size:16px;font-weight:600;cursor:pointer}
@@ -53,7 +56,7 @@
   function niveau(f,c){if(st.mode==='intake')return c[f.k].in;const a=c[f.k].in,b=c[f.k].uit;return a==='verplicht'||b==='verplicht'?'verplicht':a==='wenselijk'||b==='wenselijk'?'wenselijk':'nee';}
   function head(){if(!st)return;const v=Velden.voortgang(st.s,st.fotos,kant());const e=st.root.querySelector('.gp');if(e)e.textContent=`${v.klaar}/${v.totaal} verplicht`;
     const b=st.root.querySelector('.bar2 i');if(b)b.style.width=v.pct+'%';
-    st.root.querySelectorAll('.fr[data-k]').forEach(el=>{const f=Velden.VELDEN.find(x=>x.k===el.dataset.k),c=Velden.cfg();el.classList.toggle('mist',niveau(f,c)==='verplicht'&&!Velden.gevuld(st.s,f,st.fotos));});}
+    st.root.querySelectorAll('.fr[data-k]').forEach(el=>{const f=Velden.VELDEN.find(x=>x.k===el.dataset.k),c=Velden.cfg();const vol=Velden.gevuld(st.s,f,st.fotos);el.classList.toggle('mist',niveau(f,c)==='verplicht'&&!vol);el.classList.toggle('vol',vol);const v=el.querySelector('.vink');if(v)v.hidden=!vol;});}
   function render(){
     const c=Velden.cfg(),s=st.s,R=st.root;
     R.innerHTML=`<div class="gh"><button class="back bpill" id="gX"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>Klaar</button><h2>${st.mode==='intake'?'Intake':'Gegevens voor het document'}</h2><span class="gp"></span></div>
@@ -80,7 +83,7 @@
       default:{const ty={datum:'date',tel:'tel',mail:'email',getal:'number'}[f.t]||'text';
         inp=`<input id="${id}" type="${ty}" data-k="${f.k}" value="${esc(v==null?'':v)}" placeholder="${esc(f.vb?'bijv. '+f.vb:'')}"${f.t==='getal'?' inputmode="numeric"':''}${f.t==='mail'?' autocomplete="email"':''}>`;}
     }
-    return `<div class="fr" data-k="${f.k}"><label class="fl" for="${id}"><span>${esc(f.l)}</span>${bd}</label>${inp}</div>`;
+    return `<div class="fr" data-k="${f.k}"><label class="fl" for="${id}"><span>${esc(f.l)}</span><i class="vink" role="img" aria-label="ingevuld" hidden>✓</i>${bd}</label>${inp}</div>`;
   }
   function vgHtml(v){const it=v.items||{};let g='',o='';
     Velden.VG.forEach(a=>{if(a.groep!==g){g=a.groep;o+=`<div class="vgg">${esc(g)}</div>`;}const x=it[a.id]||{};

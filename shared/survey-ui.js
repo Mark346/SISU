@@ -82,6 +82,13 @@
 .sui .sect .seg{flex:1;display:flex;background:var(--card);border:1px solid var(--line);border-radius:var(--r-pill);padding:3px}
 .sui .sect button{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;min-height:44px;border:0;border-radius:var(--r-pill);background:transparent;color:var(--ink);font-weight:600;font-size:15px;cursor:pointer}
 .sui .sect button.on{background:var(--acc);color:var(--on-acc);font-weight:800}
+.sconf{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.6);display:flex;align-items:flex-end;justify-content:center}
+.sconfb{width:100%;max-width:560px;max-height:85vh;overflow-y:auto;background:var(--card);border:1px solid var(--line);border-radius:var(--r) var(--r) 0 0;padding:18px calc(16px + env(safe-area-inset-right)) calc(18px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left));display:flex;flex-direction:column;gap:10px}
+.sconfb h3{margin:0;font-size:21px}.sconfb p{margin:0;color:var(--mute)}
+.sconfb li small{color:var(--mute)}
+.sconfb ul{margin:0 0 6px;padding-left:20px;color:var(--warn);font-size:16px;line-height:1.5}
+.sconfb .btn{width:100%}
+.sconfb .sdanger{border-color:var(--warn);color:var(--warn)}.sconfb .sdanger.sure{background:var(--warn);color:var(--on-acc)}
 .stoast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:90;background:var(--ink);color:#111;font-weight:700;padding:12px 18px;border-radius:14px;max-width:92vw;box-shadow:0 8px 24px #000a}`;
   let cfg=null,survey=null,urls={},main=null,showDone=false,showArch=false,newOpen=false;
   /* "vandaag", "gisteren", "24 nov" of "24 nov 2025" */
@@ -162,6 +169,22 @@
       const i=Velden.voortgang(x,[],'in');if(i.totaal)Gegevens.open(x,'intake',{onClose:()=>show(x)});};
   }
 
+  /* bevestiging om toch door te zetten terwijl verplichte velden leeg zijn: 'toch' | 'invullen' | 'annuleren' */
+  function bevestig(naar,mist){return new Promise(res=>{
+    const d=document.createElement('div');d.className='sconf';d.setAttribute('role','dialog');d.setAttribute('aria-modal','true');d.setAttribute('aria-labelledby','scT');
+    d.innerHTML=`<div class="sconfb"><h3 id="scT">Toch op "${esc(naar)}" zetten?</h3>
+      <p>Deze verplichte velden zijn nog niet ingevuld (${mist.length}):</p>
+      <ul>${mist.map(f=>{const sc=Velden.SECTIES.find(x=>x.id===f.s);return `<li>${esc(f.l)}${sc?` <small>(${esc(sc.naam)})</small>`:''}</li>`;}).join('')}</ul>
+      <button class="btn pri" data-k="invullen">Velden invullen</button>
+      <button class="btn sdanger" data-k="toch">Toch op "${esc(naar)}" zetten</button>
+      <button class="btn" data-k="annuleren">Annuleren</button></div>`;
+    document.body.appendChild(d);d.querySelector('[data-k=invullen]').focus();
+    d.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{
+      if(b.dataset.k==='toch'&&!b.classList.contains('sure')){b.classList.add('sure');b.textContent='Zeker? Tik nog eens';return;}
+      d.remove();res(b.dataset.k);});
+    d.addEventListener('click',e=>{if(e.target===d){d.remove();res('annuleren');}});
+  });}
+
   /* ---------- status en voortgang van één schouw ---------- */
   async function statusBlock(el,s,na){
     const ph=await Store.photos.bySurvey(s.id,true),cur=Velden.statusOf(s);
@@ -183,7 +206,10 @@
     if($('sbB'))$('sbB').onclick=async()=>{s.status=terug;await Store.surveys.put(s);reopen();};
     $('sbN').onclick=async()=>{
       const v=knop.check==='in'?vi:knop.check==='uit'?vo:null;
-      if(v&&v.mist.length){toast(`Nog ${v.mist.length} verplicht${v.mist.length===1?' veld':'e velden'} leeg`);Gegevens.open(s,knop.check==='in'?'intake':'alles',{onClose:reopen});return;}
+      if(v&&v.mist.length){const keuze=await bevestig(Velden.statusMeta(knop.to).naam,v.mist);
+        if(keuze==='invullen'){Gegevens.open(s,knop.check==='in'?'intake':'alles',{onClose:reopen});return;}
+        if(keuze!=='toch')return;
+        s.onvolledig={...(s.onvolledig||{}),[knop.to]:{op:new Date().toISOString(),mist:v.mist.map(f=>f.l)}};}
       if(knop.to==='gelopen'&&!ph.some(p=>p.status!=='vervallen'))toast("Let op: er zijn nog geen foto's");
       s.status=knop.to;if(knop.to==='gelopen'&&!s.gelopenOp)s.gelopenOp=new Date().toISOString();
       await Store.surveys.put(s);toast('Status: '+Velden.statusMeta(knop.to).naam);
