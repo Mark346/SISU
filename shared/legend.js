@@ -85,5 +85,18 @@
       return await new Promise(res=>c.toBlob(res,'image/jpeg',.9));
     }finally{URL.revokeObjectURL(u);}
   }
-  window.Legend={render,burnIn,svgString,size,COLORS:C};
+  /* legenda-items als kleine losse SVG's (90 x 36), voor het document */
+  const LEG=[
+    ['Nieuw tracé',{arrow:[[8,18],[82,18]]}],
+    ['Bestaande buis',{buis:[[8,18],[82,18]]}],
+    ['Nieuwe koppeling',{syms:[{t:'kn',x:45,y:18}]}],
+    ['Bestaande koppeling',{syms:[{t:'kb',x:45,y:18}]}],
+    ['Nieuwe handhole',{syms:[{t:'hn',x:45,y:18}]}],
+    ['Bestaande handhole',{syms:[{t:'hb',x:45,y:18}]}],
+    ['Invoer / doorvoer',{syms:[{t:'dv',x:45,y:18}]}],
+    ['Label (bijv. CPE + WODF)',{syms:[{t:'lb',x:45,y:18,label:'CPE'}]}],
+    ['Let op',{syms:[{t:'lo',x:45,y:18}]}]
+  ];
+  function legendaItems(){return LEG.map(([naam,a])=>({naam,svg:svgString({orient:'liggend',...a},.8).replace(/viewBox="[^"]*" width="\d+" height="\d+"/,'viewBox="0 0 90 36" width="90" height="36"')}));}
+  window.Legend={render,burnIn,svgString,size,legendaItems,COLORS:C};
 })();

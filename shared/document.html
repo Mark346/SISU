@@ -31,6 +31,13 @@
 .ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;display:block}
 .cap{font-size:15px;margin-top:6px;line-height:1.35}.cap b{display:block}
 .empty{color:#555}
+.doc .sd{margin:0;color:#777;font-size:14px;text-transform:uppercase;letter-spacing:.06em;font-weight:700}
+.tel{margin-bottom:10px}.tel td:first-child{width:55%}.tel tr.mist td{background:#fff3e8}
+.ont{color:#c2410c;font-weight:800}.nvt{font-weight:800;margin:6px 0}.leeg{color:#999}
+.ontb{background:#fff3e8;border:2px solid #FF7A1A;border-radius:8px;padding:10px 12px;margin:10px 0;font-size:15px}
+.beeld{margin:8px 0 12px}.beeld .bl{font-weight:700;margin-bottom:6px}.beeld img{max-width:100%;max-height:420px;display:block;border:1px solid #ccc}
+.vgt{width:100%;border-collapse:collapse;font-size:14px}.vgt th,.vgt td{border:1px solid #bbb;padding:6px 8px;text-align:left;vertical-align:top}.vgt th{background:#f2f2f2}.vgt small{color:#777}
+.leg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 16px}.leg div{display:flex;align-items:center;gap:10px;font-size:15px}.leg svg{flex:none}
 @page{size:A4 portrait;margin:12mm}
 @media print{
   body{background:#fff}.bar,.ctl,.msg,.noprint{display:none!important}
@@ -58,6 +65,8 @@
 </main>
 <script src="store.js"></script>
 <script src="legend.js"></script>
+<script src="velden.js"></script>
+<script src="docmodel.js"></script>
 <script src="pdfdoc.js"></script>
 <script>
 const $=id=>document.getElementById(id);
@@ -78,13 +87,17 @@ function fakePhoto(W,H){
   return new Promise(res=>c.toBlob(res,'image/jpeg',.85));
 }
 async function makeTest(){
-  const s=await Store.surveys.put({adres:'Testschouw – Voorbeeldstraat 1',variant:'veeg',status:'klaar',tellers:{meters:42,invoeringen:1,boringen:1}});
+  const vb={};Velden.VELDEN.forEach(f=>{if(f.vb)vb[f.k]=f.vb;});
+  Object.assign(vb,{type_aansluiting:'OFFNET',datum_survey:'2025-11-07',klant_org:'Duwo',klant_contact:'Ron Westen',klant_tel:'06-00000000',klant_mail:'contact@voorbeeld.nl',loc_adres:'Oranjelaan 2',loc_postcode:'2341CC',loc_plaats:'Oegstgeest',eig_klant_is_eigenaar:'Ja',aanm_naam:'Ron Westen',aanm_tel:'06-00000000',aanm_dagen:'5',plattegrond:'nvt',
+    vg:{nagelopen:true,items:{a0:{aan:true},a5:{aan:true},a19:{aan:true},a26:{aan:true}}}});
+  const s=await Store.surveys.put({adres:'Testschouw – Oranjelaan 2, Oegstgeest',variant:'veeg',status:'klaar',tellers:{meters:15,invoeringen:1,boringen:0},velden:vb});
   await Store.photos.put({surveyId:s.id,volgorde:1,blob:await fakePhoto(1600,1200),bron:'veeg',
     ann:{orient:'liggend',arrow:[[200,292],[200,205],[292,160]],syms:[{t:'kn',x:310,y:152}],buis:[[12,150],[388,140]]},
     bijschrift:'Vervolg tracé naar gemeentegrond. Vanaf koppeling te blazen naar bestaande HH.'});
   await Store.photos.put({surveyId:s.id,volgorde:2,blob:await fakePhoto(1200,1600),bron:'veeg',
     ann:{orient:'staand',arrow:[[20,300],[160,300],[215,215]],syms:[{t:'dv',x:226,y:196},{t:'lo',x:90,y:200}]},
     bijschrift:'Vervolg tracé langs parkeervakken naar de invoering.'});
+  await Store.photos.put({surveyId:s.id,volgorde:3,blob:await fakePhoto(1600,1200),bron:'veeg',sectie:'binnen',ann:{orient:'liggend',arrow:[[200,290],[200,150]],syms:[{t:'lb',x:200,y:120,label:'CPE + WODF'}]},bijschrift:'Plaatsen apparatuur op de wand.'});
   return s;
 }
 
@@ -92,25 +105,31 @@ async function fill(){
   let list=await Store.surveys.list();
   if(!list.length){msg('Nog geen schouw gevonden. Er is een testschouw gemaakt om te laten zien hoe het eruitziet.');await makeTest();list=await Store.surveys.list();}
   const want=new URLSearchParams(location.search).get('survey');
-  $('sel').innerHTML=list.map(s=>`<option value="${esc(s.id)}">${esc(s.adres||'zonder adres')} · ${new Date(s.datum).toLocaleDateString('nl-NL')}${s.status==='open'?' · open':''}</option>`).join('');
+  $('sel').innerHTML=list.map(s=>`<option value="${esc(s.id)}">${esc(s.adres||'zonder adres')} · ${new Date(s.datum).toLocaleDateString('nl-NL')}${' · '+esc(Velden.statusMeta(Velden.statusOf(s)).naam)}</option>`).join('');
   if(want&&list.some(s=>s.id===want))$('sel').value=want;
   await show($('sel').value);
 }
 async function show(id){
   urls.forEach(u=>URL.revokeObjectURL(u));urls=[];
-  cur=await Store.surveys.get(id);if(!cur)return;
-  const T=cur.tellers||{},ph=await Store.photos.bySurvey(id);
-  const row=(l,k,eenheid)=>`<tr><td>${l}${k==='meters'&&T.metersNote?` <small>(${esc(T.metersNote)})</small>`:''}</td><td class="n"><input inputmode="numeric" data-k="${k}" value="${esc(T[k]??0)}" aria-label="${l}">${eenheid?' '+eenheid:''}</td></tr>`;
-  $('doc').innerHTML=`<h1>${esc(cur.adres||'Schouw')}</h1><p class="sub">${new Date(cur.datum).toLocaleDateString('nl-NL',{day:'numeric',month:'long',year:'numeric'})}</p>
-   <h2>Buitentracé</h2>
-   <table class="tel">${row('Aantal meters buiten tracé','meters','m')}${row('Aantal invoeringen','invoeringen')}${row('Aantal boringen/persingen','boringen')}</table>
-   <div class="grid">${ph.map((p,i)=>{const u=URL.createObjectURL(p.blob);urls.push(u);const o=(p.ann&&p.ann.orient)||'liggend';
-     return `<figure class="vak" style="margin:0"><div class="box"><div class="ph ${o}" data-i="${i}"><img src="${u}" alt="Foto ${i+1}"></div></div>
-     <figcaption class="cap"><b>Foto ${i+1}</b>${esc(p.bijschrift||'')}</figcaption></figure>`;}).join('')}</div>
-   ${ph.length?'':'<p class="empty">Nog geen foto\'s in deze schouw.</p>'}`;
-  document.querySelectorAll('.ph').forEach(el=>{const p=ph[+el.dataset.i];if(p.ann)Legend.render(el,p.ann);});
-  document.querySelectorAll('.tel input').forEach(inp=>inp.addEventListener('change',async()=>{
-    const v=parseFloat(inp.value.replace(',','.'));cur.tellers={...cur.tellers,[inp.dataset.k]:isFinite(v)?v:0};await Store.surveys.put(cur);msg('Opgeslagen');setTimeout(()=>msg(''),1500);}));
+  const m=await DocModel.bouw(id);cur=m.S;
+  const ont=DocModel.ontbreekt(m),st=Velden.statusMeta(Velden.statusOf(cur));
+  const U=b=>{const u=URL.createObjectURL(b);urls.push(u);return u;};
+  let nr=0;
+  const html=m.blokken.map(b=>{switch(b.t){
+    case 'kop':return `<h2>${esc(b.tekst)}</h2>`;
+    case 'rijen':return `<table class="tel">${b.rijen.map(r=>`<tr class="${r.mist?'mist':''}"><td>${esc(r.l)}</td><td class="n">${r.v?esc(r.v):(r.mist?'<span class="ont">ontbreekt</span>':'')}</td></tr>`).join('')}</table>`;
+    case 'beeld':return `<div class="beeld"><div class="bl">${esc(b.l)}</div>${b.blob?`<img src="${U(b.blob)}" alt="${esc(b.l)}">`:b.tekst?`<p class="nvt">${esc(b.tekst)}</p>`:(b.mist?'<p><span class="ont">ontbreekt</span></p>':'<p class="leeg">—</p>')}</div>`;
+    case 'fotos':return b.fotos.length?`<div class="grid">${b.fotos.map(p=>{nr++;const o=(p.ann&&p.ann.orient)||'liggend';
+      return `<figure class="vak" style="margin:0"><div class="box"><div class="ph ${o}" data-id="${p.id}"><img src="${U(p.blob)}" alt="Foto ${nr}"></div></div><figcaption class="cap"><b>Foto ${nr}</b>${esc(p.bijschrift||'')}</figcaption></figure>`;}).join('')}</div>`
+      :`<p>${b.mist?'<span class="ont">'+esc(b.l)+' ontbreken</span>':''}</p>`;
+    case 'vg':return b.items.length?`<table class="vgt"><tr><th>Aspect</th><th>Risico's</th><th>Afspraken / randvoorwaarden</th></tr>${b.items.map(a=>`<tr><td><small>${esc(a.groep)}</small><br>${esc(a.aspect)}</td><td>${esc(a.risico)}</td><td>${esc(a.afspraak)}</td></tr>`).join('')}</table>`
+      :`<p>${b.mist?'<span class="ont">V&amp;G nog niet nagelopen</span>':'Geen aspecten aangekruist.'}</p>`;
+    case 'legenda':return `<div class="leg">${Legend.legendaItems().map(i=>`<div>${i.svg}<span>${esc(i.naam)}</span></div>`).join('')}</div>`;
+  }return'';}).join('');
+  $('doc').innerHTML=`<p class="sd">Site survey document</p><h1>${esc(cur.adres||'Schouw')}</h1><p class="sub">${new Date(cur.datum).toLocaleDateString('nl-NL',{day:'numeric',month:'long',year:'numeric'})} · <span class="noprint">status: ${esc(st.naam)}</span></p>
+    ${ont.length?`<div class="ontb noprint"><b>Nog ${ont.length} verplicht${ont.length===1?'':'e'} onderde${ont.length===1?'el':'len'} leeg:</b> ${ont.map(esc).join(', ')}.</div>`:''}${html}`;
+  const byId={};m.fotos.forEach(p=>byId[p.id]=p);
+  document.querySelectorAll('.ph').forEach(el=>{const p=byId[el.dataset.id];if(p&&p.ann)Legend.render(el,p.ann);});
 }
 $('sel').addEventListener('change',e=>{show(e.target.value);bindPdf();});
 function bindPdf(){const o=$('pdf'),n=o.cloneNode(true);o.replaceWith(n);n.textContent='Delen als PDF';PdfDoc.bindShare(n,$('sel').value,msg);}

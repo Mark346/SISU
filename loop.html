@@ -57,6 +57,9 @@ h2{font-size:22px;margin:22px 0 10px}
 <script src="shared/camera.js"></script>
 <script src="shared/sensors.js"></script>
 <script src="shared/editor.js"></script>
+<script src="shared/velden.js"></script>
+<script src="shared/gegevens.js"></script>
+<script src="shared/docmodel.js"></script>
 <script src="shared/pdfdoc.js"></script>
 <script src="shared/survey-ui.js"></script>
 <script>
@@ -272,6 +275,7 @@ async function refresh(){
   main.innerHTML=`
    ${l.fase==='start'?`<p class="say">Sta op het startpunt, kijk in de looprichting.</p>`:''}
    ${l.fase==='klaar'?`<p class="say">Klaar: het eindpunt staat erin. Bekijk het document of pas een foto aan.</p>`:''}
+   <div id="stblk" style="margin-bottom:12px"></div>
    <div class="live" id="lv"></div>
    <div class="bend" id="bend" hidden>Je bent afgebogen. Foto maken?<button class="btn pri" id="bendF">Foto</button></div>
    ${l.terug?`<div class="back2" id="terug"><div>Loop terug naar foto ${l.terug.nr}:</div><div class="d">– m</div><div class="row"><button class="btn pri" id="here">Ik sta bij foto ${l.terug.nr}, verder</button></div></div>`:''}
@@ -304,6 +308,7 @@ async function refresh(){
   main.querySelectorAll('.sp').forEach(b=>Editor.stripBind(b,b.dataset.id,id=>{if(pickMode){const p=photos.find(q=>q.id===id);if(p.status==='vervallen'){toast('Kies een foto die nog meetelt');return;}reroute(id);return;}openEd(id);},
     ()=>photos.find(p=>p.id===b.dataset.id),async p=>{await Store.photos.put(p);await SurveyUI.recount();refresh();}));
   main.querySelectorAll('[data-sim]').forEach(b=>b.onclick=()=>sim(b.dataset.sim));
+  SurveyUI.statusBlock($('stblk'),S,()=>refresh());
   render();
 }
 async function stepT(d){const n=Math.max(0,(S.tellers.boringen||0)+d);S.tellers={...S.tellers,boringen:n};$('tb').textContent=n;await Store.surveys.put(S);}

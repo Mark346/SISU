@@ -43,3 +43,10 @@ De drie nieuwe varianten delen code in `shared/`:
 - `document.html` – "Zo komt het in het document": tellers, foto's in twee kolommen, afdrukken als PDF en foto's met pijlen delen.
 
 De laatst gekozen variant wordt onthouden (`localStorage` sleutel `sisu.lastVariant`).
+
+## Instellingen, statussen en voortgang
+- `instellingen.html`: alle onderdelen van het site survey document (voorbeeld Oranjelaan 2, Oegstgeest) met per onderdeel **Input** (intake) en **Output** (document): verplicht, wenselijk of nee. Opgeslagen in `localStorage` (`sisu.velden`).
+- `shared/velden.js`: de lijst met onderdelen, V&G-aspecten, statussen en voortgang.
+- `shared/gegevens.js`: formulier voor de intake en voor alle documentgegevens.
+- `shared/docmodel.js`: bouwt het document uit de instellingen (scherm, print en PDF).
+- Statussen van een schouw: New → Intake compleet → Gelopen → Klaar → Archief. "Intake compleet" gaat vanzelf zodra alle verplichte input er is; "Klaar" kan pas als alle verplichte output er is.

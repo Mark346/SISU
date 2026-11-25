@@ -1,6 +1,6 @@
 /* Gedeelde opslag voor de nieuwe varianten (IndexedDB "sisu").
    Staat los van de opslag van Origineel ("schouw"), die hier nooit wordt aangeraakt.
-   surveys: { id, adres, datum, variant, status:'open'|'klaar', tellers:{meters,invoeringen,boringen} }
+   surveys: { id, adres, datum, variant, status:'new'|'intake'|'gelopen'|'klaar'|'archief' (oud: 'open'), tellers:{meters,invoeringen,boringen}, velden:{}, bijlagen:{} }
    photos:  { id, surveyId, volgorde, blob, ann, bijschrift, meters, gps:{lat,lon,acc}, heading,
               status:'ok'|'vervallen', bron:'veeg'|'richt'|'loop'|'origineel' } */
 (function(){
@@ -23,11 +23,11 @@
   const surveys={
     list:()=>tx('surveys','readonly',s=>req(s.getAll())).then(a=>a.sort((x,y)=>(y.datum||'').localeCompare(x.datum||''))),
     get:id=>tx('surveys','readonly',s=>req(s.get(id))),
-    put:v=>{const o={tellers:{meters:0,invoeringen:0,boringen:0},status:'open',...v};if(!o.id)o.id=newId();if(!o.datum)o.datum=new Date().toISOString();
+    put:v=>{const o={tellers:{meters:0,invoeringen:0,boringen:0},status:'new',...v};if(!o.id)o.id=newId();if(!o.datum)o.datum=new Date().toISOString();
       return tx('surveys','readwrite',s=>req(s.put(o))).then(()=>o);},
     del:async id=>{const ph=await photos.bySurvey(id,true);await tx('photos','readwrite',s=>Promise.all(ph.map(p=>req(s.delete(p.id)))));return tx('surveys','readwrite',s=>req(s.delete(id)));},
     /* de meest recente schouw die nog open staat, of null */
-    lastOpen:async()=>(await surveys.list()).find(s=>s.status==='open')||null
+    lastOpen:async()=>(await surveys.list()).find(s=>s.status!=='klaar'&&s.status!=='archief')||null
   };
   const photos={
     bySurvey:(surveyId,metVervallen)=>tx('photos','readonly',s=>req(s.index('surveyId').getAll(surveyId)))

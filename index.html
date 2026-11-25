@@ -13,12 +13,15 @@
 
 </head>
 <body>
-<header class="bar"><button class="back" id="hb" hidden>‹ Schouwen</button><h1 id="ttl">Sisu</h1></header>
+<header class="bar"><button class="back" id="hb" hidden>‹ Schouwen</button><h1 id="ttl">Sisu</h1><a class="back" href="instellingen.html" id="hset" aria-label="Instellingen">Instellingen</a></header>
 <main class="page" id="main"></main>
 <script src="shared/store.js"></script>
 <script src="shared/legend.js"></script>
 <script src="shared/camera.js"></script>
 <script src="shared/editor.js"></script>
+<script src="shared/velden.js"></script>
+<script src="shared/gegevens.js"></script>
+<script src="shared/docmodel.js"></script>
 <script src="shared/pdfdoc.js"></script>
 <script src="shared/survey-ui.js"></script>
 <script>
@@ -26,7 +29,7 @@
 function newPhoto(survey,galerij){
   Camera.take({galerij}).then(async r=>{
     if(!r||!r.blob)return;
-    const p=await Store.photos.put({surveyId:survey.id,blob:r.blob,ann:{orient:r.orient||'liggend'},bron:'veeg',status:'ok'});
+    const p=await Store.photos.put({surveyId:survey.id,blob:r.blob,ann:{orient:r.orient||'liggend'},bron:'veeg',status:'ok',sectie:(SurveyUI.current()||survey).sectie||'buiten'});
     edit(survey,p.id);
   }).catch(()=>SurveyUI.toast('Foto maken lukte niet'));
 }
@@ -41,7 +44,7 @@ function edit(survey,id){
 SurveyUI.init({
   variant:'veeg',naam:'Veeg & Klik',startTitel:'Sisu · Veeg & Klik',metersZelf:true,
   startExtra:'<div class="row" style="margin-top:40px"><a class="btn" href="opties.html" style="flex:1">Andere opties</a></div>',
-  onScreen:w=>{const b=document.getElementById("hb");b.hidden=w==="start";b.onclick=()=>SurveyUI.start();},
+  onScreen:w=>{const b=document.getElementById("hb");b.hidden=w==="start";document.getElementById("hset").hidden=w!=="start";b.onclick=()=>SurveyUI.start();},
   invoerUitleg:"Telt de app: IN-symbolen op geldige foto's.",
   acties:(s,n)=>[{label:`Foto ${n+1} maken`,pri:1,fn:s=>newPhoto(s,false)},{label:'Foto uit galerij',fn:s=>newPhoto(s,true)}],
   tellen:(s,ph)=>({invoeringen:ph.reduce((n,p)=>n+(((p.ann&&p.ann.syms)||[]).filter(x=>x.t==='dv').length),0)}),
