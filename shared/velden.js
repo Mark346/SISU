@@ -5,7 +5,7 @@
    Verplicht bij input = vragen we vóór het schouwen ("Nog X gegevens vooraf").
    Verplicht bij output = nodig voor een compleet document; wenselijk = komt in het document als het is ingevuld.
    s = sectie in het document; g = sectie in het gegevensscherm (als die anders is).
-   Ook: statussen van een schouw (voorbereiden, schouwen, controleren, klaar; archief is een vlag) en voortgang. */
+   Ook: statussen van een schouw (uitwerking, afronding, klaar; archief is een vlag) en voortgang. */
 (function(){
   const V='verplicht',W='wenselijk',N='nee';
   /* naam = kop in het document, kort = naam in het gegevensscherm, moment = wanneer je het invult,
@@ -148,15 +148,15 @@
   ];
 
   const STATUS=[
-    {id:'voorbereiden',naam:'Voorbereiden',kleur:'var(--st-new)'},
-    {id:'schouwen',naam:'Schouwen',kleur:'var(--st-intake)'},
-    {id:'controleren',naam:'Controleren',kleur:'var(--st-gelopen)'},
+    {id:'uitwerking',naam:'Uitwerking',kleur:'var(--st-intake)'},
+    {id:'afronding',naam:'Afronding',kleur:'var(--st-gelopen)'},
     {id:'klaar',naam:'Klaar',kleur:'var(--st-klaar)'}
   ];
   /* oude statussen omzetten (de nieuwe waarde wordt pas bij de volgende keer opslaan geschreven):
-     open/new/leeg/intake -> voorbereiden, gelopen -> controleren, klaar en archief -> klaar (archief = vlag gearchiveerd) */
-  const OUD={open:'voorbereiden',new:'voorbereiden',intake:'voorbereiden',gelopen:'controleren',archief:'klaar'};
-  const statusOf=s=>{const v=s&&s.status;if(!v)return'voorbereiden';if(STATUS.some(x=>x.id===v))return v;return OUD[v]||'voorbereiden';};
+     open/new/leeg/intake/voorbereiden/schouwen -> uitwerking, gelopen/controleren -> afronding,
+     klaar en archief -> klaar (archief = vlag gearchiveerd) */
+  const OUD={open:'uitwerking',new:'uitwerking',intake:'uitwerking',voorbereiden:'uitwerking',schouwen:'uitwerking',gelopen:'afronding',controleren:'afronding',archief:'klaar'};
+  const statusOf=s=>{const v=s&&s.status;if(!v)return'uitwerking';if(STATUS.some(x=>x.id===v))return v;return OUD[v]||'uitwerking';};
   const statusMeta=id=>STATUS.find(x=>x.id===id)||STATUS[0];
   const gearchiveerd=s=>!!s&&(s.gearchiveerd===true||(s.status==='archief'&&s.gearchiveerd!==false));
 
@@ -224,6 +224,11 @@
   /* verplicht voor het scherm: kant 'in' (vooraf), 'uit' (document) of beide */
   function nodig(c,f,kant){const x=c[f.k];return kant?x[kant]==='verplicht':(x.in==='verplicht'||x.uit==='verplicht');}
   function zichtbaar(c,f){const x=c[f.k];return f.schakel||x.in!=='nee'||x.uit!=='nee';}
+  /* nog te doen, gesplitst in informatie en foto's (foto-velden en foto-reeksen); kant 'uit' = voor het document */
+  function todo(s,fotos,kant){const c=cfg(),info=[],ft=[];
+    VELDEN.forEach(f=>{if(f.schakel||f.t==='legenda'||!actief(s,f)||verborgen(s,f)||!nodig(c,f,kant)||gevuld(s,f,fotos))return;
+      (f.t==='foto'||f.t==='fotos'?ft:info).push(f);});
+    return{info,fotos:ft};}
   /* open verplichte velden per sectie van het gegevensscherm: [{sc, velden, open}] */
   function secties(s,fotos,o={}){
     const c=cfg();
@@ -252,5 +257,5 @@
     return{klaar:fs.length-mis.length,totaal:fs.length,mist:mis,pct:fs.length?Math.round((fs.length-mis.length)/fs.length*100):100};
   }
   window.Velden={VELDEN,SECTIES,MOMENT,VG,VG_VAAK,VG_VOORSTEL,CONTACTEN,STATUS,V,W,N,cfg,setCfg,resetCfg,waarde,zet,actief,gevuld,voortgang,
-    onnet,onnetFix,standaard,setStandaard,statusOf,statusMeta,gearchiveerd,groep,inLijst,nodig,secties,verborgen,zelfdeAan,migreer};
+    todo,onnet,onnetFix,standaard,setStandaard,statusOf,statusMeta,gearchiveerd,groep,inLijst,nodig,secties,verborgen,zelfdeAan,migreer};
 })();

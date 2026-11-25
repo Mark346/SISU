@@ -45,7 +45,7 @@ h2{font-size:22px;font-weight:800;margin:24px 0 10px}
 .geg2 .gt{display:flex;align-items:baseline;justify-content:space-between;gap:10px}.geg2 h2{margin:0;font-size:20px}
 .geg2 .gt span{font-size:15px;font-weight:600}.geg2 .gt .mis{color:var(--warn)}.geg2 .gt .ok{color:var(--ok)}
 .geg2 .gbar{height:8px;border-radius:4px;background:var(--track);overflow:hidden}.geg2 .gbar i{display:block;height:100%;background:var(--prog-doc)}
-.geg2 .btn{width:100%}
+.geg2 #gOpen{width:100%}
 .foot{position:sticky;bottom:0;margin:20px -16px 0;padding:12px 16px calc(12px + env(safe-area-inset-bottom));background:var(--bg);border-top:1px solid var(--line);display:flex;gap:10px}
 .foot .btn{flex:1;min-height:56px;font-size:18px}
 .msg{min-height:22px;color:var(--mute)}
@@ -92,12 +92,12 @@ async function load(){
   S=await Store.surveys.get(id);if(!S){$('story').innerHTML='<p class="note">Deze schouw is niet gevonden.</p>';$('make').disabled=true;return;}
   $('back').href='../'+(PAGE[S.variant]||'index.html')+'?survey='+encodeURIComponent(S.id);
   P=await Store.photos.bySurvey(S.id,true);
-  // naar controle & aanvullen = status Controleren (vanaf Voorbereiden/Schouwen, als er foto's zijn)
+  // naar controle & aanvullen = status Afronding (vanaf Uitwerking, als er foto's zijn)
   let ch=Velden.migreer(S);
   for(const p of Velden.onnetFix(S,P)){await Store.photos.put(p);ch=true;} // ONNET: geen buiten tracé
   if(S.status==='archief'&&S.gearchiveerd==null){S.gearchiveerd=true;ch=true;}
   const cur=Velden.statusOf(S);if(S.status!==cur){S.status=cur;ch=true;}
-  if((cur==='voorbereiden'||cur==='schouwen')&&P.some(p=>p.status!=='vervallen')){S.status='controleren';if(!S.eersteFoto)S.eersteFoto=new Date().toISOString();ch=true;}
+  if(cur==='uitwerking'&&P.some(p=>p.status!=='vervallen')){S.status='afronding';if(!S.eersteFoto)S.eersteFoto=new Date().toISOString();ch=true;}
   if(ch)await Store.surveys.put(S);
   // volgorde netjes doornummeren (1, 2, 3 …)
   for(let i=0;i<P.length;i++)if(P[i].volgorde!==i+1){P[i].volgorde=i+1;await Store.photos.put(P[i]);}
@@ -154,11 +154,13 @@ function edit(i){
 }
 /* gegevens voor het document: wat ontbreekt nog, en direct invullen */
 function renderGeg(){
-  const vo=Velden.voortgang(S,P,'uit'),n=Velden.secties(S,P,{}).reduce((t,x)=>t+x.open.length,0);
-  $('geg2').innerHTML=`<div class="gk"><div class="gt"><h2>Gegevens</h2><span class="${vo.mist.length?'mis':'ok'}">Document ${vo.klaar} van ${vo.totaal} compleet</span></div>
+  const vo=Velden.voortgang(S,P,'uit'),klaar=async()=>{await recount();render();};
+  $('geg2').innerHTML=`<div class="gk"><div class="gt"><h2>Nog te doen</h2><span class="${vo.mist.length?'mis':'ok'}">Document ${vo.klaar} van ${vo.totaal} compleet</span></div>
     <div class="gbar"><i style="width:${vo.pct}%"></i></div>
-    <button class="btn${n?' pri':''}" id="gOpen">${n?`Gegevens (${n} open)`:'Gegevens'}</button></div>`;
-  $('gOpen').onclick=()=>Gegevens.open(S,{filter:n?'todo':'alles',onClose:async()=>{await recount();render();}});
+    <div id="gTodo">${Gegevens.todoHtml(S,P,'uit')}</div>
+    <button class="btn" id="gOpen">Alle gegevens</button></div>`;
+  Gegevens.todoBind($('gTodo'),S,klaar);
+  $('gOpen').onclick=()=>Gegevens.open(S,{filter:'alles',onClose:klaar});
   // hoofdknop: compleet = "Document maken", anders "Toch afronden (X open)"
   if(Velden.statusOf(S)!=='klaar'&&vo.mist.length)$('make').textContent=`Toch afronden (${vo.mist.length} open)`;else $('make').textContent='Document maken';
 }

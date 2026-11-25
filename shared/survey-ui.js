@@ -88,6 +88,7 @@
 .sui .snext .t small{display:block;color:var(--mute);font-size:14px;margin-top:3px;line-height:1.3}
 .sui .snext .btn{flex:none;min-height:48px;padding:0 16px;font-size:15px}
 .sstat{display:flex;flex-direction:column;gap:8px;margin-top:6px}
+.sui .stodo{margin-top:4px}
 .sui .sect{display:flex;align-items:center;gap:10px;margin-top:16px}.sui .sect>span{color:var(--mute);font-size:15px;white-space:nowrap}
 .sui .sect .seg{flex:1;display:flex;background:var(--card);border:1px solid var(--line);border-radius:var(--r-pill);padding:3px}
 .sui .sect button{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;min-height:44px;border:0;border-radius:var(--r-pill);background:transparent;color:var(--ink);font-weight:600;font-size:15px;cursor:pointer}
@@ -134,7 +135,7 @@
     title(cfg.startTitel||cfg.naam);survey=null;if(cfg.onScreen)cfg.onScreen('start');
     const fotos={};for(const x of all)fotos[x.id]=await Store.photos.bySurvey(x.id,true);
     if(!all.length)newOpen=true;
-    // statusregel: gekleurd bolletje + "Schouwen · vandaag" (+ "gemaakt in …" als het uit een andere variant komt);
+    // statusregel: gekleurd bolletje + "Uitwerking · vandaag" (+ "gemaakt in …" als het uit een andere variant komt);
     // klaar met open velden: "Klaar · 3 open" in waarschuwingskleur
     const sst=x=>{const m=Velden.statusMeta(st(x)),vo=Velden.voortgang(x,fotos[x.id],'uit'),onv=m.id==='klaar'&&x.onvolledig&&vo.mist.length;
       return `<span class="sst"><i class="dot" style="background:${m.kleur}"></i><span>${onv?`<span class="wrn">Klaar · ${vo.mist.length} open</span>`:esc(m.naam)} · ${esc(relD(x.datum))}${x.variant&&x.variant!==cfg.variant?' · gemaakt in '+esc(NAMEN[x.variant]||x.variant):''}</span></span>`;};
@@ -178,7 +179,7 @@
     $('go').onclick=async()=>{const a=$('adr').value.trim();if(!a){toast('Vul eerst het adres in');$('adr').focus();return;}
       if(cfg.typeKiezen&&!typ){toast('Kies eerst OFFNET of ONNET');main.querySelector('[data-typ]').focus();return;}
       newOpen=false;
-      const x=await Store.surveys.put({adres:a,variant:cfg.variant,status:'voorbereiden',...(typ?{velden:{type_aansluiting:typ},sectie:typ==='ONNET'?'binnen':'buiten'}:{})});await show(x);
+      const x=await Store.surveys.put({adres:a,variant:cfg.variant,status:'uitwerking',...(typ?{velden:{type_aansluiting:typ},sectie:typ==='ONNET'?'binnen':'buiten'}:{})});await show(x);
       // eerst wat je vooraf moet weten (alleen als daar iets verplicht is)
       const i=Velden.voortgang(x,[],'in');if(i.mist.length)Gegevens.open(x,{filter:'todo',moment:'vooraf',onClose:()=>show(x)});};
   }
@@ -186,9 +187,9 @@
   /* oude status omzetten (alleen samen met een andere wijziging opslaan) */
   function norm(s){let ch=false;if(s.status==='archief'&&s.gearchiveerd==null){s.gearchiveerd=true;ch=true;}
     const n=Velden.statusOf(s);if(s.status!==n){s.status=n;ch=true;}return ch;}
-  /* automatisch: voorbereiden -> schouwen zodra de eerste (nieuwe) foto er is */
+  /* bij de eerste foto: datum onthouden (datum van de schouw); aantal foto's bijhouden */
   function naFoto(s,n){let ch=false;
-    if(Velden.statusOf(s)==='voorbereiden'&&n>(s.nFoto||0)){norm(s);s.status='schouwen';if(!s.eersteFoto)s.eersteFoto=new Date().toISOString();ch=true;}
+    if(n>0&&!s.eersteFoto){s.eersteFoto=new Date().toISOString();ch=true;}
     if(n!==s.nFoto){s.nFoto=n;ch=true;}
     if(ch)norm(s);return ch;}
 
@@ -225,19 +226,17 @@
     if(ch){norm(s);await Store.surveys.put(s);}
     const cur=Velden.statusOf(s),idx=Velden.STATUS.findIndex(x=>x.id===cur);
     const reopen=()=>{if(na)na();else show(s);};
-    const naam=L=>L.map(x=>x.sc.kort).join(' · ');
+    // fase Uitwerking en Afronding: nog te doen, informatie en foto's apart
     let kaart='';
-    if(cur==='voorbereiden'){const L=Velden.secties(s,ph,{moment:'vooraf',kant:'in'}).filter(x=>x.open.length),n=L.reduce((t,x)=>t+x.open.length,0);
-      if(n)kaart=`<div class="snext wrn"><div class="t"><b>Nog ${n} ${n===1?'gegeven':'gegevens'} vooraf</b><small>${esc(naam(L))}</small></div><button class="btn pri" id="sbGo">Nu invullen</button></div>`;}
-    else if(cur==='schouwen'){const L=Velden.secties(s,ph,{moment:'terplekke'}).filter(x=>x.open.length),n=L.reduce((t,x)=>t+x.open.length,0);
-      if(n)kaart=`<div class="snext wrn"><div class="t"><b>Nog ${n} ${n===1?'ding':'dingen'} ter plekke</b><small>${esc(naam(L))}</small></div><button class="btn pri" id="sbGo">Nu invullen</button></div>`;}
-    else{const vo=Velden.voortgang(s,ph,'uit');
-      if(cur==='controleren'||vo.mist.length)kaart=`<div class="snext${vo.mist.length?' wrn':''}"><div class="t"><b>Document ${vo.klaar} van ${vo.totaal} compleet</b>${vo.mist.length?`<small>${vo.mist.length} verplicht nog open</small>`:''}</div><a class="btn${cur==='controleren'?' pri':''}" href="shared/storyline.html?survey=${encodeURIComponent(s.id)}">Naar controle &amp; aanvullen</a></div>`;}
+    if(cur==='klaar'){const vo=Velden.voortgang(s,ph,'uit');
+      if(vo.mist.length)kaart=`<div class="snext wrn"><div class="t"><b>Klaar · ${vo.mist.length} open</b><small>Document ${vo.klaar} van ${vo.totaal} compleet</small></div><a class="btn" href="shared/storyline.html?survey=${encodeURIComponent(s.id)}">Aanvullen</a></div>`;}
+    else{kaart=`<div class="stodo">${Gegevens.todoHtml(s,ph,cur==='afronding'?'uit':undefined)}</div>`;
+      if(cur==='afronding'){const vo=Velden.voortgang(s,ph,'uit');kaart+=`<div class="snext"><div class="t"><b>Document ${vo.klaar} van ${vo.totaal} compleet</b></div><a class="btn pri" href="shared/storyline.html?survey=${encodeURIComponent(s.id)}">Naar controle &amp; aanvullen</a></div>`;}}
     el.innerHTML=`<div class="sstat"><div class="shd" id="sbH" tabindex="0" role="group" aria-label="Status ${esc(Velden.statusMeta(cur).naam)}, stap ${idx+1} van ${Velden.STATUS.length}. Lang drukken om de status terug te zetten.">
       <div class="sht"><b>${esc(s.adres||'Schouw')}</b><span>stap ${idx+1} van ${Velden.STATUS.length}</span></div>
       <ol class="sstep" aria-hidden="true">${Velden.STATUS.map((x,i)=>`<li class="${i===idx?'nu':''}"><i style="${i<=idx?'background:'+x.kleur:''}"></i><span>${esc(x.naam)}</span></li>`).join('')}</ol></div>${kaart}</div>`;
-    langDruk($('sbH'),()=>terugBlad(s,reopen));
-    if($('sbGo'))$('sbGo').onclick=()=>Gegevens.open(s,{filter:'todo',moment:cur==='voorbereiden'?'vooraf':'terplekke',onClose:reopen});
+    if(!el.isConnected)return;langDruk(el.querySelector('#sbH'),()=>terugBlad(s,reopen));
+    const td=el.querySelector('.stodo');if(td)Gegevens.todoBind(td,s,reopen);
   }
   /* knop "Schouw verwijderen" (verhuisd van het startscherm naar de schouw): twee keer tikken */
   function bindDel(btn,s,voor){if(!btn)return;let t=null;const lab=btn.textContent;btn.onclick=async()=>{
@@ -247,9 +246,9 @@
     if(!survey)return;const ph=await Store.photos.bySurvey(survey.id),t=cfg.tellen(survey,ph)||{};
     const T={meters:0,invoeringen:0,boringen:0,...survey.tellers,...t};let ch=false;
     if(JSON.stringify(T)!==JSON.stringify(survey.tellers)){survey.tellers=T;ch=true;}
-    const was=Velden.statusOf(survey);if(naFoto(survey,ph.filter(p=>p.status!=='vervallen').length))ch=true;
+    if(naFoto(survey,ph.filter(p=>p.status!=='vervallen').length))ch=true;
     if(ch)await Store.surveys.put(survey);
-    if(was!==Velden.statusOf(survey)){toast('Status: '+Velden.statusMeta(Velden.statusOf(survey)).naam);const b=$('stblk');if(b&&!cfg.eigenScherm)statusBlock(b,survey);}
+    {const b=$('stblk');if(b&&b.firstChild&&!cfg.eigenScherm)statusBlock(b,survey);} // nog te doen bijwerken
     const i=$('ti');if(i)i.textContent=T.invoeringen||0;const m=$('tmv');if(m)m.textContent=nl1(T.meters||0)+' m';
     return T;
   }

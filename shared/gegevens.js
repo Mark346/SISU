@@ -278,5 +278,26 @@
     d.querySelectorAll('[data-k2]').forEach(b=>b.onclick=dicht);
     d.querySelector('input').focus();
   }
-  window.Gegevens={open,close:()=>close(),naKast,vraag,bron:null};
+  /* blok "nog te doen": informatie en foto's apart. html(s,fotos,kant) + bind(el,s,klaar) */
+  const ICI='M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M12 11v5 M12 8v.01',ICF='M4 8h3l2-3h6l2 3h3v11H4z M12 17a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z';
+  function todoHtml(s,fotos,kant){css();const T=Velden.todo(s,fotos,kant);
+    const sec=fs=>[...new Set(fs.map(f=>f.t==='teller'?(f.kort||f.l):(Velden.SECTIES.find(x=>x.id===Velden.groep(f))||{}).kort))].join(' · ');
+    const fotoNm=fs=>fs.map(f=>f.kort||f.l).join(' · ');
+    const rij=(ic,titel,fs,txt,knop)=>`<div class="tdr${fs.length?' wrn':''}"><span class="tdi">${svg(ic,20)}</span><div class="tdt"><b>${titel}</b><small>${fs.length?`${fs.length} nog te doen · ${esc(txt)}`:'<span class="okk">✓ Compleet</span>'}</small></div>${fs.length&&knop?knop:''}</div>`;
+    const bijl=T.fotos.find(f=>f.t==='foto');
+    return `<div class="tdo">${rij(ICI,'Informatie',T.info,sec(T.info),'<button class="btn pri" data-td="info">Invullen</button>')}
+      ${rij(ICF,"Foto's",T.fotos,fotoNm(T.fotos),bijl?`<button class="btn" data-td="foto" data-sec="${Velden.groep(bijl)}">Toevoegen</button>`:'')}</div>`;}
+  function todoBind(el,s,klaar){
+    el.querySelectorAll('[data-td]').forEach(b=>b.onclick=()=>open(s,{filter:'todo',sectie:b.dataset.sec,onClose:klaar}));}
+  const TDCSS=`.tdo{display:flex;flex-direction:column;gap:8px}
+.tdr{display:flex;align-items:center;gap:12px;background:var(--card,#1C1F25);border:1px solid var(--line,#2E323A);border-radius:16px;padding:10px 10px 10px 12px}
+.tdr.wrn{border-color:var(--warn)}
+.tdi{flex:none;width:36px;height:36px;border-radius:10px;background:var(--well);display:grid;place-items:center;color:var(--mute)}
+.tdr.wrn .tdi{color:var(--warn)}
+.tdt{flex:1;min-width:0}.tdt b{display:block;font-size:16px;font-weight:800;line-height:1.2}
+.tdt small{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;color:var(--mute);font-size:14px;margin-top:2px;line-height:1.3}
+.tdt .okk{color:var(--ok,#22C55E);font-weight:700}
+.tdr .btn{flex:none;min-height:44px;padding:0 14px;font-size:15px;width:auto}`;
+  { const st0=document.createElement('style');st0.textContent=TDCSS;document.head.appendChild(st0); }
+  window.Gegevens={open,close:()=>close(),naKast,vraag,todoHtml,todoBind,bron:null};
 })();
