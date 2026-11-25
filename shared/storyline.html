@@ -94,6 +94,7 @@ async function load(){
   P=await Store.photos.bySurvey(S.id,true);
   // naar controle & aanvullen = status Controleren (vanaf Voorbereiden/Schouwen, als er foto's zijn)
   let ch=Velden.migreer(S);
+  for(const p of Velden.onnetFix(S,P)){await Store.photos.put(p);ch=true;} // ONNET: geen buiten tracé
   if(S.status==='archief'&&S.gearchiveerd==null){S.gearchiveerd=true;ch=true;}
   const cur=Velden.statusOf(S);if(S.status!==cur){S.status=cur;ch=true;}
   if((cur==='voorbereiden'||cur==='schouwen')&&P.some(p=>p.status!=='vervallen')){S.status='controleren';if(!S.eersteFoto)S.eersteFoto=new Date().toISOString();ch=true;}
@@ -163,17 +164,17 @@ function renderGeg(){
 }
 Gegevens.bron=k=>S&&S.id===k?S:null;
 function renderTel(){
-  const T=S.tellers||{},auto=S.variant!=='veeg';
+  const T=S.tellers||{},auto=S.variant!=='veeg',on=Velden.onnet(S);
   $('tel').innerHTML=`<h2>Tellers</h2><div class="tel">
-    ${auto?`<div class="r"><div class="l">Meters buiten tracé<small>${esc(T.metersNote||'')}</small></div><span class="v">${nl1(T.meters||0)} m</span></div>`
+    ${on?'':`${auto?`<div class="r"><div class="l">Meters buiten tracé<small>${esc(T.metersNote||'')}</small></div><span class="v">${nl1(T.meters||0)} m</span></div>`
           :`<div class="r"><div class="l"><label for="tm">Meters buiten tracé</label><small>Zelf invullen.</small></div><input id="tm" inputmode="decimal" value="${esc(T.meters||'')}" placeholder="0"></div>`}
     <div class="r"><div class="l">Invoeringen<small>Telt de app.</small></div><span class="v">${T.invoeringen||0}</span></div>
-    <div class="r"><div class="l">Boringen/persingen</div><button class="step" id="bm" aria-label="Eén minder">−</button><span class="v" id="tb">${T.boringen||0}</span><button class="step" id="bp" aria-label="Eén meer">+</button></div>
-    ${binnenAan()?`<div class="r"><div class="l"><label for="tmb">Meters binnen tracé</label><small>Zelf invullen.</small></div><input id="tmb" inputmode="decimal" value="${esc(T.metersBinnen!=null?T.metersBinnen:'')}" placeholder="0"></div>`:''}</div>`;
+    <div class="r"><div class="l">Boringen/persingen</div><button class="step" id="bm" aria-label="Eén minder">−</button><span class="v" id="tb">${T.boringen||0}</span><button class="step" id="bp" aria-label="Eén meer">+</button></div>`}
+    ${binnenAan()||on?`<div class="r"><div class="l"><label for="tmb">Meters binnen tracé</label><small>Zelf invullen.</small></div><input id="tmb" inputmode="decimal" value="${esc(T.metersBinnen!=null?T.metersBinnen:'')}" placeholder="0"></div>`:''}</div>`;
   if($('tmb'))$('tmb').onchange=async()=>{const v=parseFloat($('tmb').value.replace(',','.'));S.tellers={...S.tellers,metersBinnen:isFinite(v)?v:0};await Store.surveys.put(S);msg('Opgeslagen');renderGeg();};
   if($('tm'))$('tm').onchange=async()=>{const v=parseFloat($('tm').value.replace(',','.'));S.tellers={...S.tellers,meters:isFinite(v)?v:0};await Store.surveys.put(S);msg('Opgeslagen');renderGeg();};
   const st=async d=>{const n=Math.max(0,(S.tellers.boringen||0)+d);S.tellers={...S.tellers,boringen:n};$('tb').textContent=n;await Store.surveys.put(S);};
-  $('bm').onclick=()=>st(-1);$('bp').onclick=()=>st(1);
+  if($('bm')){$('bm').onclick=()=>st(-1);$('bp').onclick=()=>st(1);}
 }
 function binnenAan(){const c=Velden.cfg().binnen_fotos;return c.in!=='nee'||c.uit!=='nee';}
 /* Document maken: compleet -> status Klaar en naar het document; niet compleet -> één keer bevestigen, dan Klaar met de lijst wat open is */

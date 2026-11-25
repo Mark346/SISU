@@ -254,9 +254,12 @@
     if(cfg.eigenScherm)return cfg.eigenScherm(s); // variant met een eigen schouwscherm (Loop-spoor)
     const ph=await Store.photos.bySurvey(s.id,true),ok=ph.filter(p=>p.status!=='vervallen');
     Object.values(urls).forEach(u=>URL.revokeObjectURL(u));urls={};ph.forEach(p=>urls[p.id]=URL.createObjectURL(p.blob));
-    if(Velden.migreer(s))await Store.surveys.put(s);
+    let wijz=Velden.migreer(s);const naarBinnen=Velden.onnetFix(s,ph);if(naarBinnen.length||(Velden.onnet(s)&&s.sectie==='binnen'))wijz=true;
+    for(const p of naarBinnen)await Store.photos.put(p);
+    if(wijz)await Store.surveys.put(s);
+    const on=Velden.onnet(s);
     const T=await recount(),acts=cfg.acties(s,ok.length);
-    const seg=binnenAan()?`<div class="sect" role="group" aria-label="Foto's voor"><span>Foto's voor</span><div class="seg">${['buiten','binnen'].map(x=>`<button data-sect="${x}" class="${(s.sectie||'buiten')===x?'on':''}" aria-pressed="${(s.sectie||'buiten')===x}"><i class="dot" style="background:var(--sec-${x})"></i>${x==='buiten'?'Buiten':'Binnen'}</button>`).join('')}</div></div>`:'';
+    const seg=binnenAan()&&!on?`<div class="sect" role="group" aria-label="Foto's voor"><span>Foto's voor</span><div class="seg">${['buiten','binnen'].map(x=>`<button data-sect="${x}" class="${(s.sectie||'buiten')===x?'on':''}" aria-pressed="${(s.sectie||'buiten')===x}"><i class="dot" style="background:var(--sec-${x})"></i>${x==='buiten'?'Buiten':'Binnen'}</button>`).join('')}</div></div>`:'';
     main.innerHTML=`
      <div id="stblk"></div>
      ${(()=>{ // hoofdactie als grote pil met camera, "uit galerij" als ronde knop ernaast, de rest eronder
@@ -269,12 +272,12 @@
      <p class="note">Tik om te bewerken. Lang drukken: vervalt (ander tracé) of terugzetten.</p>`:'<p class="note">Nog geen foto\'s. Begin bij de aansluiting op het netwerk.</p>'}
      <h2>Tellers</h2>
      <div class="tel">
-       ${cfg.metersZelf
+       ${on?'':cfg.metersZelf
          ?`<div class="r"><div class="l"><label for="tm" style="margin:0">Meters buiten tracé</label><small>Zelf invullen: deze variant meet niet.</small></div><input id="tm" inputmode="decimal" value="${esc(T.meters||'')}" placeholder="0"></div>`
          :`<div class="r"><div class="l">Meters buiten tracé<small>${esc(T.metersNote||'')}</small></div><span class="v" id="tmv">${nl1(T.meters||0)} m</span></div>`}
-       <div class="r"><div class="l">Invoeringen<small>${esc(cfg.invoerUitleg||'Telt de app.')}</small></div><span class="v" id="ti">${T.invoeringen||0}</span></div>
-       <div class="r"><div class="l">Boringen/persingen</div><button class="step" id="bm" aria-label="Eén minder">−</button><span class="v" id="tb">${T.boringen||0}</span><button class="step" id="bp" aria-label="Eén meer">+</button></div>
-       ${binnenAan()?`<div class="r"><div class="l"><label for="tmb" style="margin:0">Meters binnen tracé</label><small>Zelf invullen.</small></div><input id="tmb" inputmode="decimal" value="${esc(T.metersBinnen!=null?T.metersBinnen:'')}" placeholder="0"></div>`:''}
+       ${on?'':`<div class="r"><div class="l">Invoeringen<small>${esc(cfg.invoerUitleg||'Telt de app.')}</small></div><span class="v" id="ti">${T.invoeringen||0}</span></div>
+       <div class="r"><div class="l">Boringen/persingen</div><button class="step" id="bm" aria-label="Eén minder">−</button><span class="v" id="tb">${T.boringen||0}</span><button class="step" id="bp" aria-label="Eén meer">+</button></div>`}
+       ${binnenAan()||on?`<div class="r"><div class="l"><label for="tmb" style="margin:0">Meters binnen tracé</label><small>Zelf invullen.</small></div><input id="tmb" inputmode="decimal" value="${esc(T.metersBinnen!=null?T.metersBinnen:'')}" placeholder="0"></div>`:''}
      </div>
      <div class="sfoot">
        <a class="btn pri" href="shared/storyline.html?survey=${encodeURIComponent(s.id)}">Naar controle &amp; aanvullen</a>
@@ -290,7 +293,7 @@
     if($('tmb'))$('tmb').onchange=async()=>{const v=parseFloat($('tmb').value.replace(',','.'));survey.tellers={...survey.tellers,metersBinnen:isFinite(v)?v:0};await Store.surveys.put(survey);toast('Opgeslagen');statusBlock($('stblk'),survey);};
     if($('tm'))$('tm').onchange=async()=>{const v=parseFloat($('tm').value.replace(',','.'));survey.tellers={...survey.tellers,meters:isFinite(v)?v:0};await Store.surveys.put(survey);toast('Opgeslagen');};
     const step=async d=>{const n=Math.max(0,(survey.tellers.boringen||0)+d);survey.tellers={...survey.tellers,boringen:n};$('tb').textContent=n;await Store.surveys.put(survey);};
-    $('bm').onclick=()=>step(-1);$('bp').onclick=()=>step(1);
+    if($('bm')){$('bm').onclick=()=>step(-1);$('bp').onclick=()=>step(1);}
     $('other').onclick=()=>{history.replaceState(null,'',location.pathname);start();};
   }
   if(window.Gegevens)Gegevens.bron=id=>survey&&survey.id===id?survey:null;

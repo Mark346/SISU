@@ -89,7 +89,7 @@ function fakePhoto(W,H){
 }
 async function makeTest(){
   const vb={};Velden.VELDEN.forEach(f=>{if(f.vb)vb[f.k]=f.vb;});
-  Object.assign(vb,{type_aansluiting:'OFFNET',datum_survey:'2025-11-07',klant_org:'Duwo',klant_contact:'Dhr. R. Jansen',klant_tel:'06-00000000',klant_mail:'contact@voorbeeld.nl',loc_adres:'Oranjelaan 2',loc_postcode:'2341CC',loc_plaats:'Oegstgeest',eig_klant_is_eigenaar:'Ja',aanm_naam:'Dhr. R. Jansen',aanm_tel:'06-00000000',aanm_dagen:'5',plattegrond:'nvt',
+  Object.assign(vb,{type_aansluiting:'OFFNET',datum_survey:'2025-11-07',klant_org:'Woonstichting',klant_contact:'Dhr. R. Jansen',klant_tel:'06-00000000',klant_mail:'contact@voorbeeld.nl',loc_adres:'Oranjelaan 2',loc_postcode:'2341CC',loc_plaats:'Oegstgeest',eig_klant_is_eigenaar:'Ja',aanm_naam:'Dhr. R. Jansen',aanm_tel:'06-00000000',aanm_dagen:'5',plattegrond:'nvt',
     vg:{nagelopen:true,items:{a0:{aan:true},a5:{aan:true},a19:{aan:true},a26:{aan:true}}}});
   const s=await Store.surveys.put({adres:'Testschouw – Oranjelaan 2, Oegstgeest',variant:'veeg',status:'klaar',tellers:{meters:15,invoeringen:1,boringen:0},velden:vb});
   await Store.photos.put({surveyId:s.id,volgorde:1,blob:await fakePhoto(1600,1200),bron:'veeg',

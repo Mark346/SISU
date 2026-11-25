@@ -26,17 +26,18 @@
   ];
   const MOMENT={vooraf:'vooraf',terplekke:'ter plekke',achteraf:'achteraf'};
   const nietEigenaar={veld:'eig_klant_is_eigenaar',is:'Nee'};
+  const geenOnnet={veld:'type_aansluiting',niet:'ONNET'};
   // type: text | lang | datum | tel | mail | getal | keuze | janee | foto | fotos | vg | legenda | teller
   const VELDEN=[
     {k:'projectnummer',s:'alg',l:'Projectnummer',t:'text',in:V,uit:V,vb:'5222119 - 00172403 - 00046005-SID000883900'},
-    {k:'type_aansluiting',s:'alg',l:'Type aansluiting',t:'keuze',opties:['OFFNET','ONNET','FTTS','Anders'],in:V,uit:V,vb:'OFFNET'},
+    {k:'type_aansluiting',s:'alg',l:'Type aansluiting',t:'keuze',opties:['OFFNET','ONNET','FTTS'],in:V,uit:V,vb:'OFFNET'},
     {k:'datum_survey',s:'alg',l:'Datum site survey',t:'datum',in:W,uit:V,vb:'07-11-2025'},
     {k:'aanw_org_naam',s:'alg',g:'aanw',l:'Aanwezig organisatie: naam',t:'text',in:W,uit:W,vb:'Dhr. J. Jansen'},
-    {k:'aanw_org_bedrijf',s:'alg',g:'aanw',l:'Aanwezig organisatie: bedrijf',t:'text',in:W,uit:W,vb:'Duwo'},
+    {k:'aanw_org_bedrijf',s:'alg',g:'aanw',l:'Aanwezig organisatie: bedrijf',t:'text',in:W,uit:W,vb:'Woningcorporatie'},
     {k:'aanw_org_tel',s:'alg',g:'aanw',l:'Aanwezig organisatie: telefoon',t:'tel',in:W,uit:W,vb:'06-12345678'},
-    {k:'aanw_aan_naam',s:'alg',g:'aanw',l:'Aanwezig aannemer: naam',t:'text',in:W,uit:W,vb:'Dhr. P. de Vries'},
-    {k:'aanw_aan_bedrijf',s:'alg',g:'aanw',l:'Aanwezig aannemer: bedrijf',t:'text',in:W,uit:W,vb:'BAM'},
-    {k:'aanw_aan_tel',s:'alg',g:'aanw',l:'Aanwezig aannemer: telefoon',t:'tel',in:W,uit:W,vb:'06-12345678'},
+    {k:'aanw_aan_naam',s:'alg',g:'aanw',pre:true,l:'Aanwezig aannemer: naam',t:'text',in:W,uit:W,vb:'Dhr. P. de Vries'},
+    {k:'aanw_aan_bedrijf',s:'alg',g:'aanw',pre:true,l:'Aanwezig aannemer: bedrijf',t:'text',in:W,uit:W,vb:'BAM'},
+    {k:'aanw_aan_tel',s:'alg',g:'aanw',pre:true,l:'Aanwezig aannemer: telefoon',t:'tel',in:W,uit:W,vb:'06-12345678'},
     {k:'afh_org',s:'alg',l:'Afhankelijkheden organisatie (onderwerp, datum gereed)',t:'lang',in:N,uit:W},
     {k:'afh_aan',s:'alg',l:'Afhankelijkheden aannemer (onderwerp, datum gereed)',t:'lang',in:N,uit:W},
 
@@ -46,7 +47,7 @@
     {k:'klant_plaats',s:'klant',l:'Plaats',t:'text',in:V,uit:V,vb:'Oegstgeest'},
     {k:'klant_contact',s:'klant',l:'Contactpersoon',t:'text',in:V,uit:V,vb:'Dhr. R. Jansen'},
     {k:'klant_tel',s:'klant',l:'Telefoonnummer',t:'tel',in:V,uit:V,vb:'06-12345678'},
-    {k:'klant_mail',s:'klant',l:'E-mail',t:'mail',in:W,uit:W,vb:'naam@duwo.nl'},
+    {k:'klant_mail',s:'klant',l:'E-mail',t:'mail',in:W,uit:W,vb:'naam@bedrijf.nl'},
 
     {k:'loc_zelfde',s:'loc',l:'Zelfde als klant',t:'janee',schakel:true,std:'Ja',bron:{loc_adres:'klant_adres',loc_postcode:'klant_postcode',loc_plaats:'klant_plaats'},in:N,uit:N},
     {k:'loc_gebouw',s:'loc',l:'Gebouwnaam',t:'text',in:W,uit:W},
@@ -67,7 +68,7 @@
     {k:'aanm_zelfde',s:'aanm',l:'Zelfde als contactpersoon klant',t:'janee',schakel:true,std:'Ja',bron:{aanm_naam:'klant_contact',aanm_tel:'klant_tel',aanm_mail:'klant_mail'},in:N,uit:N},
     {k:'aanm_naam',s:'aanm',zelfde:{veld:'aanm_zelfde',bron:'klant_contact'},l:'Naam',t:'text',in:W,uit:V,vb:'Dhr. R. Jansen'},
     {k:'aanm_tel',s:'aanm',zelfde:{veld:'aanm_zelfde',bron:'klant_tel'},l:'Telefoon',t:'tel',in:W,uit:V,vb:'06-12345678'},
-    {k:'aanm_mail',s:'aanm',zelfde:{veld:'aanm_zelfde',bron:'klant_mail'},l:'E-mail',t:'mail',in:W,uit:W,vb:'naam@duwo.nl'},
+    {k:'aanm_mail',s:'aanm',zelfde:{veld:'aanm_zelfde',bron:'klant_mail'},l:'E-mail',t:'mail',in:W,uit:W,vb:'naam@bedrijf.nl'},
     {k:'aanm_dagen',s:'aanm',l:'Aantal dagen vooraf',t:'getal',in:W,uit:V,vb:'5'},
 
     {k:'afw_plaats',s:'afw',l:'Plaatsbepaling 19" kast',t:'text',in:N,uit:V,vb:'Begane grond'},
@@ -80,10 +81,10 @@
     {k:'trace_opm',s:'trace',l:'Opmerking bij tracé',t:'lang',in:N,uit:W,vb:'Invoer ongeveer 3 meter uit rechterhoek'},
     {k:'plattegrond',s:'trace',l:'Plattegrond (indien beschikbaar)',t:'foto',in:W,uit:W,nvt:'NIET BESCHIKBAAR',vb:'NIET BESCHIKBAAR'},
 
-    {k:'buiten_meters',s:'buiten',l:'Aantal meters buiten tracé',t:'teller',teller:'meters',in:N,uit:V,vb:'15 meter'},
-    {k:'buiten_invoeringen',s:'buiten',l:'Aantal invoeringen',t:'teller',teller:'invoeringen',in:N,uit:V,vb:'1'},
-    {k:'buiten_boringen',s:'buiten',l:'Aantal boringen/persingen',t:'teller',teller:'boringen',in:N,uit:W},
-    {k:'buiten_fotos',s:'buiten',l:"Foto's buiten tracé",t:'fotos',sectie:'buiten',in:N,uit:V,vb:'7 foto\'s met pijl en bijschrift'},
+    {k:'buiten_meters',s:'buiten',als:geenOnnet,l:'Aantal meters buiten tracé',t:'teller',teller:'meters',in:N,uit:V,vb:'15 meter'},
+    {k:'buiten_invoeringen',s:'buiten',als:geenOnnet,l:'Aantal invoeringen',t:'teller',teller:'invoeringen',in:N,uit:V,vb:'1'},
+    {k:'buiten_boringen',s:'buiten',als:geenOnnet,l:'Aantal boringen/persingen',t:'teller',teller:'boringen',in:N,uit:W},
+    {k:'buiten_fotos',s:'buiten',als:geenOnnet,l:"Foto's buiten tracé",t:'fotos',sectie:'buiten',in:N,uit:V,vb:'7 foto\'s met pijl en bijschrift'},
 
     {k:'binnen_meters',s:'binnen',l:'Aantal meters binnen tracé',kort:'Meters binnen tracé',t:'teller',teller:'metersBinnen',in:N,uit:V,vb:'12 meter DB2 door de kruipruimte + 2 meter DB1'},
     {k:'binnen_kabelgoot',s:'binnen',l:'Nieuw aan te leggen kabelgoot',t:'getal',stap:true,in:N,uit:W,vb:'0'},
@@ -176,6 +177,7 @@
     // "zelfde als": waarde komt van de bron zolang de schakelaar aan staat
     if(f&&f.zelfde&&zelfdeAan(s,f.zelfde.veld))return waarde(s,f.zelfde.bron);
     if(!leeg(v))return v;
+    if(f&&f.pre){const d=standaard()[k];if(!leeg(d))return d;}
     if(f&&f.schakel)return zelfdeAan(s,k)?'Ja':'Nee';
     const ad=adresDelen(s);
     if(k==='loc_adres'||k==='klant_adres')return ad.adres||'';
@@ -206,7 +208,16 @@
     if(ch)s.velden=vv;return ch;}
   function zet(s,k,v){s.velden={...(s.velden||{}),[k]:v};}
   /* telt een veld mee? (bijv. eigenaar-velden alleen als de klant geen eigenaar is) */
-  function actief(s,f){if(!f.als)return true;return (waarde(s,f.als.veld)||'')===f.als.is;}
+  function actief(s,f){if(!f.als)return true;const v=waarde(s,f.als.veld)||'';return f.als.niet!=null?v!==f.als.niet:v===f.als.is;}
+  /* ONNET: geen buiten tracé; foto's horen dan bij binnen */
+  const onnet=s=>(waarde(s,'type_aansluiting')||'')==='ONNET';
+  /* bij ONNET: schouw en foto's naar binnen zetten; geeft de gewijzigde foto's terug (opslaan doet de aanroeper) */
+  function onnetFix(s,fotos){if(!onnet(s))return[];if(s.sectie!=='binnen')s.sectie='binnen';
+    return (fotos||[]).filter(p=>(p.sectie||'buiten')!=='binnen').map(p=>{p.sectie='binnen';return p;});}
+  /* standaardwaarden uit de instellingen (bijv. de vaste aannemer); per schouw aan te passen */
+  const STD_KEY='sisu.standaard';
+  function standaard(){try{return JSON.parse(localStorage.getItem(STD_KEY)||'{}')||{};}catch(e){return{};}}
+  function setStandaard(k,v){const o=standaard();if(v==null||String(v).trim()==='')delete o[k];else o[k]=v;localStorage.setItem(STD_KEY,JSON.stringify(o));}
   const groep=f=>f.g||f.s;
   /* staat dit veld in het gegevensscherm? (tellers, foto-reeksen en de legenda niet) */
   const inLijst=f=>!['teller','fotos','legenda'].includes(f.t);
@@ -240,5 +251,5 @@
     return{klaar:fs.length-mis.length,totaal:fs.length,mist:mis,pct:fs.length?Math.round((fs.length-mis.length)/fs.length*100):100};
   }
   window.Velden={VELDEN,SECTIES,MOMENT,VG,VG_VAAK,VG_VOORSTEL,CONTACTEN,STATUS,V,W,N,cfg,setCfg,resetCfg,waarde,zet,actief,gevuld,voortgang,
-    statusOf,statusMeta,gearchiveerd,groep,inLijst,nodig,secties,verborgen,zelfdeAan,migreer};
+    onnet,onnetFix,standaard,setStandaard,statusOf,statusMeta,gearchiveerd,groep,inLijst,nodig,secties,verborgen,zelfdeAan,migreer};
 })();

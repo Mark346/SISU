@@ -31,7 +31,7 @@
 function newPhoto(survey,galerij){
   Camera.take({galerij}).then(async r=>{
     if(!r||!r.blob)return;
-    const p=await Store.photos.put({surveyId:survey.id,blob:r.blob,ann:{orient:r.orient||'liggend'},bron:'veeg',status:'ok',sectie:(SurveyUI.current()||survey).sectie||'buiten'});
+    const p=await Store.photos.put({surveyId:survey.id,blob:r.blob,ann:{orient:r.orient||'liggend'},bron:'veeg',status:'ok',sectie:Velden.onnet(SurveyUI.current()||survey)?'binnen':((SurveyUI.current()||survey).sectie||'buiten')});
     edit(survey,p.id);
   }).catch(()=>SurveyUI.toast('Foto maken lukte niet'));
 }

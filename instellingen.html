@@ -23,6 +23,8 @@
 .veld{display:grid;grid-template-columns:1fr 80px 80px;gap:6px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:8px 8px 8px 14px;margin-bottom:6px}
 .veld .nm{font-weight:700;font-size:15px;line-height:1.25}
 .veld .vb{color:var(--mute);font-size:13px;font-weight:400;margin-top:1px}
+.veld .std{grid-column:1/-1;display:flex;flex-direction:column;gap:4px;margin:4px 6px 4px 0;font-size:14px;font-weight:600;color:var(--mute)}
+.veld .std input{box-sizing:border-box;width:100%;min-width:0;min-height:46px;border-radius:12px;border:1px solid var(--line2);background:var(--well);color:var(--ink);padding:0 12px;font-size:16px;-webkit-appearance:none;appearance:none}
 .cyc{width:80px;min-height:44px;border-radius:var(--r-pill);border:1px solid transparent;padding:0 4px;cursor:pointer;font-size:14px;font-weight:800;text-align:center}
 .cyc.verplicht{background:var(--acc);color:var(--on-acc)}
 .cyc.wenselijk{background:var(--f1);color:#fff}
@@ -39,7 +41,7 @@
 <body>
 <header class="bar"><a class="back bpill" href="index.html"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>Terug</a><h1>Instellingen</h1><span class="versie" id="versie"></span></header>
 <main class="page">
-  <div class="todo" role="note"><b>Nog toevoegen</b><ul><li>Foto's: welke foto's verplicht of wenselijk zijn</li><li>ONNET en OFFNET: aparte instellingen per type aansluiting</li></ul></div>
+  <div class="todo" role="note"><b>Nog toevoegen</b><ul><li>Foto's: welke foto's verplicht of wenselijk zijn</li><li>ONNET en OFFNET: aparte instellingen per type aansluiting (nu: bij ONNET vervalt buiten tracé)</li></ul></div>
   <p class="uitleg">Alle onderdelen van het site survey document. Kies per onderdeel wat er nodig is bij de <b>input</b> (vóór het schouwen) en bij de <b>output</b> (het document). Tik op een knop om te wisselen: Verplicht → Wenselijk → Nee. Onder elke sectie staat wanneer je die meestal invult: vooraf, ter plekke of achteraf.</p>
   <p class="uitleg">Een schouw gaat vanzelf door de stappen <b>Voorbereiden</b> → <b>Schouwen</b> (bij de eerste foto) → <b>Controleren</b> (bij Naar controle &amp; aanvullen) → <b>Klaar</b> (bij Document maken).</p>
   <div class="lg"><b>Verplicht</b><span>Moet ingevuld zijn. Input: gevraagd bij Voorbereiden, vóór het schouwen. Output: nodig voor een compleet document. Afronden kan ook als er nog iets open is, na een bevestiging.</span>
@@ -63,8 +65,9 @@ function totaal(){const c=Velden.cfg(),n=(k,v)=>Velden.VELDEN.filter(f=>c[f.k][k
 function render(){
   const c=Velden.cfg();totaal();
   $('lijst').innerHTML=Velden.SECTIES.map(sc=>{const fs=Velden.VELDEN.filter(f=>Velden.groep(f)===sc.id&&!f.schakel);if(!fs.length)return'';
-    return `<section class="sec"><div class="kop"><h2>${esc(sc.kort||sc.naam)}<small>${esc(Velden.MOMENT[sc.moment]||'')}</small></h2><span>Input</span><span>Output</span></div>${fs.map(f=>`<div class="veld"><div class="nm">${esc(f.l)}${f.vb?`<div class="vb">Bijv. ${esc(f.vb)}</div>`:''}${f.als?'<div class="vb">Alleen als de klant geen eigenaar is.</div>':''}${f.zelfde?'<div class="vb">Ingevuld via "zelfde als" als die aan staat.</div>':''}</div>${['in','uit'].map(kant=>btn(f,kant,c[f.k][kant])).join('')}</div>`).join('')}</section>`;}).join('');
+    return `<section class="sec"><div class="kop"><h2>${esc(sc.kort||sc.naam)}<small>${esc(Velden.MOMENT[sc.moment]||'')}</small></h2><span>Input</span><span>Output</span></div>${fs.map(f=>`<div class="veld"><div class="nm">${esc(f.l)}${f.vb?`<div class="vb">Bijv. ${esc(f.vb)}</div>`:''}${f.als?`<div class="vb">${f.als.niet==='ONNET'?'Niet bij ONNET (geen buiten tracé).':'Alleen als de klant geen eigenaar is.'}</div>`:''}${f.zelfde?'<div class="vb">Ingevuld via "zelfde als" als die aan staat.</div>':''}</div>${['in','uit'].map(kant=>btn(f,kant,c[f.k][kant])).join('')}${f.pre?`<label class="std">Standaard bij elke schouw (per schouw aan te passen)<input data-std="${f.k}" type="${f.t==='tel'?'tel':'text'}" value="${esc(Velden.standaard()[f.k]||'')}" placeholder="${esc(f.vb?'bijv. '+f.vb:'')}"></label>`:''}</div>`).join('')}</section>`;}).join('');
 }
+$('lijst').addEventListener('input',e=>{const i=e.target.closest('[data-std]');if(i)Velden.setStandaard(i.dataset.std,i.value);});
 $('lijst').addEventListener('click',e=>{const b=e.target.closest('.cyc');if(!b||b.disabled)return;
   const f=Velden.VELDEN.find(x=>x.k===b.dataset.k),kant=b.dataset.kant,nv=VOLG[(VOLG.indexOf(Velden.cfg()[f.k][kant])+1)%3];
   Velden.setCfg(f.k,kant,nv);const n=document.createElement('div');n.innerHTML=btn(f,kant,nv);const nb=n.firstElementChild;b.replaceWith(nb);nb.focus();totaal();});
