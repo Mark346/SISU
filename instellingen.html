@@ -29,7 +29,7 @@
 .cyc.nee{background:var(--bg);color:var(--mute);border-color:var(--line2)}
 .cyc[disabled]{opacity:.45;cursor:default}
 .kop{display:grid;grid-template-columns:1fr 80px 80px;gap:6px;align-items:end;position:sticky;top:57px;background:var(--bg);padding:8px 6px 6px 0;z-index:2}
-.kop h2{font-size:20px;font-weight:800;margin:0}
+.kop h2{font-size:20px;font-weight:800;margin:0}.kop h2 small{display:block;font-size:14px;font-weight:600;color:var(--mute);margin-top:2px}
 .kop span{font-size:13px;font-weight:600;color:var(--mute);text-align:center}
 .tot{display:flex;gap:10px;margin:6px 0 4px;flex-wrap:wrap}
 .tot span{background:var(--card);border:1px solid var(--line);border-radius:var(--r-pill);padding:5px 12px;font-size:14px;font-weight:600}
@@ -40,8 +40,9 @@
 <header class="bar"><a class="back bpill" href="index.html"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>Terug</a><h1>Instellingen</h1><span class="versie" id="versie"></span></header>
 <main class="page">
   <div class="todo" role="note"><b>Nog toevoegen</b><ul><li>Foto's: welke foto's verplicht of wenselijk zijn</li><li>ONNET en OFFNET: aparte instellingen per type aansluiting</li></ul></div>
-  <p class="uitleg">Alle onderdelen van het site survey document. Kies per onderdeel wat er nodig is bij de <b>input</b> (de intake, vóór je gaat lopen) en bij de <b>output</b> (het document). Tik op een knop om te wisselen: Verplicht → Wenselijk → Nee.</p>
-  <div class="lg"><b>Verplicht</b><span>Moet ingevuld zijn. Input: nodig voor "intake compleet". Output: nodig voor "klaar".</span>
+  <p class="uitleg">Alle onderdelen van het site survey document. Kies per onderdeel wat er nodig is bij de <b>input</b> (vóór het schouwen) en bij de <b>output</b> (het document). Tik op een knop om te wisselen: Verplicht → Wenselijk → Nee. Onder elke sectie staat wanneer je die meestal invult: vooraf, ter plekke of achteraf.</p>
+  <p class="uitleg">Een schouw gaat vanzelf door de stappen <b>Voorbereiden</b> → <b>Schouwen</b> (bij de eerste foto) → <b>Controleren</b> (bij Naar controle &amp; aanvullen) → <b>Klaar</b> (bij Document maken).</p>
+  <div class="lg"><b>Verplicht</b><span>Moet ingevuld zijn. Input: gevraagd bij Voorbereiden, vóór het schouwen. Output: nodig voor een compleet document. Afronden kan ook als er nog iets open is, na een bevestiging.</span>
     <b>Wenselijk</b><span>Wordt gevraagd en komt in het document als het is ingevuld, maar houdt niets tegen.</span>
     <b>Nee</b><span>Wordt niet gevraagd (input) of komt niet in het document (output).</span></div>
   <div class="tot" id="tot"></div>
@@ -61,8 +62,8 @@ function totaal(){const c=Velden.cfg(),n=(k,v)=>Velden.VELDEN.filter(f=>c[f.k][k
   $('tot').innerHTML=`<span>Input: ${n('in','verplicht')} verplicht · ${n('in','wenselijk')} wenselijk</span><span>Output: ${n('uit','verplicht')} verplicht · ${n('uit','wenselijk')} wenselijk</span>`;}
 function render(){
   const c=Velden.cfg();totaal();
-  $('lijst').innerHTML=Velden.SECTIES.map(sc=>{const fs=Velden.VELDEN.filter(f=>f.s===sc.id);if(!fs.length)return'';
-    return `<section class="sec"><div class="kop"><h2>${esc(sc.naam)}</h2><span>Input</span><span>Output</span></div>${fs.map(f=>`<div class="veld"><div class="nm">${esc(f.l)}${f.vb?`<div class="vb">Bijv. ${esc(f.vb)}</div>`:''}${f.als?'<div class="vb">Alleen als de klant geen eigenaar is.</div>':''}</div>${['in','uit'].map(kant=>btn(f,kant,c[f.k][kant])).join('')}</div>`).join('')}</section>`;}).join('');
+  $('lijst').innerHTML=Velden.SECTIES.map(sc=>{const fs=Velden.VELDEN.filter(f=>Velden.groep(f)===sc.id&&!f.schakel);if(!fs.length)return'';
+    return `<section class="sec"><div class="kop"><h2>${esc(sc.kort||sc.naam)}<small>${esc(Velden.MOMENT[sc.moment]||'')}</small></h2><span>Input</span><span>Output</span></div>${fs.map(f=>`<div class="veld"><div class="nm">${esc(f.l)}${f.vb?`<div class="vb">Bijv. ${esc(f.vb)}</div>`:''}${f.als?'<div class="vb">Alleen als de klant geen eigenaar is.</div>':''}${f.zelfde?'<div class="vb">Ingevuld via "zelfde als" als die aan staat.</div>':''}</div>${['in','uit'].map(kant=>btn(f,kant,c[f.k][kant])).join('')}</div>`).join('')}</section>`;}).join('');
 }
 $('lijst').addEventListener('click',e=>{const b=e.target.closest('.cyc');if(!b||b.disabled)return;
   const f=Velden.VELDEN.find(x=>x.k===b.dataset.k),kant=b.dataset.kant,nv=VOLG[(VOLG.indexOf(Velden.cfg()[f.k][kant])+1)%3];

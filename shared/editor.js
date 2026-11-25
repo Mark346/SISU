@@ -175,6 +175,8 @@
     document.body.appendChild(root);
     st={ph,opts,root,tool:'nieuw',nb:'nieuw',sel:null,url:URL.createObjectURL(ph.blob),toast:'',siblings:[],thumbs:{}};
     await loadSiblings();
+    // serverkast: welke foto's hadden er al een (na de eerste nieuwe vragen we waar de kast komt)
+    st.skVoor=new Set(st.siblings.filter(heeftSk).map(p=>p.id));st.skNieuw=null;
     build();
     return{close:()=>close()};
   }
@@ -183,15 +185,19 @@
     const all=await Store.photos.bySurvey(st.ph.surveyId,true);st.siblings=all;
     all.forEach(p=>{if(!st.thumbs[p.id])st.thumbs[p.id]=URL.createObjectURL(p.blob);});
   }
+  const heeftSk=p=>!!(p&&p.ann&&(p.ann.syms||[]).some(x=>x.t==='sk'));
   function close(silent){
-    if(!st)return;const o=st.opts;URL.revokeObjectURL(st.url);Object.values(st.thumbs).forEach(u=>URL.revokeObjectURL(u));
+    if(!st)return;const o=st.opts;if(st.skVoor&&heeftSk(st.ph)&&!st.skVoor.has(st.ph.id))st.skNieuw=st.ph.id;const sk=st.skNieuw;
+    if(saveT){clearTimeout(saveT);saveT=null;const p=st.ph;p.bijschrift=capOf(p).text;Store.photos.put(p).catch(()=>{});} /* nog niet opgeslagen wijziging bewaren */
+    URL.revokeObjectURL(st.url);Object.values(st.thumbs).forEach(u=>URL.revokeObjectURL(u));
     st.root.remove();hidePop();st=null;if(!silent&&o.onClose)o.onClose();
+    if(!silent&&sk&&window.Gegevens&&Gegevens.naKast)Gegevens.naKast(sk,o.onClose).catch(()=>{});
   }
   const size=()=>Legend.size(st.ph.ann);
   let saveT=null;
   function save(now){
     clearTimeout(saveT);
-    const go=async()=>{const p=st&&st.ph;if(!p)return;const c=capOf(p);p.bijschrift=c.text;await Store.photos.put(p);if(st&&st.opts.onChange)st.opts.onChange(p);};
+    const go=async()=>{saveT=null;const p=st&&st.ph;if(!p)return;if(st.skVoor&&heeftSk(p)&&!st.skVoor.has(p.id))st.skNieuw=p.id;const c=capOf(p);p.bijschrift=c.text;await Store.photos.put(p);if(st&&st.opts.onChange)st.opts.onChange(p);};
     if(now)return go();saveT=setTimeout(go,250);
   }
   function remember(){const k=st.ph.id;(stacks[k]=stacks[k]||[]).push(JSON.stringify({ann:st.ph.ann,cap:st.ph.cap||null}));if(stacks[k].length>60)stacks[k].shift();}

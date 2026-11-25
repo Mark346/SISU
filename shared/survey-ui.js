@@ -35,9 +35,8 @@
 .sui .sst{display:flex;align-items:center;gap:7px;color:var(--mute);font-size:15px;margin-top:4px}
 .sui .dot{flex:none;display:inline-block;width:10px;height:10px;border-radius:5px}
 .sui .sv .go{align-self:start;margin-top:3px;color:var(--mute)}
-.sui .srings{grid-column:1/-1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-.sui .ring{display:flex;align-items:center;gap:10px;font-size:14px;line-height:1.25;color:var(--mute)}
-.sui .ring svg{flex:none}.sui .ring b{display:block;color:var(--ink);font-size:16px;font-weight:800}
+.sui .sdoc{display:block;color:var(--mute);font-size:15px;margin-top:4px}
+.sui .sst .wrn{color:var(--warn);font-weight:700}
 .sui .slink{display:flex;justify-content:center;align-items:center;min-height:44px;margin:18px auto 0;color:var(--mute);font-weight:600;font-size:15px;text-decoration:none}
 .sui .sleeg{color:var(--mute);margin:14px 2px 0}
 /* schouwoverzicht (Glasvezel) */
@@ -68,17 +67,22 @@
 .sui .sdone .sh b{display:block;font-size:18px;font-weight:600;line-height:1.2}
 .sui .sdone .sb{display:flex;gap:8px;margin-top:10px}.sui .sdone .sb .btn{flex:1;min-height:48px;padding:0 8px}
 @media (prefers-reduced-motion:reduce){.sui .sfold svg{transition:none}}
-.sui .sblk{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-top:4px}
-.sui .sstep{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));list-style:none;margin:0 0 14px;padding:0;gap:4px}
-.sui .sstep li{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:13px;color:var(--mute);text-align:center;line-height:1.15}
-.sui .sstep li i{display:block;width:100%;height:6px;border-radius:3px;background:var(--track)}
+.sui .shd{margin-top:2px;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:manipulation;cursor:default}
+.sui .sht{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.sui .sht b{flex:1;min-width:0;font-size:17px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sui .sht span{flex:none;color:var(--mute);font-size:14px}
+.sui .sstep{display:flex;list-style:none;margin:8px 0 0;padding:0;gap:4px}
+.sui .sstep li{flex:1 1 auto;display:flex;flex-direction:column;gap:5px;font-size:13px;color:var(--mute);line-height:1.15;min-width:0}
+.sui .sstep li span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sui .sstep li i{display:block;width:100%;height:4px;border-radius:2px;background:var(--track)}
 .sui .sstep li.nu{color:var(--ink);font-weight:800}
-.sui .sprg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-.sui .spb{display:flex;align-items:center;min-height:72px;border:0;border-radius:16px;background:var(--well);color:var(--ink);padding:0 12px;cursor:pointer;text-align:left;font:inherit}
-.sui .spb:active{background:var(--card2)}.sui .spb .ring b{font-size:18px}
-.sui .saanv{width:100%;margin-top:10px}
-.sui .smist{margin:12px 2px 0;font-size:14px;line-height:1.4;color:var(--warn)}
-.sui .sblk .row{margin-top:14px;flex-wrap:nowrap}.sui .sblk .row .btn{flex:1;min-width:0;min-height:50px;font-size:15px;padding:0 10px;white-space:nowrap}
+.sui .snext{display:flex;align-items:center;gap:12px;margin-top:12px;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:12px 12px 12px 16px}
+.sui .snext.wrn{border-color:var(--warn)}
+.sui .snext .t{flex:1;min-width:0}.sui .snext .t b{display:block;font-size:17px;font-weight:800;line-height:1.2}
+.sui .snext.wrn .t b{color:var(--warn)}
+.sui .snext .t small{display:block;color:var(--mute);font-size:14px;margin-top:3px;line-height:1.3}
+.sui .snext .btn{flex:none;min-height:48px;padding:0 16px;font-size:15px}
+.sstat{display:flex;flex-direction:column;gap:8px;margin-top:6px}
 .sui .sect{display:flex;align-items:center;gap:10px;margin-top:16px}.sui .sect>span{color:var(--mute);font-size:15px;white-space:nowrap}
 .sui .sect .seg{flex:1;display:flex;background:var(--card);border:1px solid var(--line);border-radius:var(--r-pill);padding:3px}
 .sui .sect button{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;min-height:44px;border:0;border-radius:var(--r-pill);background:transparent;color:var(--ink);font-weight:600;font-size:15px;cursor:pointer}
@@ -97,9 +101,6 @@
     const dag=x=>new Date(x.getFullYear(),x.getMonth(),x.getDate()).getTime(),v=Math.round((dag(n)-dag(t))/864e5);
     if(v===0)return'vandaag';if(v===1)return'gisteren';
     return t.toLocaleDateString('nl-NL',t.getFullYear()===n.getFullYear()?{day:'numeric',month:'short'}:{day:'numeric',month:'short',year:'numeric'});}
-  /* voortgangsring (Intake / Document) */
-  function ring(lab,v,kleur,maat){const len=v.totaal?v.pct/100*125.66:0,m=maat||44;
-    return `<span class="ring"><svg width="${m}" height="${m}" viewBox="0 0 50 50" aria-hidden="true"><circle cx="25" cy="25" r="20" fill="none" style="stroke:var(--track)" stroke-width="6"/>${len>0?`<circle cx="25" cy="25" r="20" fill="none" style="stroke:${kleur}" stroke-width="6" stroke-linecap="round" stroke-dasharray="${len.toFixed(1)} 200" transform="rotate(-90 25 25)"/>`:''}</svg><span>${lab}<b>${v.totaal?v.klaar+'/'+v.totaal:'–'}</b></span></span>`;}
   const ICO={
     plus:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M12 4v16M4 12h16"/></svg>',
     pijl:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>',
@@ -123,14 +124,17 @@
     const want=new URLSearchParams(location.search).get('survey');
     if(want){const s=await Store.surveys.get(want);if(s)return show(s);}
     const all=await Store.surveys.list(),st=x=>Velden.statusOf(x);
-    const open=all.filter(x=>['new','intake','gelopen'].includes(st(x))),done=all.filter(x=>st(x)==='klaar'),arch=all.filter(x=>st(x)==='archief'),lastOpen=open[0];
+    const arch=all.filter(x=>Velden.gearchiveerd(x)),rest=all.filter(x=>!Velden.gearchiveerd(x));
+    const open=rest.filter(x=>st(x)!=='klaar'),done=rest.filter(x=>st(x)==='klaar'),lastOpen=open[0];
     title(cfg.startTitel||cfg.naam);survey=null;if(cfg.onScreen)cfg.onScreen('start');
     const fotos={};for(const x of all)fotos[x.id]=await Store.photos.bySurvey(x.id,true);
     if(!all.length)newOpen=true;
-    // statusregel: gekleurd bolletje + "Gelopen · vandaag" (+ "gemaakt in …" als het uit een andere variant komt)
-    const sst=x=>{const m=Velden.statusMeta(st(x));return `<span class="sst"><i class="dot" style="background:var(--st-${m.id})"></i><span>${esc(m.naam)} · ${esc(relD(x.datum))}${x.variant&&x.variant!==cfg.variant?' · gemaakt in '+esc(NAMEN[x.variant]||x.variant):''}</span></span>`;};
-    const rings=x=>`<span class="srings">${ring('Intake',Velden.voortgang(x,fotos[x.id],'in'),'var(--prog-in)')}${ring('Document',Velden.voortgang(x,fotos[x.id],'uit'),'var(--prog-doc)')}</span>`;
-    const fold=(id,open,label,lijst,status)=>`<button class="sfold" id="${id}" aria-expanded="${open}"><i class="dot" style="background:var(--st-${status})"></i>${label}<span class="n">· ${lijst.length===1?esc(lijst[0].adres||'zonder adres'):lijst.length+' schouwen'}</span>${ICO.pijl}</button>`;
+    // statusregel: gekleurd bolletje + "Schouwen · vandaag" (+ "gemaakt in …" als het uit een andere variant komt);
+    // klaar met open velden: "Klaar · 3 open" in waarschuwingskleur
+    const sst=x=>{const m=Velden.statusMeta(st(x)),vo=Velden.voortgang(x,fotos[x.id],'uit'),onv=m.id==='klaar'&&x.onvolledig&&vo.mist.length;
+      return `<span class="sst"><i class="dot" style="background:${m.kleur}"></i><span>${onv?`<span class="wrn">Klaar · ${vo.mist.length} open</span>`:esc(m.naam)} · ${esc(relD(x.datum))}${x.variant&&x.variant!==cfg.variant?' · gemaakt in '+esc(NAMEN[x.variant]||x.variant):''}</span></span>`;};
+    const docr=x=>{const v=Velden.voortgang(x,fotos[x.id],'uit');return `<span class="sdoc">Document ${v.klaar}/${v.totaal}</span>`;};
+    const fold=(id,open,label,lijst,kleur)=>`<button class="sfold" id="${id}" aria-expanded="${open}"><i class="dot" style="background:${kleur}"></i>${label}<span class="n">· ${lijst.length===1?esc(lijst[0].adres||'zonder adres'):lijst.length+' schouwen'}</span>${ICO.pijl}</button>`;
     const kaart=(x,knoppen)=>`<div class="sdone"><div class="sh"><b>${esc(x.adres||'zonder adres')}</b>${sst(x)}</div>${knoppen}</div>`;
     main.innerHTML=`
      <div class="shead"><h2>Schouwen</h2>${open.length?`<span>${open.length} bezig</span>`:''}</div>
@@ -141,12 +145,12 @@
        ${lastOpen&&lastOpen.adres?`<button class="btn take" id="take"><span>Adres overnemen:</span>${esc(lastOpen.adres)}</button>`:''}
        <div class="row">${all.length?'<button class="btn" id="cancel">Annuleren</button>':''}<button class="btn pri" id="go" style="flex:1.4">Start schouw</button></div>
      </div>
-     ${open.length?`<div class="surv">${open.map(x=>`<button class="sv" data-id="${esc(x.id)}"><span><b>${esc(x.adres||'zonder adres')}</b>${sst(x)}</span><span class="go">${ICO.pijl}</span>${rings(x)}</button>`).join('')}</div>`
+     ${open.length?`<div class="surv">${open.map(x=>`<button class="sv" data-id="${esc(x.id)}"><span><b>${esc(x.adres||'zonder adres')}</b>${sst(x)}${docr(x)}</span><span class="go">${ICO.pijl}</span></button>`).join('')}</div>`
        :(all.length?'<p class="sleeg">Niets bezig. Tik op Nieuwe schouw om te beginnen.</p>':'')}
-     ${done.length?fold('fold',showDone,'Klaar',done,'klaar')+(showDone?`<div class="surv">${done.map(x=>kaart(x,`
+     ${done.length?fold('fold',showDone,'Klaar',done,'var(--st-klaar)')+(showDone?`<div class="surv">${done.map(x=>kaart(x,`
          <div class="sb"><a class="btn pri" href="shared/document.html?survey=${encodeURIComponent(x.id)}">Document</a><button class="btn" data-share="${esc(x.id)}">Delen (PDF)</button></div>
          <div class="sb"><button class="btn" data-open="${esc(x.id)}">Openen</button><button class="btn" data-arch="${esc(x.id)}">Archiveren</button></div>`)).join('')}</div>`:''):''}
-     ${arch.length?fold('foldA',showArch,'Archief',arch,'archief')+(showArch?`<div class="surv">${arch.map(x=>kaart(x,`
+     ${arch.length?fold('foldA',showArch,`Gearchiveerd (${arch.length})`,arch,'var(--st-archief)')+(showArch?`<div class="surv">${arch.map(x=>kaart(x,`
          <div class="sb"><a class="btn" href="shared/document.html?survey=${encodeURIComponent(x.id)}">Document</a><button class="btn" data-share="${esc(x.id)}">Delen (PDF)</button></div>
          <div class="sb"><button class="btn" data-unarch="${esc(x.id)}">Terugzetten</button><button class="btn sdel2" data-del="${esc(x.id)}">Verwijderen</button></div>`)).join('')}</div>`:''):''}
      ${cfg.startExtra||''}`;
@@ -154,8 +158,8 @@
     main.querySelectorAll('[data-del]').forEach(b=>{let t=null;const lab=b.textContent;b.onclick=async()=>{
       if(!b.classList.contains('sure')){b.classList.add('sure');b.textContent='Zeker? Tik nog eens';t=setTimeout(()=>{b.classList.remove('sure');b.textContent=lab;},3000);return;}
       clearTimeout(t);await Store.surveys.del(b.dataset.del);toast('Schouw verwijderd');start();};});
-    main.querySelectorAll('[data-arch]').forEach(b=>b.onclick=async()=>{const x=await Store.surveys.get(b.dataset.arch);x.status='archief';await Store.surveys.put(x);toast('Naar het archief');start();});
-    main.querySelectorAll('[data-unarch]').forEach(b=>b.onclick=async()=>{const x=await Store.surveys.get(b.dataset.unarch);x.status='klaar';await Store.surveys.put(x);toast('Terug bij Klaar');start();});
+    main.querySelectorAll('[data-arch]').forEach(b=>b.onclick=async()=>{const x=await Store.surveys.get(b.dataset.arch);x.gearchiveerd=true;x.status=Velden.statusOf(x);await Store.surveys.put(x);toast('Gearchiveerd');start();});
+    main.querySelectorAll('[data-unarch]').forEach(b=>b.onclick=async()=>{const x=await Store.surveys.get(b.dataset.unarch);x.gearchiveerd=false;x.status=Velden.statusOf(x);await Store.surveys.put(x);toast('Terug bij Klaar');start();});
     main.querySelectorAll('[data-share]').forEach(b=>{if(window.PdfDoc)PdfDoc.bindShare(b,b.dataset.share,toast);else b.hidden=true;});
     if($('fold'))$('fold').onclick=()=>{showDone=!showDone;start();};
     if($('foldA'))$('foldA').onclick=()=>{showArch=!showArch;start();};
@@ -166,56 +170,66 @@
     if($('take'))$('take').onclick=()=>{$('adr').value=lastOpen.adres;};
     $('go').onclick=async()=>{const a=$('adr').value.trim();if(!a){toast('Vul eerst het adres in');$('adr').focus();return;}
       newOpen=false;
-      const x=await Store.surveys.put({adres:a,variant:cfg.variant,status:'new'});await show(x);
-      const i=Velden.voortgang(x,[],'in');if(i.totaal)Gegevens.open(x,'intake',{onClose:()=>show(x)});};
+      const x=await Store.surveys.put({adres:a,variant:cfg.variant,status:'voorbereiden'});await show(x);
+      // eerst wat je vooraf moet weten (alleen als daar iets verplicht is)
+      const i=Velden.voortgang(x,[],'in');if(i.mist.length)Gegevens.open(x,{filter:'todo',moment:'vooraf',onClose:()=>show(x)});};
   }
 
-  /* bevestiging om toch door te zetten terwijl verplichte velden leeg zijn: 'toch' | 'invullen' | 'annuleren' */
-  function bevestig(naar,mist){return new Promise(res=>{
-    const d=document.createElement('div');d.className='sconf';d.setAttribute('role','dialog');d.setAttribute('aria-modal','true');d.setAttribute('aria-labelledby','scT');
-    d.innerHTML=`<div class="sconfb"><h3 id="scT">Toch op "${esc(naar)}" zetten?</h3>
-      <p>Deze verplichte velden zijn nog niet ingevuld (${mist.length}):</p>
-      <ul>${mist.map(f=>{const sc=Velden.SECTIES.find(x=>x.id===f.s);return `<li>${esc(f.l)}${sc?` <small>(${esc(sc.naam)})</small>`:''}</li>`;}).join('')}</ul>
-      <button class="btn pri" data-k="invullen">Velden invullen</button>
-      <button class="btn sdanger" data-k="toch">Toch op "${esc(naar)}" zetten</button>
-      <button class="btn" data-k="annuleren">Annuleren</button></div>`;
-    document.body.appendChild(d);d.querySelector('[data-k=invullen]').focus();
-    d.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{
-      if(b.dataset.k==='toch'&&!b.classList.contains('sure')){b.classList.add('sure');b.textContent='Zeker? Tik nog eens';return;}
-      d.remove();res(b.dataset.k);});
-    d.addEventListener('click',e=>{if(e.target===d){d.remove();res('annuleren');}});
-  });}
+  /* oude status omzetten (alleen samen met een andere wijziging opslaan) */
+  function norm(s){let ch=false;if(s.status==='archief'&&s.gearchiveerd==null){s.gearchiveerd=true;ch=true;}
+    const n=Velden.statusOf(s);if(s.status!==n){s.status=n;ch=true;}return ch;}
+  /* automatisch: voorbereiden -> schouwen zodra de eerste (nieuwe) foto er is */
+  function naFoto(s,n){let ch=false;
+    if(Velden.statusOf(s)==='voorbereiden'&&n>(s.nFoto||0)){norm(s);s.status='schouwen';if(!s.eersteFoto)s.eersteFoto=new Date().toISOString();ch=true;}
+    if(n!==s.nFoto){s.nFoto=n;ch=true;}
+    if(ch)norm(s);return ch;}
 
-  /* ---------- status en voortgang van één schouw ---------- */
+  /* blad "Status terugzetten naar …" (lang drukken op de statusbalk); bevestigen door twee keer te tikken */
+  function terugBlad(s,klaar){
+    const cur=Velden.statusOf(s),idx=Velden.STATUS.findIndex(x=>x.id===cur),eerder=Velden.STATUS.slice(0,idx).reverse();
+    const d=document.createElement('div');d.className='sconf';d.setAttribute('role','dialog');d.setAttribute('aria-modal','true');d.setAttribute('aria-labelledby','scT');
+    d.innerHTML=`<div class="sconfb"><h3 id="scT">Status terugzetten naar …</h3>
+      ${eerder.length?`<p>Nu: ${esc(Velden.statusMeta(cur).naam)}. Tik twee keer om terug te zetten.</p>${eerder.map(x=>`<button class="btn sdanger" data-to="${x.id}">${esc(x.naam)}</button>`).join('')}`:'<p>Dit is de eerste stap. Hier kun je niet verder terug.</p>'}
+      <button class="btn" data-x>Annuleren</button></div>`;
+    document.body.appendChild(d);(d.querySelector('[data-to]')||d.querySelector('[data-x]')).focus();
+    const weg=()=>d.remove();
+    d.querySelector('[data-x]').onclick=weg;d.addEventListener('click',e=>{if(e.target===d)weg();});
+    d.querySelectorAll('[data-to]').forEach(b=>{const lab=b.textContent;b.onclick=async()=>{
+      if(!b.classList.contains('sure')){d.querySelectorAll('.sure').forEach(x=>{x.classList.remove('sure');x.textContent=x.dataset.lab;});b.dataset.lab=lab;b.classList.add('sure');b.textContent=`Zeker? Tik nog eens (${lab})`;return;}
+      const ph=await Store.photos.bySurvey(s.id);norm(s);s.status=b.dataset.to;s.nFoto=ph.length;delete s.onvolledig;
+      await Store.surveys.put(s);weg();toast('Status: '+lab);klaar();};});
+  }
+  /* lang drukken (ca. 0,6 s) */
+  function langDruk(el,fn){let t=null,x0=0,y0=0,klaar=0;const stop=()=>{clearTimeout(t);t=null;};
+    const vuur=()=>{stop();if(Date.now()-klaar<1000)return;klaar=Date.now();if(navigator.vibrate)try{navigator.vibrate(15);}catch(_){}fn();};
+    el.addEventListener('pointerdown',e=>{x0=e.clientX;y0=e.clientY;stop();t=setTimeout(vuur,600);});
+    el.addEventListener('pointermove',e=>{if(t&&Math.hypot(e.clientX-x0,e.clientY-y0)>10)stop();});
+    ['pointerup','pointercancel','pointerleave'].forEach(k=>el.addEventListener(k,stop));
+    // Android/Chrome: lang drukken geeft een contextmenu-event (en breekt de pointer af)
+    el.addEventListener('contextmenu',e=>{e.preventDefault();vuur();});
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();fn();}});}
+
+  /* ---------- status en "volgende stap" van één schouw ---------- */
   async function statusBlock(el,s,na){
-    const ph=await Store.photos.bySurvey(s.id,true),cur=Velden.statusOf(s);
-    // automatisch: new -> intake compleet zodra alle verplichte intake-velden er zijn
-    const vi=Velden.voortgang(s,ph,'in'),vo=Velden.voortgang(s,ph,'uit');
-    if(cur==='new'&&vi.totaal&&vi.mist.length===0){s.status='intake';await Store.surveys.put(s);toast('Intake compleet');return statusBlock(el,s,na);}
-    const idx=Velden.STATUS.findIndex(x=>x.id===cur);
-    const knop={new:{l:'Intake afronden',to:'intake',check:'in'},intake:{l:'Schouw gelopen',to:'gelopen'},gelopen:{l:'Afronden (klaar)',to:'klaar',check:'uit'},klaar:{l:'Archiveren',to:'archief'},archief:{l:'Terugzetten',to:'klaar'}}[cur];
-    const terug={intake:'new',gelopen:'intake',klaar:'gelopen'}[cur];
-    const mist=v=>v.mist.length?`<p class="smist">Nog verplicht: ${v.mist.slice(0,6).map(f=>esc(f.l)).join(', ')}${v.mist.length>6?' en '+(v.mist.length-6)+' meer':''}</p><button class="btn saanv" id="sbA">Gegevens aanvullen</button>`:'';
-    el.innerHTML=`<div class="sblk">
-      <ol class="sstep" aria-label="Status">${Velden.STATUS.map((x,i)=>`<li class="${i<idx?'af':i===idx?'nu':''}" ${i===idx?'aria-current="step"':''}><i style="${i<=idx?'background:'+x.kleur:''}"></i><span>${esc(x.naam)}</span></li>`).join('')}</ol>
-      <div class="sprg"><button class="spb" id="sbI">${ring('Intake',vi,'var(--prog-in)',48)}</button><button class="spb" id="sbO">${ring('Document',vo,'var(--prog-doc)',48)}</button></div>
-      ${cur==='new'?mist(vi):''}${cur==='gelopen'?mist(vo):''}
-      <div class="row">${terug?`<button class="btn" id="sbB">‹ ${esc(Velden.statusMeta(terug).naam)}</button>`:''}<button class="btn pri" id="sbN">${esc(knop.l)}</button></div></div>`;
+    let ch=Velden.migreer(s);
+    const ph=await Store.photos.bySurvey(s.id,true),ok=ph.filter(p=>p.status!=='vervallen');
+    if(naFoto(s,ok.length))ch=true;
+    if(ch){norm(s);await Store.surveys.put(s);}
+    const cur=Velden.statusOf(s),idx=Velden.STATUS.findIndex(x=>x.id===cur);
     const reopen=()=>{if(na)na();else show(s);};
-    $('sbI').onclick=()=>Gegevens.open(s,'intake',{onClose:reopen});
-    $('sbO').onclick=()=>Gegevens.open(s,'alles',{onClose:reopen});
-    if($('sbA'))$('sbA').onclick=()=>Gegevens.open(s,cur==='new'?'intake':'alles',{onClose:reopen,naarLeeg:true});
-    if($('sbB'))$('sbB').onclick=async()=>{s.status=terug;await Store.surveys.put(s);reopen();};
-    $('sbN').onclick=async()=>{
-      const v=knop.check==='in'?vi:knop.check==='uit'?vo:null;
-      if(v&&v.mist.length){const keuze=await bevestig(Velden.statusMeta(knop.to).naam,v.mist);
-        if(keuze==='invullen'){Gegevens.open(s,knop.check==='in'?'intake':'alles',{onClose:reopen});return;}
-        if(keuze!=='toch')return;
-        s.onvolledig={...(s.onvolledig||{}),[knop.to]:{op:new Date().toISOString(),mist:v.mist.map(f=>f.l)}};}
-      if(knop.to==='gelopen'&&!ph.some(p=>p.status!=='vervallen'))toast("Let op: er zijn nog geen foto's");
-      s.status=knop.to;if(knop.to==='gelopen'&&!s.gelopenOp)s.gelopenOp=new Date().toISOString();
-      await Store.surveys.put(s);toast('Status: '+Velden.statusMeta(knop.to).naam);
-      if(knop.to==='klaar'||knop.to==='archief'){history.replaceState(null,'',location.pathname);start();}else reopen();};
+    const naam=L=>L.map(x=>x.sc.kort).join(' · ');
+    let kaart='';
+    if(cur==='voorbereiden'){const L=Velden.secties(s,ph,{moment:'vooraf',kant:'in'}).filter(x=>x.open.length),n=L.reduce((t,x)=>t+x.open.length,0);
+      if(n)kaart=`<div class="snext wrn"><div class="t"><b>Nog ${n} ${n===1?'gegeven':'gegevens'} vooraf</b><small>${esc(naam(L))}</small></div><button class="btn pri" id="sbGo">Nu invullen</button></div>`;}
+    else if(cur==='schouwen'){const L=Velden.secties(s,ph,{moment:'terplekke'}).filter(x=>x.open.length),n=L.reduce((t,x)=>t+x.open.length,0);
+      if(n)kaart=`<div class="snext wrn"><div class="t"><b>Nog ${n} ${n===1?'ding':'dingen'} ter plekke</b><small>${esc(naam(L))}</small></div><button class="btn pri" id="sbGo">Nu invullen</button></div>`;}
+    else{const vo=Velden.voortgang(s,ph,'uit');
+      if(cur==='controleren'||vo.mist.length)kaart=`<div class="snext${vo.mist.length?' wrn':''}"><div class="t"><b>Document ${vo.klaar} van ${vo.totaal} compleet</b>${vo.mist.length?`<small>${vo.mist.length} verplicht nog open</small>`:''}</div><a class="btn${cur==='controleren'?' pri':''}" href="shared/storyline.html?survey=${encodeURIComponent(s.id)}">Naar controle &amp; aanvullen</a></div>`;}
+    el.innerHTML=`<div class="sstat"><div class="shd" id="sbH" tabindex="0" role="group" aria-label="Status ${esc(Velden.statusMeta(cur).naam)}, stap ${idx+1} van ${Velden.STATUS.length}. Lang drukken om de status terug te zetten.">
+      <div class="sht"><b>${esc(s.adres||'Schouw')}</b><span>stap ${idx+1} van ${Velden.STATUS.length}</span></div>
+      <ol class="sstep" aria-hidden="true">${Velden.STATUS.map((x,i)=>`<li class="${i===idx?'nu':''}"><i style="${i<=idx?'background:'+x.kleur:''}"></i><span>${esc(x.naam)}</span></li>`).join('')}</ol></div>${kaart}</div>`;
+    langDruk($('sbH'),()=>terugBlad(s,reopen));
+    if($('sbGo'))$('sbGo').onclick=()=>Gegevens.open(s,{filter:'todo',moment:cur==='voorbereiden'?'vooraf':'terplekke',onClose:reopen});
   }
   /* knop "Schouw verwijderen" (verhuisd van het startscherm naar de schouw): twee keer tikken */
   function bindDel(btn,s,voor){if(!btn)return;let t=null;const lab=btn.textContent;btn.onclick=async()=>{
@@ -223,8 +237,11 @@
     clearTimeout(t);if(voor)voor();await Store.surveys.del(s.id);toast('Schouw verwijderd');survey=null;history.replaceState(null,'',location.pathname);start();};}
   async function recount(){
     if(!survey)return;const ph=await Store.photos.bySurvey(survey.id),t=cfg.tellen(survey,ph)||{};
-    const T={meters:0,invoeringen:0,boringen:0,...survey.tellers,...t};
-    if(JSON.stringify(T)!==JSON.stringify(survey.tellers)){survey.tellers=T;await Store.surveys.put(survey);}
+    const T={meters:0,invoeringen:0,boringen:0,...survey.tellers,...t};let ch=false;
+    if(JSON.stringify(T)!==JSON.stringify(survey.tellers)){survey.tellers=T;ch=true;}
+    const was=Velden.statusOf(survey);if(naFoto(survey,ph.filter(p=>p.status!=='vervallen').length))ch=true;
+    if(ch)await Store.surveys.put(survey);
+    if(was!==Velden.statusOf(survey)){toast('Status: '+Velden.statusMeta(Velden.statusOf(survey)).naam);const b=$('stblk');if(b&&!cfg.eigenScherm)statusBlock(b,survey);}
     const i=$('ti');if(i)i.textContent=T.invoeringen||0;const m=$('tmv');if(m)m.textContent=nl1(T.meters||0)+' m';
     return T;
   }
@@ -237,14 +254,16 @@
     if(cfg.eigenScherm)return cfg.eigenScherm(s); // variant met een eigen schouwscherm (Loop-spoor)
     const ph=await Store.photos.bySurvey(s.id,true),ok=ph.filter(p=>p.status!=='vervallen');
     Object.values(urls).forEach(u=>URL.revokeObjectURL(u));urls={};ph.forEach(p=>urls[p.id]=URL.createObjectURL(p.blob));
+    if(Velden.migreer(s))await Store.surveys.put(s);
     const T=await recount(),acts=cfg.acties(s,ok.length);
+    const seg=binnenAan()?`<div class="sect" role="group" aria-label="Foto's voor"><span>Foto's voor</span><div class="seg">${['buiten','binnen'].map(x=>`<button data-sect="${x}" class="${(s.sectie||'buiten')===x?'on':''}" aria-pressed="${(s.sectie||'buiten')===x}"><i class="dot" style="background:var(--sec-${x})"></i>${x==='buiten'?'Buiten':'Binnen'}</button>`).join('')}</div></div>`:'';
     main.innerHTML=`
      <div id="stblk"></div>
-     ${binnenAan()?`<div class="sect" role="group" aria-label="Foto's voor"><span>Foto's voor</span><div class="seg">${['buiten','binnen'].map(x=>`<button data-sect="${x}" class="${(s.sectie||'buiten')===x?'on':''}" aria-pressed="${(s.sectie||'buiten')===x}"><i class="dot" style="background:var(--sec-${x})"></i>${x==='buiten'?'Buiten':'Binnen'}</button>`).join('')}</div></div>`:''}
      ${(()=>{ // hoofdactie als grote pil met camera, "uit galerij" als ronde knop ernaast, de rest eronder
         const isGal=a=>/galerij/i.test(a.label),boven=acts.map((a,i)=>({a,i})).filter(x=>x.a.pri||isGal(x.a)),onder=acts.map((a,i)=>({a,i})).filter(x=>!x.a.pri&&!isGal(x.a));
         return (boven.length?`<div class="sacts">${boven.map(({a,i})=>a.pri?`<button class="btn pri" data-a="${i}">${ICO.camera}${esc(a.label)}</button>`:`<button class="btn rnd" data-a="${i}" aria-label="${esc(a.label)}">${ICO.galerij}</button>`).join('')}</div>`:'')
           +onder.map(({a,i})=>`<div class="row"><button class="btn" data-a="${i}">${esc(a.label)}</button></div>`).join('');})()}
+     ${seg}
      <div class="fhead"><h2>Foto's</h2>${ph.length?`<span>${ok.length} van ${ph.length} in document</span>`:''}</div>
      ${ph.length?`<div class="strip">${ph.map((p,i)=>`<button class="th${p.status==='vervallen'?' vv':''}" data-id="${p.id}" aria-label="Foto ${i+1}${p.sectie==='binnen'?', binnen':''}${p.status==='vervallen'?', vervalt':''}"><img src="${urls[p.id]}" alt=""><span>${i+1}${p.sectie==='binnen'?' · binnen':''}${p.status==='vervallen'?' · vervalt':''}</span></button>`).join('')}</div>
      <p class="note">Tik om te bewerken. Lang drukken: vervalt (ander tracé) of terugzetten.</p>`:'<p class="note">Nog geen foto\'s. Begin bij de aansluiting op het netwerk.</p>'}
@@ -255,6 +274,7 @@
          :`<div class="r"><div class="l">Meters buiten tracé<small>${esc(T.metersNote||'')}</small></div><span class="v" id="tmv">${nl1(T.meters||0)} m</span></div>`}
        <div class="r"><div class="l">Invoeringen<small>${esc(cfg.invoerUitleg||'Telt de app.')}</small></div><span class="v" id="ti">${T.invoeringen||0}</span></div>
        <div class="r"><div class="l">Boringen/persingen</div><button class="step" id="bm" aria-label="Eén minder">−</button><span class="v" id="tb">${T.boringen||0}</span><button class="step" id="bp" aria-label="Eén meer">+</button></div>
+       ${binnenAan()?`<div class="r"><div class="l"><label for="tmb" style="margin:0">Meters binnen tracé</label><small>Zelf invullen.</small></div><input id="tmb" inputmode="decimal" value="${esc(T.metersBinnen!=null?T.metersBinnen:'')}" placeholder="0"></div>`:''}
      </div>
      <div class="sfoot">
        <a class="btn pri" href="shared/storyline.html?survey=${encodeURIComponent(s.id)}">Naar controle &amp; aanvullen</a>
@@ -267,10 +287,12 @@
     main.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>acts[+b.dataset.a].fn(survey));
     main.querySelectorAll('.th').forEach(b=>Editor.stripBind(b,b.dataset.id,id=>cfg.openFoto(survey,id),()=>ph.find(p=>p.id===b.dataset.id),async p=>{
       await Store.photos.put(p);toast(p.status==='vervallen'?'Foto vervalt: telt niet mee en komt niet in het document':'Foto teruggezet');show(survey);}));
+    if($('tmb'))$('tmb').onchange=async()=>{const v=parseFloat($('tmb').value.replace(',','.'));survey.tellers={...survey.tellers,metersBinnen:isFinite(v)?v:0};await Store.surveys.put(survey);toast('Opgeslagen');statusBlock($('stblk'),survey);};
     if($('tm'))$('tm').onchange=async()=>{const v=parseFloat($('tm').value.replace(',','.'));survey.tellers={...survey.tellers,meters:isFinite(v)?v:0};await Store.surveys.put(survey);toast('Opgeslagen');};
     const step=async d=>{const n=Math.max(0,(survey.tellers.boringen||0)+d);survey.tellers={...survey.tellers,boringen:n};$('tb').textContent=n;await Store.surveys.put(survey);};
     $('bm').onclick=()=>step(-1);$('bp').onclick=()=>step(1);
     $('other').onclick=()=>{history.replaceState(null,'',location.pathname);start();};
   }
-  window.SurveyUI={init,statusBlock,binnenAan,bindDel,show:s=>show(s||survey),start:()=>{history.replaceState(null,'',location.pathname);return start();},recount,toast,current:()=>survey};
+  if(window.Gegevens)Gegevens.bron=id=>survey&&survey.id===id?survey:null;
+  window.SurveyUI={init,naFoto,statusBlock,binnenAan,bindDel,show:s=>show(s||survey),start:()=>{history.replaceState(null,'',location.pathname);return start();},recount,toast,current:()=>survey};
 })();

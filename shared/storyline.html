@@ -45,10 +45,6 @@ h2{font-size:22px;font-weight:800;margin:24px 0 10px}
 .geg2 .gt{display:flex;align-items:baseline;justify-content:space-between;gap:10px}.geg2 h2{margin:0;font-size:20px}
 .geg2 .gt span{font-size:15px;font-weight:600}.geg2 .gt .mis{color:var(--warn)}.geg2 .gt .ok{color:var(--ok)}
 .geg2 .gbar{height:8px;border-radius:4px;background:var(--track);overflow:hidden}.geg2 .gbar i{display:block;height:100%;background:var(--prog-doc)}
-.geg2 .gm{margin:0;color:var(--mute)}.geg2 .gm.ok{color:var(--ok)}
-.geg2 .gl{display:flex;flex-wrap:wrap;gap:8px}
-.geg2 .gch{display:flex;flex-direction:column;align-items:flex-start;min-height:44px;padding:6px 14px;border-radius:16px;border:1px solid var(--warn);background:transparent;color:var(--ink);font-size:15px;font-weight:600;cursor:pointer;text-align:left}
-.geg2 .gch small{color:var(--mute);font-weight:400;font-size:13px}
 .geg2 .btn{width:100%}
 .foot{position:sticky;bottom:0;margin:20px -16px 0;padding:12px 16px calc(12px + env(safe-area-inset-bottom));background:var(--bg);border-top:1px solid var(--line);display:flex;gap:10px}
 .foot .btn{flex:1;min-height:56px;font-size:18px}
@@ -96,6 +92,12 @@ async function load(){
   S=await Store.surveys.get(id);if(!S){$('story').innerHTML='<p class="note">Deze schouw is niet gevonden.</p>';$('make').disabled=true;return;}
   $('back').href='../'+(PAGE[S.variant]||'index.html')+'?survey='+encodeURIComponent(S.id);
   P=await Store.photos.bySurvey(S.id,true);
+  // naar controle & aanvullen = status Controleren (vanaf Voorbereiden/Schouwen, als er foto's zijn)
+  let ch=Velden.migreer(S);
+  if(S.status==='archief'&&S.gearchiveerd==null){S.gearchiveerd=true;ch=true;}
+  const cur=Velden.statusOf(S);if(S.status!==cur){S.status=cur;ch=true;}
+  if((cur==='voorbereiden'||cur==='schouwen')&&P.some(p=>p.status!=='vervallen')){S.status='controleren';if(!S.eersteFoto)S.eersteFoto=new Date().toISOString();ch=true;}
+  if(ch)await Store.surveys.put(S);
   // volgorde netjes doornummeren (1, 2, 3 …)
   for(let i=0;i<P.length;i++)if(P[i].volgorde!==i+1){P[i].volgorde=i+1;await Store.photos.put(P[i]);}
   await recount();render();
@@ -151,32 +153,41 @@ function edit(i){
 }
 /* gegevens voor het document: wat ontbreekt nog, en direct invullen */
 function renderGeg(){
-  const vo=Velden.voortgang(S,P,'uit'),el=$('geg2'),sec=k=>{const x=Velden.SECTIES.find(y=>y.id===k);return x?x.naam:'';};
-  el.innerHTML=`<div class="gk"><div class="gt"><h2>Gegevens</h2><span class="${vo.mist.length?'mis':'ok'}">${vo.klaar}/${vo.totaal} verplicht ingevuld</span></div>
+  const vo=Velden.voortgang(S,P,'uit'),n=Velden.secties(S,P,{}).reduce((t,x)=>t+x.open.length,0);
+  $('geg2').innerHTML=`<div class="gk"><div class="gt"><h2>Gegevens</h2><span class="${vo.mist.length?'mis':'ok'}">Document ${vo.klaar} van ${vo.totaal} compleet</span></div>
     <div class="gbar"><i style="width:${vo.pct}%"></i></div>
-    ${vo.mist.length?`<p class="gm">Nog leeg (${vo.mist.length}). Tik op een veld om het in te vullen:</p>
-      <div class="gl">${vo.mist.map(f=>`<button class="gch" data-veld="${f.k}">${esc(f.l)}<small>${esc(sec(f.s))}</small></button>`).join('')}</div>
-      <button class="btn pri" id="gAanv">Ontbrekende gegevens invullen</button>`
-     :'<p class="gm ok">Alle verplichte gegevens zijn ingevuld.</p>'}
-    <button class="btn" id="gAlles">Alle gegevens bekijken en aanpassen</button></div>`;
-  const open=opts=>Gegevens.open(S,'alles',{...opts,onClose:async()=>{S=await Store.surveys.get(S.id);await recount();render();}});
-  el.querySelectorAll('[data-veld]').forEach(b=>b.onclick=()=>open({veld:b.dataset.veld}));
-  if($('gAanv'))$('gAanv').onclick=()=>open({naarLeeg:true});
-  $('gAlles').onclick=()=>open({});
+    <button class="btn${n?' pri':''}" id="gOpen">${n?`Gegevens (${n} open)`:'Gegevens'}</button></div>`;
+  $('gOpen').onclick=()=>Gegevens.open(S,{filter:n?'todo':'alles',onClose:async()=>{await recount();render();}});
+  // hoofdknop: compleet = "Document maken", anders "Toch afronden (X open)"
+  if(Velden.statusOf(S)!=='klaar'&&vo.mist.length)$('make').textContent=`Toch afronden (${vo.mist.length} open)`;else $('make').textContent='Document maken';
 }
+Gegevens.bron=k=>S&&S.id===k?S:null;
 function renderTel(){
   const T=S.tellers||{},auto=S.variant!=='veeg';
   $('tel').innerHTML=`<h2>Tellers</h2><div class="tel">
     ${auto?`<div class="r"><div class="l">Meters buiten tracé<small>${esc(T.metersNote||'')}</small></div><span class="v">${nl1(T.meters||0)} m</span></div>`
           :`<div class="r"><div class="l"><label for="tm">Meters buiten tracé</label><small>Zelf invullen.</small></div><input id="tm" inputmode="decimal" value="${esc(T.meters||'')}" placeholder="0"></div>`}
     <div class="r"><div class="l">Invoeringen<small>Telt de app.</small></div><span class="v">${T.invoeringen||0}</span></div>
-    <div class="r"><div class="l">Boringen/persingen</div><button class="step" id="bm" aria-label="Eén minder">−</button><span class="v" id="tb">${T.boringen||0}</span><button class="step" id="bp" aria-label="Eén meer">+</button></div></div>`;
-  if($('tm'))$('tm').onchange=async()=>{const v=parseFloat($('tm').value.replace(',','.'));S.tellers={...S.tellers,meters:isFinite(v)?v:0};await Store.surveys.put(S);msg('Opgeslagen');};
+    <div class="r"><div class="l">Boringen/persingen</div><button class="step" id="bm" aria-label="Eén minder">−</button><span class="v" id="tb">${T.boringen||0}</span><button class="step" id="bp" aria-label="Eén meer">+</button></div>
+    ${binnenAan()?`<div class="r"><div class="l"><label for="tmb">Meters binnen tracé</label><small>Zelf invullen.</small></div><input id="tmb" inputmode="decimal" value="${esc(T.metersBinnen!=null?T.metersBinnen:'')}" placeholder="0"></div>`:''}</div>`;
+  if($('tmb'))$('tmb').onchange=async()=>{const v=parseFloat($('tmb').value.replace(',','.'));S.tellers={...S.tellers,metersBinnen:isFinite(v)?v:0};await Store.surveys.put(S);msg('Opgeslagen');renderGeg();};
+  if($('tm'))$('tm').onchange=async()=>{const v=parseFloat($('tm').value.replace(',','.'));S.tellers={...S.tellers,meters:isFinite(v)?v:0};await Store.surveys.put(S);msg('Opgeslagen');renderGeg();};
   const st=async d=>{const n=Math.max(0,(S.tellers.boringen||0)+d);S.tellers={...S.tellers,boringen:n};$('tb').textContent=n;await Store.surveys.put(S);};
   $('bm').onclick=()=>st(-1);$('bp').onclick=()=>st(1);
 }
+function binnenAan(){const c=Velden.cfg().binnen_fotos;return c.in!=='nee'||c.uit!=='nee';}
+/* Document maken: compleet -> status Klaar en naar het document; niet compleet -> één keer bevestigen, dan Klaar met de lijst wat open is */
 $('make').onclick=async()=>{
   const a=document.activeElement;if(a&&a.dataset&&a.dataset.tx!=null)await saveText(+a.dataset.tx,a.value);
+  S=Gegevens.bron(S.id)||S;
+  const vo=Velden.voortgang(S,P,'uit');
+  if(vo.mist.length){
+    if(Velden.statusOf(S)!=='klaar'){
+      const k=await Gegevens.vraag(`Toch afronden met ${vo.mist.length} open?`,'Nog niet ingevuld: '+vo.mist.slice(0,8).map(f=>f.kort||f.l).join(', ')+(vo.mist.length>8?' en '+(vo.mist.length-8)+' meer':'')+'. Je kunt het daarna nog aanvullen.',[['toch','Toch afronden','pri'],['terug','Terug','']]);
+      if(k!=='toch')return;}
+    S.onvolledig={op:new Date().toISOString(),mist:vo.mist.map(f=>f.l)};
+  }else delete S.onvolledig;
+  S.status='klaar';await Store.surveys.put(S);
   location.href='document.html?survey='+encodeURIComponent(S.id);
 };
 load().catch(e=>msg('Kon de opslag niet openen: '+(e.message||e)));
