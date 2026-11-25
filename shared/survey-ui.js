@@ -375,13 +375,14 @@
       :`<div id="bVeld"></div>`}
      <div class="sfoot"><button class="btn" id="fTerug">Terug naar de schouw</button></div>`;
     window.scrollTo(0,0);
-    const neem=async a=>{s.sectie=x;await Store.surveys.put(s);a.fn(s);};
+    // camera direct in de tik openen (iOS opent hem niet meer na een await), daarna pas opslaan
+    const neem=a=>{s.sectie=x;a.fn(s);Store.surveys.put(s);};
     if($('fCam'))$('fCam').onclick=()=>neem(pri);if($('fGal'))$('fGal').onclick=()=>neem(gal);
     main.querySelectorAll('.th').forEach(b=>Editor.stripBind(b,b.dataset.id,id=>cfg.openFoto(survey,id),()=>ph.find(p=>p.id===b.dataset.id),async p=>{
       await Store.photos.put(p);toast(p.status==='vervallen'?'Foto vervalt: telt niet mee en komt niet in het document':'Foto teruggezet');show(survey);}));
     $('fTerug').onclick=terug;
     main.querySelectorAll('[data-rol]').forEach(b=>b.onclick=()=>{const f=Velden.VELDEN.find(v=>v.k===b.dataset.rol);
-      Gegevens.rolBlad(s,f,{klaar:()=>show(s),maak:async g=>{const a=g?(gal||pri):pri;if(!a)return;wachtRol=f.rol;s.sectie=x;await Store.surveys.put(s);a.fn(s);}});});
+      Gegevens.rolBlad(s,f,{klaar:()=>show(s),maak:g=>{const a=g?(gal||pri):pri;if(!a)return;wachtRol=f.rol;s.sectie=x;a.fn(s);Store.surveys.put(s);}});});
     if(kast){
       const kf=g=>Camera.take({galerij:g}).then(async r=>{if(!r||!r.blob)return;s.bijlagen={...(s.bijlagen||{}),afw_foto:r.blob};s.kastGevraagd=true;await Store.surveys.put(s);toast('Afbeelding kast opgeslagen');show(s);});
       $('kCam').onclick=()=>kf(false);$('kGal').onclick=()=>kf(true);
