@@ -82,6 +82,11 @@
 .gblb label{display:block;font-weight:700;margin:4px 0 4px}
 .gblb input{display:block;box-sizing:border-box;width:100%;min-width:0;min-height:48px;border-radius:14px;border:1px solid var(--line2);background:var(--well);color:inherit;padding:0 12px;font-size:16px;-webkit-appearance:none;appearance:none}
 .gblb img{width:100%;max-height:160px;object-fit:cover;border-radius:var(--r-thumb,14px)}
+.gblb .grk{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.gblb .grk button{position:relative;padding:0;border:2px solid transparent;border-radius:12px;background:none;cursor:pointer;overflow:hidden;aspect-ratio:4/3}
+.gblb .grk button.on{border-color:var(--ok,#22C55E)}
+.gblb .grk img{width:100%;height:100%;max-height:none;object-fit:cover;border-radius:10px;display:block}
+.gblb .grk span{position:absolute;left:6px;bottom:6px;background:var(--overlay,rgba(0,0,0,.6));color:#fff;font-size:13px;font-weight:800;border-radius:99px;padding:2px 8px}
 @media (prefers-reduced-motion:reduce){:is(.geg,.gin) .gopt svg,:is(.geg,.gin) .sw i{transition:none}}`;
   function css(){if(document.getElementById('gegcss'))return;const s=document.createElement('style');s.id='gegcss';s.textContent=CSS;document.head.appendChild(s);}
 
@@ -359,7 +364,7 @@
   let vkUrls=[];
   function vakkenHtml(s,fotos,kant){css();const V=Velden.vakken(s,fotos,kant),on=Velden.onnet(s);
     vkUrls.forEach(u=>URL.revokeObjectURL(u));vkUrls=[];
-    const sec=fs=>[...new Set(fs.map(f=>f.t==='teller'||f.t==='foto'||f.t==='fotos'?(f.kort||f.l):(Velden.SECTIES.find(x=>x.id===Velden.groep(f))||{}).kort))].join(' · ');
+    const sec=fs=>[...new Set(fs.map(f=>f.t==='teller'||f.t==='foto'||f.t==='fotos'||f.t==='rolfoto'?(f.kort||f.l):(Velden.SECTIES.find(x=>x.id===Velden.groep(f))||{}).kort))].join(' · ');
     const sub=fs=>fs.length?`${fs.length} nog te doen · ${esc(sec(fs))}`:'<span class="okk">✓ Compleet</span>';
     const ok=(fotos||[]).filter(p=>p.status!=='vervallen'&&p.blob);
     const thumbs=x=>{const L=ok.filter(p=>(p.sectie||'buiten')===x),max=7;if(!L.length)return'';
@@ -377,5 +382,26 @@
         open(s,{filter:V.info.length?'todo':'alles',zonder:['buiten','binnen','afw'],onClose:klaar});}
       else if(o.naar)o.naar(x);});
   }
-  window.Gegevens={open,close:()=>close(),naKast,vraag,todoHtml,todoBind,inline,vakkenHtml,vakkenBind,bron:null};
+  /* ---------- verplichte foto met een rol kiezen (aansluitpunt, invoer pand, beginpunt) ---------- */
+  async function zetRol(foto,rol,alle){for(const p of alle)if(p.rol===rol&&p.id!==foto.id){delete p.rol;await Store.photos.put(p);}
+    foto.rol=rol;await Store.photos.put(foto);}
+  async function rolBlad(s,f,o={}){css();
+    const alle=await Store.photos.bySurvey(s.id,true),hier=alle.filter(p=>p.status!=='vervallen'&&(p.sectie||'buiten')===f.sectie),nu=hier.find(p=>p.rol===f.rol);
+    const us=[];const u=b=>{const x=URL.createObjectURL(b);us.push(x);return x;};
+    const d=document.createElement('div');d.className='gbl';d.setAttribute('role','dialog');d.setAttribute('aria-modal','true');d.setAttribute('aria-labelledby','grT');
+    d.innerHTML=`<div class="gblb"><h3 id="grT">${esc(f.kort||f.l)}</h3><p>${esc(f.vb?hoofd(f.vb)+'.':'')}</p>
+      ${o.maak?`<button class="btn pri" data-r="cam">Foto maken</button><button class="btn" data-r="gal">Uit galerij</button>`:''}
+      ${hier.length?`<p>${o.maak?'Of kies':'Kies'} een foto die er al is:</p><div class="grk">${hier.map(p=>`<button data-p="${p.id}" class="${p===nu?'on':''}" aria-pressed="${p===nu}" aria-label="Foto ${hier.indexOf(p)+1}${p.rol&&p!==nu?' (al gebruikt als andere verplichte foto)':''}"><img src="${u(p.blob)}" alt=""><span>${hier.indexOf(p)+1}${p===nu?' ✓':''}</span></button>`).join('')}</div>`:`<p>Er zijn nog geen foto's ${esc(f.sectie)}.</p>`}
+      ${nu?'<button class="btn" data-r="weg">Niet meer als verplichte foto</button>':''}
+      <button class="btn" data-r="x">Annuleren</button></div>`;
+    document.body.appendChild(d);d.querySelector('button').focus();
+    const dicht=r=>{us.forEach(x=>URL.revokeObjectURL(x));d.remove();if(r&&o.klaar)o.klaar();};
+    d.addEventListener('click',e=>{if(e.target===d)dicht(false);});
+    d.querySelectorAll('[data-r]').forEach(b=>b.onclick=async()=>{const r=b.dataset.r;
+      if(r==='x')return dicht(false);
+      if(r==='weg'){delete nu.rol;await Store.photos.put(nu);return dicht(true);}
+      dicht(false);if(o.maak)o.maak(r==='gal');});
+    d.querySelectorAll('[data-p]').forEach(b=>b.onclick=async()=>{const p=hier.find(x=>x.id===b.dataset.p);await zetRol(p,f.rol,alle);dicht(true);});
+  }
+  window.Gegevens={open,close:()=>close(),naKast,vraag,todoHtml,todoBind,inline,vakkenHtml,vakkenBind,rolBlad,zetRol,bron:null};
 })();

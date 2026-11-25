@@ -75,7 +75,7 @@
     {k:'afw_ruimte',s:'afw',l:'Ruimtebenaming',t:'text',in:N,uit:V,vb:'Ruimte onder de trap'},
     {k:'afw_kast',s:'afw',l:'Kastbenaming',t:'text',in:N,uit:V,vb:'Wandmontage'},
     {k:'afw_apparatuur',s:'afw',l:'Type apparatuur',t:'text',in:N,uit:V,vb:'WODF + CPE'},
-    {k:'afw_foto',s:'afw',l:'Afbeelding kast',t:'foto',in:N,uit:V,vb:'foto van de plek waar de kast komt'},
+    {k:'afw_foto',s:'afw',l:'Afbeelding kast',kort:'Afwerkpunt klantlocatie (kast)',t:'foto',in:N,uit:V,vb:'foto van de plek waar de kast komt'},
 
     {k:'trace_geo',s:'trace',l:'Geografische weergave (kaart met tracé)',t:'foto',in:W,uit:V,vb:'luchtfoto of kaart met het tracé ingetekend'},
     {k:'trace_opm',s:'trace',l:'Opmerking bij tracé',t:'lang',in:N,uit:W,vb:'Invoer ongeveer 3 meter uit rechterhoek'},
@@ -84,11 +84,14 @@
     {k:'buiten_meters',s:'buiten',als:geenOnnet,l:'Aantal meters buiten tracé',t:'teller',teller:'meters',in:N,uit:V,vb:'15 meter'},
     {k:'buiten_invoeringen',s:'buiten',als:geenOnnet,l:'Aantal invoeringen',t:'teller',teller:'invoeringen',in:N,uit:V,vb:'1'},
     {k:'buiten_boringen',s:'buiten',als:geenOnnet,l:'Aantal boringen/persingen',t:'teller',teller:'boringen',in:N,uit:W},
+    {k:'foto_aansluit',s:'buiten',als:geenOnnet,l:'Foto aansluitpunt netwerk',kort:'Aansluitpunt netwerk',t:'rolfoto',rol:'aansluit',sectie:'buiten',in:N,uit:V,vb:'eerste foto: waar de kabel op het netwerk aansluit'},
+    {k:'foto_invoer',s:'buiten',als:geenOnnet,l:'Foto invoer pand',kort:'Invoer pand',t:'rolfoto',rol:'invoer',sectie:'buiten',in:N,uit:V,vb:'waar de kabel het pand in gaat (buitenkant)'},
     {k:'buiten_fotos',s:'buiten',als:geenOnnet,l:"Foto's buiten tracé",t:'fotos',sectie:'buiten',in:N,uit:V,vb:'7 foto\'s met pijl en bijschrift'},
 
     {k:'binnen_meters',s:'binnen',l:'Aantal meters binnen tracé',kort:'Meters binnen tracé',t:'teller',teller:'metersBinnen',in:N,uit:V,vb:'12 meter DB2 door de kruipruimte + 2 meter DB1'},
     {k:'binnen_kabelgoot',s:'binnen',l:'Nieuw aan te leggen kabelgoot',t:'getal',stap:true,in:N,uit:W,vb:'0'},
     {k:'binnen_brandwerend',s:'binnen',l:'Brandwerende doorvoeren',t:'getal',stap:true,in:N,uit:W,vb:'0'},
+    {k:'foto_begin',s:'binnen',l:'Foto beginpunt / invoer binnen',kort:'Beginpunt / invoer',t:'rolfoto',rol:'begin',sectie:'binnen',in:N,uit:V,vb:'waar de kabel binnenkomt (binnenkant)'},
     {k:'binnen_fotos',s:'binnen',l:"Foto's binnen tracé",t:'fotos',sectie:'binnen',in:N,uit:W,vb:'8 foto\'s met pijl en bijschrift'},
     {k:'binnen_stroom',s:'binnen',l:'Stroomvoorziening',t:'lang',in:N,uit:V,vb:'Stroomvoorziening in de ruimte onder de trap aanwezig'},
 
@@ -220,7 +223,9 @@
   function setStandaard(k,v){const o=standaard();if(v==null||String(v).trim()==='')delete o[k];else o[k]=v;localStorage.setItem(STD_KEY,JSON.stringify(o));}
   const groep=f=>f.g||f.s;
   /* staat dit veld in het gegevensscherm? (tellers, foto-reeksen en de legenda niet) */
-  const inLijst=f=>!['teller','fotos','legenda'].includes(f.t);
+  const inLijst=f=>!['teller','fotos','rolfoto','legenda'].includes(f.t);
+  /* verplichte foto's met een rol (aansluitpunt, invoer pand, beginpunt binnen) per sectie */
+  const ROLLEN=s=>VELDEN.filter(f=>f.t==='rolfoto'&&actief(s,f)&&cfg()[f.k].uit!=='nee');
   /* verplicht voor het scherm: kant 'in' (vooraf), 'uit' (document) of beide */
   function nodig(c,f,kant){const x=c[f.k];return kant?x[kant]==='verplicht':(x.in==='verplicht'||x.uit==='verplicht');}
   function zichtbaar(c,f){const x=c[f.k];return f.schakel||x.in!=='nee'||x.uit!=='nee';}
@@ -248,6 +253,7 @@
     const v=waarde(s,f.k);
     switch(f.t){
       case 'teller':return f.teller==='meters'||f.teller==='metersBinnen'?(+v>0):(v!=null&&v!=='');
+      case 'rolfoto':return (fotos||[]).some(p=>p.status!=='vervallen'&&p.rol===f.rol);
       case 'fotos':return (fotos||[]).some(p=>p.status!=='vervallen'&&(p.sectie||'buiten')===f.sectie);
       case 'foto':return !!((s.bijlagen||{})[f.k])||v==='nvt';
       case 'vg':return !!(v&&v.nagelopen);
@@ -263,5 +269,5 @@
     return{klaar:fs.length-mis.length,totaal:fs.length,mist:mis,pct:fs.length?Math.round((fs.length-mis.length)/fs.length*100):100};
   }
   window.Velden={VELDEN,SECTIES,MOMENT,VG,VG_VAAK,VG_VOORSTEL,CONTACTEN,STATUS,V,W,N,cfg,setCfg,resetCfg,waarde,zet,actief,gevuld,voortgang,
-    todo,vak,vakken,VAK_SECTIES,onnet,onnetFix,standaard,setStandaard,statusOf,statusMeta,gearchiveerd,groep,inLijst,nodig,secties,verborgen,zelfdeAan,migreer};
+    ROLLEN,todo,vak,vakken,VAK_SECTIES,onnet,onnetFix,standaard,setStandaard,statusOf,statusMeta,gearchiveerd,groep,inLijst,nodig,secties,verborgen,zelfdeAan,migreer};
 })();

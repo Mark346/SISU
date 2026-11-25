@@ -30,10 +30,12 @@
 /* Veeg & Klik: foto maken, route vegen, editor uit shared/editor.js */
 function newPhoto(survey,galerij){
   Camera.take({galerij}).then(async r=>{
+    const rol=SurveyUI.neemRol(); // verplichte foto (aansluitpunt, invoer pand, beginpunt)
     if(!r||!r.blob)return;
     const p=await Store.photos.put({surveyId:survey.id,blob:r.blob,ann:{orient:r.orient||'liggend'},bron:'veeg',status:'ok',sectie:Velden.onnet(SurveyUI.current()||survey)?'binnen':((SurveyUI.current()||survey).sectie||'buiten')});
+    if(rol)await Gegevens.zetRol(p,rol,await Store.photos.bySurvey(survey.id,true));
     edit(survey,p.id);
-  }).catch(()=>SurveyUI.toast('Foto maken lukte niet'));
+  }).catch(()=>{SurveyUI.neemRol();SurveyUI.toast('Foto maken lukte niet');});
 }
 function edit(survey,id){
   Editor.openEditor(id,{

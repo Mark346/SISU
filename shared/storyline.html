@@ -12,40 +12,55 @@
 <link rel="icon" type="image/png" sizes="32x32" href="../favicon-32.png">
 <link rel="stylesheet" href="base.css">
 <style>
-.intro{margin:6px 0 14px;color:var(--mute)}
-.adr{font-size:22px;font-weight:800;margin:8px 0 2px}
-.story{display:flex;flex-direction:column;gap:14px}
-.st{background:var(--card);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
-.st.vv{opacity:.55}
-.st .hd{display:flex;align-items:center;gap:8px;padding:10px 10px 10px 16px}
-.st .hd b{flex:1;font-size:18px;font-weight:800}
-.st .hd .tag{font-size:13px;font-weight:800;padding:3px 10px;border-radius:var(--r-pill);background:var(--card2)}
-.st .hd .sct{border:1.5px solid var(--sec-buiten);border-radius:var(--r-pill);background:transparent;color:var(--sec-buiten);min-height:36px;padding:0 12px;cursor:pointer;font-size:14px;font-weight:700}
-.st .hd .sct.binnen{border-color:var(--sec-binnen);color:var(--sec-binnen)}
-.st .hd .tag.vv{background:var(--red);color:#fff}
-.mv{width:44px;height:44px;border-radius:22px;border:1px solid var(--line2);background:var(--well);color:var(--ink);font-size:20px;font-weight:800;cursor:pointer;padding:0}
-.mv[disabled]{opacity:.3}
-.st .ph{position:relative;background:#000;cursor:pointer}
-.st .ph img{display:block;width:100%;height:auto}
-.st .ph.vv img{filter:grayscale(1) brightness(.5)}
-.st .ph .ed{position:absolute;right:10px;bottom:10px;background:var(--overlay);color:#fff;border-radius:var(--r-pill);padding:8px 14px;font-weight:600;font-size:15px;pointer-events:none}
-.st textarea{display:block;width:calc(100% - 28px);margin:10px 14px;min-height:88px;border-radius:14px;border:1px solid var(--line2);background:var(--well);color:var(--ink);padding:10px 12px;font-size:16px;line-height:1.4;resize:vertical}
-.st .acts{display:flex;gap:8px;padding:0 14px 14px}.st .acts .btn{flex:1;min-height:48px;padding:0 8px}
-.st .acts .del{border-color:var(--red)}.st .acts .del.sure{background:var(--red);border-color:var(--red);color:#fff}
-.saved{font-size:14px;color:var(--ok);font-weight:800;padding:0 16px 10px;min-height:18px}
-h2{font-size:22px;font-weight:800;margin:24px 0 10px}
-.tel{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
-.tel .r{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--line);min-height:68px}.tel .r:last-child{border-bottom:0}
-.tel .r .l{flex:1;font-weight:600}.tel .r .l small{display:block;color:var(--mute);font-size:14px;font-weight:400}
-.tel input{width:92px;min-height:46px;border-radius:14px;border:1px solid var(--line2);background:var(--well);text-align:right;padding:0 12px;font-size:18px;font-weight:800}
-.tel .v{min-width:48px;text-align:center;font-size:22px;font-weight:800;white-space:nowrap}
-.step{flex:none;width:44px;height:44px;border-radius:22px;border:1px solid var(--line2);background:var(--well);font-size:22px;font-weight:800;cursor:pointer;padding:0}
-.geg2{margin:6px 0 18px}
-.geg2 .gk{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:10px}
-.geg2 .gt{display:flex;align-items:baseline;justify-content:space-between;gap:10px}.geg2 h2{margin:0;font-size:20px}
-.geg2 .gt span{font-size:15px;font-weight:600}.geg2 .gt .mis{color:var(--warn)}.geg2 .gt .ok{color:var(--ok)}
-.geg2 .gbar{height:8px;border-radius:4px;background:var(--track);overflow:hidden}.geg2 .gbar i{display:block;height:100%;background:var(--prog-doc)}
-.geg2 #gOpen{width:100%}
+/* Afronding: de schouw in de vorm van het document (wit papier), op elke regel aan te passen */
+.top{margin:6px 0 12px}
+.adr{font-size:22px;font-weight:800;margin:4px 0 6px}
+.prog{display:flex;align-items:center;gap:10px;color:var(--mute);font-size:15px}
+.prog i{flex:1;height:8px;border-radius:4px;background:var(--track);overflow:hidden}.prog i b{display:block;height:100%;background:var(--prog-doc)}
+.prog .mis{color:var(--warn);font-weight:700}.prog .ok{color:var(--ok);font-weight:700}
+.naar{width:100%;margin-top:10px;border-color:var(--warn);color:var(--warn)}
+.hint{color:var(--mute);font-size:14px;margin:8px 2px 0}
+.doc{background:#fff;color:#111;border-radius:12px;padding:18px 14px 8px;margin-top:6px}
+.doc h1{font-size:22px;margin:0}.doc .sub{color:#555;margin:2px 0 6px;font-size:15px}
+.doc h2{display:flex;align-items:baseline;gap:8px;font-size:19px;border-bottom:2px solid #FF7A1A;padding-bottom:4px;margin:20px 0 8px}
+.doc h2 span{flex:1}.doc h2 small{font-size:13px;font-weight:800;color:#c2410c}
+.rows{border:2px solid #111;border-radius:4px;overflow:hidden}
+.dr{display:flex;align-items:center;gap:10px;width:100%;min-height:52px;padding:8px 10px;border:0;border-bottom:1px solid #ccc;background:#fff;color:#111;font:inherit;font-size:15px;text-align:left;cursor:pointer}
+.dr:last-child{border-bottom:0}.dr:active{background:#f2f2f2}
+.dr .l{flex:1 1 52%;min-width:0;line-height:1.3}
+.dr .v{flex:1 1 48%;min-width:0;text-align:right;font-weight:600;line-height:1.3;white-space:pre-wrap;overflow-wrap:anywhere}
+.dr.mist{background:#fff3e8}
+.dr .pen{flex:none;color:#999}
+.dr.tl{cursor:default}.dr.tl .v{display:flex;justify-content:flex-end;align-items:center;gap:8px}
+.dr input{width:92px;min-height:42px;text-align:right;border:1px solid #bbb;border-radius:8px;padding:0 8px;font-size:17px;font-weight:700;color:#111;background:#fff}
+.dr .stp{width:40px;height:40px;border-radius:20px;border:1px solid #bbb;background:#fff;color:#111;font-size:20px;font-weight:800;cursor:pointer;padding:0}
+.dr .mini{width:48px;height:36px;object-fit:cover;border-radius:6px;vertical-align:middle;margin-right:6px;border:1px solid #ccc}
+.ui{display:inline-grid;place-items:center;flex:none;width:24px;height:24px;border-radius:50%;background:#FF7A1A;color:#fff;font-style:normal;font-weight:900;font-size:15px;vertical-align:middle;margin-right:6px}
+.ont{color:#c2410c;font-weight:800}.leeg{color:#999;font-weight:400}
+.db{display:block;width:100%;margin:8px 0;padding:0;border:0;background:none;color:#111;font:inherit;text-align:left;cursor:pointer}
+.db .bl{font-weight:700;margin-bottom:6px;font-size:15px}
+.db img{max-width:100%;max-height:340px;display:block;border:1px solid #ccc}
+.gat{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:140px;border:2px dashed #FF7A1A;border-radius:8px;background:#fff3e8;color:#c2410c;font-weight:800;text-align:center;padding:12px}
+.gat .ui{width:44px;height:44px;font-size:26px;margin:0}
+.gat.stil{border-color:#ccc;background:#f7f7f7;color:#999}
+.pc{border:1px solid #ccc;border-radius:8px;margin:10px 0;overflow:hidden}
+.pc.vv{opacity:.55}
+.pc .ph{position:relative;background:#000;cursor:pointer}
+.pc .ph img{display:block;width:100%;height:auto}
+.pc .ph.vv img{filter:grayscale(1) brightness(.5)}
+.pc .nr{position:absolute;left:8px;top:8px;background:rgba(0,0,0,.65);color:#fff;font-weight:800;font-size:14px;border-radius:99px;padding:3px 10px;pointer-events:none}
+.pc .rl{position:absolute;right:8px;top:8px;background:#FF7A1A;color:#fff;font-weight:800;font-size:13px;border-radius:99px;padding:3px 10px;pointer-events:none}
+.pc textarea{display:block;width:calc(100% - 20px);margin:8px 10px;min-height:72px;border-radius:8px;border:1px solid #bbb;background:#fff;color:#111;padding:8px 10px;font-size:16px;line-height:1.4;resize:vertical}
+.pc .saved{font-size:13px;color:#15803d;font-weight:800;padding:0 10px;min-height:16px}
+.pc .pa{display:flex;gap:6px;padding:0 10px 10px;flex-wrap:wrap}
+.pc .pa button{flex:1 1 auto;min-height:44px;border-radius:99px;border:1px solid #bbb;background:#fff;color:#111;font-size:14px;font-weight:700;padding:0 10px;cursor:pointer}
+.pc .pa button.mv{flex:none;width:44px;padding:0;font-size:18px}.pc .pa button[disabled]{opacity:.3}
+.pc .pa .sct{border-color:var(--sec-buiten);color:#15803d}.pc .pa .sct.binnen{border-color:var(--sec-binnen);color:#6d28d9}
+.pc .pa .del.sure{background:#dc2626;border-color:#dc2626;color:#fff}
+.vgl{margin:0;padding-left:18px;font-size:15px;line-height:1.45}
+.mk{width:100%;margin:6px 0 10px;min-height:48px;border-radius:99px;border:1px solid #111;background:#fff;color:#111;font-weight:800;font-size:15px;cursor:pointer}
+.flash{animation:fl 1.2s ease-out}@keyframes fl{0%{box-shadow:0 0 0 4px #FF7A1A}100%{box-shadow:0 0 0 0 transparent}}
+@media (prefers-reduced-motion:reduce){.flash{animation:none}}
 .foot{position:sticky;bottom:0;margin:20px -16px 0;padding:12px 16px calc(12px + env(safe-area-inset-bottom));background:var(--bg);border-top:1px solid var(--line);display:flex;gap:10px}
 .foot .btn{flex:1;min-height:56px;font-size:18px}
 .msg{min-height:22px;color:var(--mute)}
@@ -54,11 +69,9 @@ h2{font-size:22px;font-weight:800;margin:24px 0 10px}
 <body>
 <header class="bar"><a class="back bpill" id="back" href="../index.html"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>Terug</a><h1>Afronding</h1></header>
 <main class="page">
-  <div id="top"></div>
-  <section class="geg2" id="geg2" aria-label="Gegevens voor het document"></section>
+  <div class="top" id="top"></div>
   <p class="msg" id="msg" role="status"></p>
-  <div class="story" id="story"></div>
-  <div id="tel"></div>
+  <div class="doc" id="doc"></div>
   <div class="foot"><button class="btn pri" id="make">Document maken</button></div>
 </main>
 <script src="store.js"></script>
@@ -68,8 +81,8 @@ h2{font-size:22px;font-weight:800;margin:24px 0 10px}
 <script src="camera.js"></script>
 <script src="gegevens.js"></script>
 <script>
-/* Storyline: alle foto's en teksten van een schouw op een rij, om na te lopen en aan te passen
-   voordat het echte document wordt gemaakt. */
+/* Afronding: de schouw in de vorm van het document, per regel en per foto aan te passen,
+   voordat het echte document wordt gemaakt. Ontbrekende verplichte onderdelen krijgen een ! */
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const nl1=v=>(Math.round(v*10)/10).toLocaleString('nl-NL',{maximumFractionDigits:1});
@@ -88,8 +101,8 @@ async function recount(){
   S.tellers={meters:0,invoeringen:0,boringen:0,...S.tellers,...f(ok)};await Store.surveys.put(S);
 }
 async function load(){
-  if(!id){$('story').innerHTML='<p class="note">Geen schouw gekozen.</p>';$('make').disabled=true;return;}
-  S=await Store.surveys.get(id);if(!S){$('story').innerHTML='<p class="note">Deze schouw is niet gevonden.</p>';$('make').disabled=true;return;}
+  if(!id){$('doc').innerHTML='<p class="note">Geen schouw gekozen.</p>';$('make').disabled=true;return;}
+  S=await Store.surveys.get(id);if(!S){$('doc').innerHTML='<p class="note">Deze schouw is niet gevonden.</p>';$('make').disabled=true;return;}
   $('back').href='../'+(PAGE[S.variant]||'index.html')+'?survey='+encodeURIComponent(S.id);
   P=await Store.photos.bySurvey(S.id,true);
   // naar afronding = status Afronding (vanaf Uitwerking, als er foto's zijn)
@@ -105,33 +118,93 @@ async function load(){
   for(let i=0;i<P.length;i++)if(P[i].volgorde!==i+1){P[i].volgorde=i+1;await Store.photos.put(P[i]);}
   await recount();render();
 }
+const UIT='<i class="ui" aria-hidden="true">!</i>';
+const ONT=UIT+'<span class="ont">Ontbreekt</span>';
+const fmtD=v=>{if(!v)return'';const d=new Date(v);return isNaN(d)?String(v):d.toLocaleDateString('nl-NL',{day:'2-digit',month:'2-digit',year:'numeric'});};
+const pagina=x=>'../'+({richt:'richt.html',loop:'loop.html'}[S.variant]||'index.html')+'?survey='+encodeURIComponent(S.id)+(x&&!['richt','loop'].includes(S.variant)?'&fotos='+x:'');
+/* fotonummers zoals in het document */
+function nummers(){const c=Velden.cfg(),nr={};let n=0;
+  for(const f of Velden.VELDEN)if(f.t==='fotos'&&c[f.k].uit!=='nee'&&Velden.actief(S,f))P.filter(p=>p.status!=='vervallen'&&(p.sectie||'buiten')===f.sectie).forEach(p=>nr[p.id]=++n);return nr;}
+const ROLNAAM=r=>{const f=Velden.VELDEN.find(v=>v.rol===r);return f?(f.kort||f.l):'';};
 function render(){
   Object.values(urls).forEach(u=>URL.revokeObjectURL(u));urls={};P.forEach(p=>urls[p.id]=URL.createObjectURL(p.blob));
-  const ok=P.filter(p=>p.status!=='vervallen').length,c=Velden.cfg().binnen_fotos,binnen=c.in!=='nee'||c.uit!=='nee';
-  $('top').innerHTML=`<div class="adr">${esc(S.adres||'Schouw')}</div><p class="intro">Controleer en vul aan: de gegevens, en daarna de foto's en teksten in de goede volgorde. Daarna maak je het document. ${ok} van ${P.length} foto's komen in het document.</p>`;
-  let n=0;
-  $('story').innerHTML=P.length?P.map((p,i)=>{const vv=p.status==='vervallen';if(!vv)n++;
-    return `<article class="st${vv?' vv':''}" data-i="${i}">
-      <div class="hd"><b>${vv?'Foto (vervalt)':'Foto '+n}</b>${p.meters!=null?`<span class="tag">${nl1(p.meters)} m</span>`:''}${binnen?`<button class="tag sct${p.sectie==='binnen'?' binnen':''}" data-sct="${i}" aria-label="Wissel buiten of binnen">${p.sectie==='binnen'?'Binnen':'Buiten'}</button>`:''}${vv?'<span class="tag vv">niet in document</span>':''}
-        <button class="mv" data-up="${i}" aria-label="Foto omhoog" ${i===0?'disabled':''}>↑</button><button class="mv" data-dn="${i}" aria-label="Foto omlaag" ${i===P.length-1?'disabled':''}>↓</button></div>
-      <div class="ph${vv?' vv':''}" data-ed="${i}" role="button" tabindex="0" aria-label="Pijlen en symbolen aanpassen"><img src="${urls[p.id]}" alt="Foto ${i+1}"><span class="ed">Pijl aanpassen</span></div>
-      <label class="note" for="tx${i}" style="display:block;padding:8px 12px 0">Bijschrift</label>
-      <textarea id="tx${i}" data-tx="${i}" ${vv?'disabled':''} placeholder="Schrijf wat hier gebeurt">${esc(p.bijschrift||'')}</textarea>
-      <div class="saved" id="sv${i}"></div>
-      <div class="acts"><button class="btn" data-ed="${i}">Bewerken</button><button class="btn" data-vv="${i}">${vv?'Terugzetten':'Vervalt'}</button><button class="btn del" data-del="${i}">Verwijderen</button></div>
-    </article>`;}).join(''):'<p class="note">Nog geen foto\'s in deze schouw.</p>';
-  document.querySelectorAll('.st .ph').forEach(el=>{const p=P[+el.dataset.ed];if(p.ann)Legend.render(el,p.ann);});
+  const c=Velden.cfg(),vo=Velden.voortgang(S,P,'uit'),nr=nummers(),T=S.tellers||{},on=Velden.onnet(S);
+  const binnen=!on&&(c.binnen_fotos.in!=='nee'||c.binnen_fotos.uit!=='nee');
+  $('top').innerHTML=`<div class="adr">${esc(S.adres||'Schouw')}</div>
+    <div class="prog"><span class="${vo.mist.length?'mis':'ok'}">Document ${vo.klaar} van ${vo.totaal} compleet</span><i><b style="width:${vo.pct}%"></b></i></div>
+    ${vo.mist.length?`<button class="btn naar" id="naar">${UIT.replace('class="ui"','class="ui" style="background:var(--warn);color:#1a1400"')}Naar eerste ontbrekende (${vo.mist.length})</button>`:''}
+    <p class="hint">Zo komt het in het document. Tik op een regel of foto om aan te passen.</p>`;
+  const sectieHtml=sc=>{
+    const fs=Velden.VELDEN.filter(f=>f.s===sc.id&&c[f.k].uit!=='nee'&&!f.schakel&&!(f.als&&f.als.niet!=null&&!Velden.actief(S,f)));
+    if(!fs.length)return'';
+    let out='',rij=[],mis=0;const flush=()=>{if(rij.length){out+=`<div class="rows">${rij.join('')}</div>`;rij=[];}};
+    for(const f of fs){
+      const verpl=c[f.k].uit==='verplicht',act=Velden.actief(S,f),vol=act&&Velden.gevuld(S,f,P),mist=act&&verpl&&!vol,v=Velden.waarde(S,f.k);if(mist)mis++;
+      const lab=esc(f.l);
+      if(!act){rij.push(`<button class="dr" data-sec="${Velden.groep(f)}"><span class="l">${lab}</span><span class="v">N.v.t</span></button>`);continue;}
+      switch(f.t){
+        case 'teller':{let ctl='';
+          if(f.teller==='meters')ctl=S.variant==='veeg'?`<input data-tel="meters" inputmode="decimal" value="${esc(T.meters||'')}" placeholder="0" aria-label="${lab}"> m`:`${nl1(T.meters||0)} m${T.metersNote?' ('+esc(T.metersNote)+')':''}`;
+          else if(f.teller==='metersBinnen')ctl=`<input data-tel="metersBinnen" inputmode="decimal" value="${esc(T.metersBinnen!=null?T.metersBinnen:'')}" placeholder="0" aria-label="${lab}"> m`;
+          else if(f.teller==='boringen')ctl=`<button class="stp" data-bor="-1" aria-label="Eén minder">−</button><b id="tb">${T.boringen||0}</b><button class="stp" data-bor="1" aria-label="Eén meer">+</button>`;
+          else ctl=`<b>${esc(v==null?0:v)}</b>`;
+          rij.push(`<div class="dr tl${mist?' mist':''}" data-k="${f.k}"><span class="l">${mist?UIT:''}${lab}</span><span class="v">${ctl}</span></div>`);break;}
+        case 'rolfoto':{const p=P.find(q=>q.status!=='vervallen'&&q.rol===f.rol);
+          rij.push(`<button class="dr${mist?' mist':''}" data-rol="${f.k}"><span class="l">${lab}</span><span class="v">${p?`<img class="mini" src="${urls[p.id]}" alt="">${nr[p.id]?'Foto '+nr[p.id]:'Ja'}`:mist?ONT:'<span class="leeg">—</span>'}</span></button>`);break;}
+        case 'foto':{flush();const b=(S.bijlagen||{})[f.k];let u='';if(b){u=URL.createObjectURL(b);urls['b_'+f.k]=u;}
+          out+=`<button class="db${mist?' mist':''}" data-sec="${Velden.groep(f)}"><div class="bl">${lab}</div>${b?`<img src="${u}" alt="${lab}">`:v==='nvt'?`<p><b>${esc(f.nvt||'Niet beschikbaar')}</b></p>`:`<div class="gat${mist?'':' stil'}">${mist?'<i class="ui">!</i>Foto ontbreekt · tik om toe te voegen':'Geen foto · tik om toe te voegen'}</div>`}</button>`;break;}
+        case 'fotos':{flush();const L=P.map((p,i)=>({p,i})).filter(x=>(x.p.sectie||'buiten')===f.sectie);
+          out+=L.length?L.map(({p,i})=>kaart(p,i,nr,binnen)).join(''):`<div class="gat${mist?'':' stil'}">${mist?'<i class="ui">!</i>':''}Nog geen foto's ${esc(f.sectie)}</div>`;
+          out+=`<button class="mk" data-naar="${f.sectie}">Foto's ${esc(f.sectie)} maken</button>`;break;}
+        case 'vg':{flush();const it=(v&&v.items)||{},A=Velden.VG.filter(a=>it[a.id]&&it[a.id].aan);
+          out+=`<div class="rows"><button class="dr${mist?' mist':''}" data-sec="vg"><span class="l">${mist?ONT+' · V&amp;G nog niet nagelopen':A.length?`<ul class="vgl">${A.map(a=>`<li>${esc(a.aspect)}</li>`).join('')}</ul>`:'V&amp;G nagelopen: geen bijzonderheden'}</span></button></div>`;break;}
+        case 'legenda':flush();out+='<p class="leeg" style="font-size:14px">De legenda komt automatisch in het document.</p>';break;
+        default:{const t=f.t==='datum'?fmtD(v):(v==null?'':String(v));
+          rij.push(`<button class="dr${mist?' mist':''}" data-sec="${Velden.groep(f)}"><span class="l">${lab}</span><span class="v">${vol?esc(t):mist?ONT:'<span class="leeg">—</span>'}</span></button>`);}
+      }
+    }
+    flush();
+    return `<h2><span>${esc(sc.naam)}</span>${mis?`<small>${mis} ontbreekt</small>`:''}</h2>${out}`;
+  };
+  $('doc').innerHTML=`<h1>Site survey</h1><p class="sub">${esc(S.adres||'')}${Velden.waarde(S,'datum_survey')?' · '+esc(fmtD(Velden.waarde(S,'datum_survey'))):''}</p>`
+    +Velden.SECTIES.map(sectieHtml).join('');
+  document.querySelectorAll('.pc .ph').forEach(el=>{const p=P[+el.dataset.ed];if(p.ann)Legend.render(el,p.ann);});
+  bind();
+}
+/* één foto als kaart in het document: foto met pijlen, bijschrift, knoppen */
+function kaart(p,i,nr,binnen){
+  const vv=p.status==='vervallen',sx=p.sectie||'buiten',same=j=>j>=0&&j<P.length&&(P[j].sectie||'buiten')===sx;
+  let up=i-1;while(up>=0&&!same(up))up--;let dn=i+1;while(dn<P.length&&!same(dn))dn++;
+  return `<article class="pc${vv?' vv':''}" data-i="${i}">
+    <div class="ph${vv?' vv':''}" data-ed="${i}" role="button" tabindex="0" aria-label="Foto ${nr[p.id]||''} bewerken"><img src="${urls[p.id]}" alt=""><span class="nr">${vv?'Vervalt':'Foto '+(nr[p.id]||'')}</span>${p.rol&&!vv?`<span class="rl">${esc(ROLNAAM(p.rol))}</span>`:''}</div>
+    <textarea id="tx${i}" data-tx="${i}" ${vv?'disabled':''} aria-label="Bijschrift foto ${nr[p.id]||''}" placeholder="Schrijf wat hier gebeurt">${esc(p.bijschrift||'')}</textarea>
+    <div class="saved" id="sv${i}"></div>
+    <div class="pa"><button data-ed="${i}">Bewerken</button><button class="mv" data-mv="${i}" data-d="-1" aria-label="Foto omhoog" ${up<0?'disabled':''}>↑</button><button class="mv" data-mv="${i}" data-d="1" aria-label="Foto omlaag" ${dn>=P.length?'disabled':''}>↓</button>
+      ${binnen?`<button class="sct${sx==='binnen'?' binnen':''}" data-sct="${i}" aria-label="Naar ${sx==='binnen'?'buiten':'binnen'}">${sx==='binnen'?'Binnen':'Buiten'}</button>`:''}<button data-vv="${i}">${vv?'Terugzetten':'Vervalt'}</button><button class="del" data-del="${i}">Verwijderen</button></div>
+  </article>`;
+}
+function bind(){
+  const opnieuw=async()=>{P=await Store.photos.bySurvey(S.id,true);await recount();render();};
+  if($('naar'))$('naar').onclick=()=>{const m=document.querySelector('#doc .mist');if(m){m.scrollIntoView({block:'center',behavior:'smooth'});m.classList.remove('flash');void m.offsetWidth;m.classList.add('flash');}};
+  document.querySelectorAll('[data-sec]').forEach(b=>b.onclick=()=>Gegevens.open(S,{filter:'alles',sectie:b.dataset.sec,onClose:opnieuw}));
+  document.querySelectorAll('[data-rol]').forEach(b=>b.onclick=()=>{const f=Velden.VELDEN.find(v=>v.k===b.dataset.rol);
+    Gegevens.rolBlad(S,f,{klaar:opnieuw,maak:g=>Camera.take({galerij:g}).then(async r=>{if(!r||!r.blob)return;
+      const p=await Store.photos.put({surveyId:S.id,blob:r.blob,ann:{orient:r.orient||'liggend'},bron:S.variant||'veeg',status:'ok',sectie:f.sectie});
+      await Gegevens.zetRol(p,f.rol,await Store.photos.bySurvey(S.id,true));P=await Store.photos.bySurvey(S.id,true);await recount();render();edit(P.findIndex(x=>x.id===p.id));}).catch(()=>msg('Foto maken lukte niet'))});});
+  document.querySelectorAll('[data-naar]').forEach(b=>b.onclick=()=>{location.href=pagina(b.dataset.naar);});
   document.querySelectorAll('[data-ed]').forEach(el=>{el.onclick=()=>edit(+el.dataset.ed);el.onkeydown=e=>{if(e.key==='Enter')edit(+el.dataset.ed);};});
-  document.querySelectorAll('[data-sct]').forEach(b=>b.onclick=async()=>{const p=P[+b.dataset.sct];p.sectie=p.sectie==='binnen'?'buiten':'binnen';await Store.photos.put(p);render();});
-  document.querySelectorAll('[data-up]').forEach(b=>b.onclick=()=>move(+b.dataset.up,-1));
-  document.querySelectorAll('[data-dn]').forEach(b=>b.onclick=()=>move(+b.dataset.dn,1));
+  document.querySelectorAll('[data-sct]').forEach(b=>b.onclick=async()=>{const p=P[+b.dataset.sct];p.sectie=p.sectie==='binnen'?'buiten':'binnen';if(p.rol){delete p.rol;}await Store.photos.put(p);render();});
+  document.querySelectorAll('[data-mv]').forEach(b=>b.onclick=()=>move(+b.dataset.mv,+b.dataset.d));
   document.querySelectorAll('[data-vv]').forEach(b=>b.onclick=()=>toggleVv(+b.dataset.vv));
   document.querySelectorAll('[data-del]').forEach(b=>{let t=null;b.onclick=()=>{
     if(!b.classList.contains('sure')){b.classList.add('sure');b.textContent='Zeker? Tik nog eens';t=setTimeout(()=>{b.classList.remove('sure');b.textContent='Verwijderen';},3000);return;}
     clearTimeout(t);del(+b.dataset.del);};});
   document.querySelectorAll('[data-tx]').forEach(t=>{let tm=null;t.oninput=()=>{clearTimeout(tm);tm=setTimeout(()=>saveText(+t.dataset.tx,t.value),400);};t.onblur=()=>{clearTimeout(tm);saveText(+t.dataset.tx,t.value);};});
-  renderTel();
-  renderGeg();
+  document.querySelectorAll('[data-tel]').forEach(i=>i.onchange=async()=>{const v=parseFloat(i.value.replace(',','.'));S.tellers={...S.tellers,[i.dataset.tel]:isFinite(v)?v:0};await Store.surveys.put(S);msg('Opgeslagen');render();});
+  document.querySelectorAll('[data-bor]').forEach(b=>b.onclick=async()=>{const n=Math.max(0,((S.tellers||{}).boringen||0)+(+b.dataset.bor));S.tellers={...S.tellers,boringen:n};await Store.surveys.put(S);render();});
+  // hoofdknop: compleet = "Document maken", anders "Toch afronden (X open)"
+  const vo=Velden.voortgang(S,P,'uit');
+  $('make').textContent=Velden.statusOf(S)!=='klaar'&&vo.mist.length?`Toch afronden (${vo.mist.length} open)`:'Document maken';
 }
 async function saveText(i,v){
   const p=P[i];if(!p||(p.bijschrift||'')===v)return;
@@ -139,9 +212,10 @@ async function saveText(i,v){
   const s=$('sv'+i);if(s){s.textContent='Opgeslagen';setTimeout(()=>{if(s)s.textContent='';},1500);}
 }
 async function move(i,d){
-  const j=i+d;if(j<0||j>=P.length)return;[P[i],P[j]]=[P[j],P[i]];
+  const sx=P[i].sectie||'buiten';let j=i+d;while(j>=0&&j<P.length&&(P[j].sectie||'buiten')!==sx)j+=d; // binnen dezelfde sectie
+  if(j<0||j>=P.length)return;[P[i],P[j]]=[P[j],P[i]];
   for(let k=0;k<P.length;k++){P[k].volgorde=k+1;await Store.photos.put(P[k]);}
-  render();const el=document.querySelector(`.st[data-i="${j}"]`);if(el)el.scrollIntoView({block:'nearest'});
+  render();const el=document.querySelector(`.pc[data-i="${j}"]`);if(el)el.scrollIntoView({block:'nearest'});
 }
 async function del(i){
   const p=P[i];await Store.photos.del(p.id);P.splice(i,1);
@@ -154,34 +228,7 @@ function edit(i){
   Editor.openEditor(p.id,{onClose:async()=>{P=await Store.photos.bySurvey(S.id,true);await recount();render();},
     onChange:async q=>{if(S.variant==='loop'){q.bron='loop';q.bijgeveegd=true;await Store.photos.put(q);}}}).catch(e=>msg('Kon de foto niet openen: '+(e.message||e)));
 }
-/* gegevens voor het document: wat ontbreekt nog, en direct invullen */
-function renderGeg(){
-  const vo=Velden.voortgang(S,P,'uit'),klaar=async()=>{await recount();render();},vakken=!['richt','loop'].includes(S.variant);
-  $('geg2').innerHTML=`<div class="gk"><div class="gt"><h2>Nog te doen</h2><span class="${vo.mist.length?'mis':'ok'}">Document ${vo.klaar} van ${vo.totaal} compleet</span></div>
-    <div class="gbar"><i style="width:${vo.pct}%"></i></div>
-    <div id="gTodo">${vakken?Gegevens.vakkenHtml(S,P,'uit'):Gegevens.todoHtml(S,P,'uit')}</div>
-    <button class="btn" id="gOpen">Alle gegevens</button></div>`;
-  // foto's toevoegen: terug naar het schouwscherm van de variant
-  if(vakken)Gegevens.vakkenBind($('gTodo'),S,klaar,{kant:'uit',naar:x=>{location.href='../index.html?survey='+encodeURIComponent(S.id)+'&fotos='+x;}});
-  else Gegevens.todoBind($('gTodo'),S,klaar,{kant:'uit',camera:()=>{location.href='../'+({richt:'richt.html',loop:'loop.html'}[S.variant]||'index.html')+'?survey='+encodeURIComponent(S.id);}});
-  $('gOpen').onclick=()=>Gegevens.open(S,{filter:'alles',onClose:klaar});
-  // hoofdknop: compleet = "Document maken", anders "Toch afronden (X open)"
-  if(Velden.statusOf(S)!=='klaar'&&vo.mist.length)$('make').textContent=`Toch afronden (${vo.mist.length} open)`;else $('make').textContent='Document maken';
-}
 Gegevens.bron=k=>S&&S.id===k?S:null;
-function renderTel(){
-  const T=S.tellers||{},auto=S.variant!=='veeg',on=Velden.onnet(S);
-  $('tel').innerHTML=`<h2>Tellers</h2><div class="tel">
-    ${on?'':`${auto?`<div class="r"><div class="l">Meters buiten tracé<small>${esc(T.metersNote||'')}</small></div><span class="v">${nl1(T.meters||0)} m</span></div>`
-          :`<div class="r"><div class="l"><label for="tm">Meters buiten tracé</label><small>Zelf invullen.</small></div><input id="tm" inputmode="decimal" value="${esc(T.meters||'')}" placeholder="0"></div>`}
-    <div class="r"><div class="l">Invoeringen<small>Telt de app.</small></div><span class="v">${T.invoeringen||0}</span></div>
-    <div class="r"><div class="l">Boringen/persingen</div><button class="step" id="bm" aria-label="Eén minder">−</button><span class="v" id="tb">${T.boringen||0}</span><button class="step" id="bp" aria-label="Eén meer">+</button></div>`}
-    ${binnenAan()||on?`<div class="r"><div class="l"><label for="tmb">Meters binnen tracé</label><small>Zelf invullen.</small></div><input id="tmb" inputmode="decimal" value="${esc(T.metersBinnen!=null?T.metersBinnen:'')}" placeholder="0"></div>`:''}</div>`;
-  if($('tmb'))$('tmb').onchange=async()=>{const v=parseFloat($('tmb').value.replace(',','.'));S.tellers={...S.tellers,metersBinnen:isFinite(v)?v:0};await Store.surveys.put(S);msg('Opgeslagen');renderGeg();};
-  if($('tm'))$('tm').onchange=async()=>{const v=parseFloat($('tm').value.replace(',','.'));S.tellers={...S.tellers,meters:isFinite(v)?v:0};await Store.surveys.put(S);msg('Opgeslagen');renderGeg();};
-  const st=async d=>{const n=Math.max(0,(S.tellers.boringen||0)+d);S.tellers={...S.tellers,boringen:n};$('tb').textContent=n;await Store.surveys.put(S);};
-  if($('bm')){$('bm').onclick=()=>st(-1);$('bp').onclick=()=>st(1);}
-}
 function binnenAan(){const c=Velden.cfg().binnen_fotos;return c.in!=='nee'||c.uit!=='nee';}
 /* Document maken: compleet -> status Klaar en naar het document; niet compleet -> één keer bevestigen, dan Klaar met de lijst wat open is */
 $('make').onclick=async()=>{
