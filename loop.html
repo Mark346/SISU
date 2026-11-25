@@ -5,10 +5,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#0d0f12">
-<title>Loop-spoor – Sisu</title>
+<meta name="theme-color" content="#121418">
+<title>Zoofi · Loop-spoor</title>
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
 <link rel="stylesheet" href="shared/base.css">
 <style>
 .live{display:grid;grid-template-columns:1fr auto;gap:8px 14px;align-items:center;padding:14px 16px;border-radius:var(--r);background:var(--card);border:2px solid var(--line);margin-top:4px}
@@ -16,12 +17,12 @@
 .live .seg small{font-size:22px;font-weight:800;margin-left:4px}
 .live .sub{font-size:17px;color:var(--mute)}.live .sub b{color:var(--ink)}
 .live .acc{font-weight:800;font-size:16px;display:flex;align-items:center;gap:6px}
-.live .acc i{width:12px;height:12px;border-radius:50%;background:#2BB24C}.live .acc.warn i{background:#F2B705}.live .acc.bad i{background:#D7261E}
+.live .acc i{width:12px;height:12px;border-radius:50%;background:var(--ok)}.live .acc.warn i{background:var(--warn)}.live .acc.bad i{background:var(--red)}
 .rose{grid-row:1/4;grid-column:2}
 .say{margin:12px 0 0;font-size:18px;font-weight:700}
-.bend{margin-top:10px;padding:12px 14px;border-radius:14px;background:#3a2a06;border:2px solid #F2B705;color:#ffe08a;font-weight:800;font-size:18px;display:flex;align-items:center;gap:10px}
+.bend{margin-top:10px;padding:12px 14px;border-radius:var(--r);background:#2A2612;border:2px solid var(--warn);color:var(--ink);font-weight:800;font-size:18px;display:flex;align-items:center;gap:10px}
 .bend .btn{margin-left:auto;min-height:44px}
-.tip{margin-top:10px;padding:12px 14px;border-radius:14px;background:#10283a;border:1px solid #2b6c9a;color:#cfe8ff;font-size:16px}
+.tip{margin-top:10px;padding:12px 14px;border-radius:var(--r);background:var(--card2);border:1px solid var(--line2);color:var(--ink);font-size:16px}
 .tip button{display:block;margin-top:8px}
 .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}.row .btn{flex:1}
 .big{width:100%;min-height:72px;font-size:21px}
@@ -37,7 +38,7 @@ h2{font-size:22px;margin:22px 0 10px}
 .back2 .d{font-size:34px;font-weight:900}
 .blk{display:flex;flex-direction:column;gap:10px}
 .blk .btn{min-height:60px;font-size:18px;justify-content:flex-start}
-.sheet{position:fixed;left:0;right:0;bottom:0;z-index:48;background:#181b20;border-radius:20px 20px 0 0;padding:16px calc(16px + env(safe-area-inset-right)) calc(18px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left));box-shadow:0 -10px 30px #000a}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:48;background:var(--card);border-radius:20px 20px 0 0;padding:16px calc(16px + env(safe-area-inset-right)) calc(18px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left));box-shadow:0 -10px 30px #000a}
 .sheet h3{margin:0 0 12px;font-size:21px}
 .tel{display:flex;flex-direction:column;border:2px solid var(--line);border-radius:var(--r);overflow:hidden}
 .tel .r{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--line);min-height:64px}.tel .r:last-child{border-bottom:0}
@@ -252,10 +253,10 @@ document.addEventListener('visibilitychange',()=>{if(document.visibilityState===
 let photos=[],urls={};
 function rose(){const h=head==null?0:head;
   return `<svg class="rose" width="104" height="104" viewBox="-52 -52 104 104" role="img" aria-label="Kompas: ${head==null?'onbekend':Math.round(h)+' graden'}">
-  <circle r="48" fill="#0d0f12" stroke="#33383f" stroke-width="3"/>
+  <circle r="48" fill="#121418" stroke="#2E323A" stroke-width="3"/>
   <g transform="rotate(${-h})"><path d="M0 -44 L7 -26 L-7 -26Z" fill="#D7261E"/><text y="-12" text-anchor="middle" font-size="15" font-weight="800" fill="#fff">N</text>
-  ${['O','Z','W'].map((t,i)=>`<text transform="rotate(${(i+1)*90}) translate(0 -14)" text-anchor="middle" font-size="12" fill="#b9bec6">${t}</text>`).join('')}</g>
-  <path d="M0 -30 L10 6 L0 0 L-10 6Z" fill="#FF7A1A"/></svg>`;}
+  ${['O','Z','W'].map((t,i)=>`<text transform="rotate(${(i+1)*90}) translate(0 -14)" text-anchor="middle" font-size="12" fill="#A7ADB8">${t}</text>`).join('')}</g>
+  <path d="M0 -30 L10 6 L0 0 L-10 6Z" fill="#F3F4F6"/></svg>`;}
 function totalM(){return photos.filter(p=>p.status!=='vervallen').reduce((s,p)=>s+(p.meters||0),0)+(S&&L().fase==='lopen'&&!L().terug?L().segM:0);}
 function accTxt(){if(mode==='stappen')return['bad',`stappen (gps ${gpsAcc==null?'–':'±'+Math.round(gpsAcc)+' m'})`];if(gpsAcc==null)return['warn','gps zoeken…'];
   return[gpsAcc<=10?'':gpsAcc<=15?'warn':'bad',`gps ±${Math.round(gpsAcc)} m`];}

@@ -5,10 +5,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#0d0f12">
-<title>Storyline – Sisu</title>
+<meta name="theme-color" content="#121418">
+<title>Zoofi · Storyline</title>
 <link rel="manifest" href="../manifest.webmanifest">
-<link rel="apple-touch-icon" href="../icon-192.png">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="../favicon-32.png">
 <link rel="stylesheet" href="base.css">
 <style>
 .intro{margin:6px 0 14px;color:var(--mute)}
@@ -18,8 +19,9 @@
 .st.vv{opacity:.55}
 .st .hd{display:flex;align-items:center;gap:8px;padding:8px 10px 8px 14px}
 .st .hd b{flex:1;font-size:18px}
-.st .hd .tag{font-size:13px;font-weight:800;padding:2px 8px;border-radius:20px;background:#3a3f47}
-.st .hd .sct{border:2px solid #FF7A1A;background:transparent;color:#FF7A1A;min-height:36px;padding:0 10px;cursor:pointer;font-size:14px}
+.st .hd .tag{font-size:13px;font-weight:800;padding:2px 8px;border-radius:20px;background:var(--line2)}
+.st .hd .sct{border:2px solid var(--sec-buiten);background:transparent;color:var(--sec-buiten);min-height:36px;padding:0 10px;cursor:pointer;font-size:14px}
+.st .hd .sct.binnen{border-color:var(--sec-binnen);color:var(--sec-binnen)}
 .st .hd .tag.vv{background:#D7261E;color:#fff}
 .mv{width:44px;height:44px;border-radius:12px;border:2px solid var(--line);background:var(--card2);color:var(--ink);font-size:20px;font-weight:900;cursor:pointer}
 .mv[disabled]{opacity:.3}
@@ -27,7 +29,7 @@
 .st .ph img{display:block;width:100%;height:auto}
 .st .ph.vv img{filter:grayscale(1) brightness(.5)}
 .st .ph .ed{position:absolute;right:10px;bottom:10px;background:#000c;color:#fff;border-radius:12px;padding:8px 12px;font-weight:800;font-size:15px;pointer-events:none}
-.st textarea{display:block;width:calc(100% - 20px);margin:10px;min-height:88px;border-radius:12px;border:2px solid #3c434c;background:#f5f4f0;color:#16191d;padding:10px 12px;font-size:16px;line-height:1.4;resize:vertical}
+.st textarea{display:block;width:calc(100% - 20px);margin:10px;min-height:88px;border-radius:12px;border:2px solid var(--line2);background:#f5f4f0;color:#16191d;padding:10px 12px;font-size:16px;line-height:1.4;resize:vertical}
 .st .acts{display:flex;gap:8px;padding:0 10px 10px}.st .acts .btn{flex:1;min-height:48px;padding:0 8px}
 .st .acts .del{border-color:#7a2a26;color:#ff9b94}.st .acts .del.sure{background:#D7261E;border-color:#D7261E;color:#fff}
 .saved{font-size:14px;color:#2BB24C;font-weight:800;padding:0 14px 10px;min-height:18px}
@@ -92,7 +94,7 @@ function render(){
   let n=0;
   $('story').innerHTML=P.length?P.map((p,i)=>{const vv=p.status==='vervallen';if(!vv)n++;
     return `<article class="st${vv?' vv':''}" data-i="${i}">
-      <div class="hd"><b>${vv?'Foto (vervalt)':'Foto '+n}</b>${p.meters!=null?`<span class="tag">${nl1(p.meters)} m</span>`:''}${binnen?`<button class="tag sct" data-sct="${i}" aria-label="Wissel buiten of binnen">${p.sectie==='binnen'?'Binnen':'Buiten'}</button>`:''}${vv?'<span class="tag vv">niet in document</span>':''}
+      <div class="hd"><b>${vv?'Foto (vervalt)':'Foto '+n}</b>${p.meters!=null?`<span class="tag">${nl1(p.meters)} m</span>`:''}${binnen?`<button class="tag sct${p.sectie==='binnen'?' binnen':''}" data-sct="${i}" aria-label="Wissel buiten of binnen">${p.sectie==='binnen'?'Binnen':'Buiten'}</button>`:''}${vv?'<span class="tag vv">niet in document</span>':''}
         <button class="mv" data-up="${i}" aria-label="Foto omhoog" ${i===0?'disabled':''}>↑</button><button class="mv" data-dn="${i}" aria-label="Foto omlaag" ${i===P.length-1?'disabled':''}>↓</button></div>
       <div class="ph${vv?' vv':''}" data-ed="${i}" role="button" tabindex="0" aria-label="Pijlen en symbolen aanpassen"><img src="${urls[p.id]}" alt="Foto ${i+1}"><span class="ed">Pijl aanpassen</span></div>
       <label class="note" for="tx${i}" style="display:block;padding:8px 12px 0">Bijschrift</label>

@@ -5,29 +5,30 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#0d0f12">
-<title>Richt &amp; Zet – Sisu</title>
+<meta name="theme-color" content="#121418">
+<title>Zoofi · Richt &amp; Zet</title>
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
 <link rel="stylesheet" href="shared/base.css">
 <style>
 .cam{position:fixed;inset:0;z-index:40;background:#000;color:#fff;display:flex;flex-direction:column;overflow:hidden}
-.ctop{flex:none;display:flex;align-items:center;gap:8px;padding:calc(4px + env(safe-area-inset-top)) calc(8px + env(safe-area-inset-right)) 4px calc(4px + env(safe-area-inset-left));background:#0d0f12}
+.ctop{flex:none;display:flex;align-items:center;gap:8px;padding:calc(4px + env(safe-area-inset-top)) calc(8px + env(safe-area-inset-right)) 4px calc(4px + env(safe-area-inset-left));background:var(--bg)}
 .ctop .st{flex:1;min-width:0;font-weight:800;font-size:16px;display:flex;align-items:center;gap:8px}
-.ctop .st i{width:12px;height:12px;border-radius:50%;background:#2BB24C;flex:none}
-.ctop .st.warn i{background:#F2B705}.ctop .st.bad i{background:#D7261E}
-.ctop .len{font-size:22px;font-weight:900;color:#FF7A1A;white-space:nowrap}
+.ctop .st i{width:12px;height:12px;border-radius:50%;background:var(--ok);flex:none}
+.ctop .st.warn i{background:var(--warn)}.ctop .st.bad i{background:var(--red)}
+.ctop .len{font-size:22px;font-weight:800;color:var(--ink);white-space:nowrap}
 .frame{position:relative;flex:none;margin:0 auto;background:#111;touch-action:none;overflow:hidden}
 .frame video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000}
 .frame svg{position:absolute;pointer-events:none}
 .frame .hold{position:absolute;left:50%;top:12px;transform:translateX(-50%);background:#000c;border-radius:12px;padding:6px 12px;font-weight:800;font-size:15px;white-space:nowrap}
-.ctl{flex:1;min-height:0;overflow-y:auto;background:#0d0f12;padding:8px calc(10px + env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) calc(10px + env(safe-area-inset-left));display:flex;flex-direction:column;gap:8px}
+.ctl{flex:1;min-height:0;overflow-y:auto;background:var(--bg);padding:8px calc(10px + env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) calc(10px + env(safe-area-inset-left));display:flex;flex-direction:column;gap:8px}
 .seg{display:flex;gap:4px}
-.seg button,.cb{flex:1;min-height:48px;border-radius:12px;border:2px solid #33383f;background:#181b20;color:#fff;font-weight:800;font-size:15px;cursor:pointer;padding:0 4px}
-.seg button.on,.cb.on{background:#FF7A1A;border-color:#FF7A1A;color:#141414}
+.seg button,.cb{flex:1;min-height:48px;border-radius:12px;border:2px solid var(--line);background:var(--card);color:#fff;font-weight:800;font-size:15px;cursor:pointer;padding:0 4px}
+.seg button.on,.cb.on{background:var(--acc);border-color:var(--acc);color:var(--on-acc)}
 .adj{display:flex;gap:6px;align-items:center}
-.adj .lb{font-size:14px;color:#b9bec6;font-weight:700;min-width:58px}
-.adj button{width:52px;min-height:48px;border-radius:12px;border:2px solid #33383f;background:#181b20;color:#fff;font-size:22px;font-weight:900;cursor:pointer}
+.adj .lb{font-size:14px;color:var(--mute);font-weight:700;min-width:58px}
+.adj button{width:52px;min-height:48px;border-radius:12px;border:2px solid var(--line);background:var(--card);color:#fff;font-size:22px;font-weight:900;cursor:pointer}
 .adj .sp{flex:1}
 .syms{display:flex;gap:6px;overflow-x:auto}
 .syms .cb{flex:none;padding:0 12px;font-size:15px}
@@ -38,13 +39,13 @@
 .shutter[disabled]{opacity:.5}
 .fb{flex:1;display:flex;flex-direction:column;justify-content:center;gap:12px;padding:24px}
 .fb p{font-size:18px}
-.sheet{position:fixed;left:0;right:0;bottom:0;z-index:48;background:#181b20;color:#fff;border-radius:20px 20px 0 0;padding:14px calc(16px + env(safe-area-inset-right)) calc(16px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left));box-shadow:0 -10px 30px #000a;max-height:80vh;overflow-y:auto}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:48;background:var(--card);color:#fff;border-radius:20px 20px 0 0;padding:14px calc(16px + env(safe-area-inset-right)) calc(16px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left));box-shadow:0 -10px 30px #000a;max-height:80vh;overflow-y:auto}
 .sheet h3{margin:0 0 6px;font-size:20px}
 .sheet label{display:flex;justify-content:space-between;font-weight:700;margin:12px 0 4px}
-.sheet input[type=range]{width:100%;height:44px;accent-color:#FF7A1A}
+.sheet input[type=range]{width:100%;height:44px;accent-color:var(--acc)}
 .sheet .tg{display:flex;align-items:center;gap:10px;min-height:48px;font-weight:700}
-.sheet .tg input{width:24px;height:24px;accent-color:#FF7A1A}
-.chk{position:fixed;inset:0;z-index:45;background:#0d0f12;color:#fff;display:flex;flex-direction:column;overflow-y:auto;padding:calc(10px + env(safe-area-inset-top)) 12px calc(12px + env(safe-area-inset-bottom))}
+.sheet .tg input{width:24px;height:24px;accent-color:var(--acc)}
+.chk{position:fixed;inset:0;z-index:45;background:var(--bg);color:#fff;display:flex;flex-direction:column;overflow-y:auto;padding:calc(10px + env(safe-area-inset-top)) 12px calc(12px + env(safe-area-inset-bottom))}
 .chk h3{margin:4px 0 10px;font-size:20px}
 .chk .ph{position:relative;width:100%;max-width:520px;margin:0 auto;background:#000}
 .chk .ph img{display:block;width:100%;height:auto}
@@ -207,7 +208,7 @@ function tick(){
 function calSvg(P){
   let o='';const g=[];for(let z=0;z<=3.001;z+=.1){const q=proj(P,0,z);if(q)g.push(q);}
   if(g.length>1)o+=`<polyline points="${g.map(q=>q[0].toFixed(1)+','+q[1].toFixed(1)).join(' ')}" fill="none" stroke="#F2D024" stroke-width="6" stroke-linecap="round"/>`;
-  for(const z of [1,2,3]){const a=proj(P,-.35,z),b=proj(P,.35,z);if(a&&b)o+=`<line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" stroke="${z===3?'#FF7A1A':'#fff'}" stroke-width="${z===3?6:3}"/><text x="${b[0]+8}" y="${b[1]+5}" fill="#fff" stroke="#000" stroke-width="3" paint-order="stroke" font-size="16" font-weight="800">${z} m</text>`;}
+  for(const z of [1,2,3]){const a=proj(P,-.35,z),b=proj(P,.35,z);if(a&&b)o+=`<line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" stroke="${z===3?'#FFD84D':'#fff'}" stroke-width="${z===3?6:3}"/><text x="${b[0]+8}" y="${b[1]+5}" fill="#fff" stroke="#000" stroke-width="3" paint-order="stroke" font-size="16" font-weight="800">${z} m</text>`;}
   return o;
 }
 function camUI(on){$('cam').hidden=!on;document.body.style.overflow=on?'hidden':'';}

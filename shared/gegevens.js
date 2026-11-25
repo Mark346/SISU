@@ -5,36 +5,36 @@
 (function(){
   const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   const CSS=`
-.geg{position:fixed;inset:0;z-index:55;background:var(--bg,#0d0f12);color:var(--ink,#f5f6f7);display:flex;flex-direction:column}
-.geg .gh{flex:none;display:flex;align-items:center;gap:8px;padding:calc(4px + env(safe-area-inset-top)) calc(12px + env(safe-area-inset-right)) 6px calc(6px + env(safe-area-inset-left));border-bottom:1px solid var(--line,#33383f)}
+.geg{position:fixed;inset:0;z-index:55;background:var(--bg,#121418);color:var(--ink,#F3F4F6);display:flex;flex-direction:column}
+.geg .gh{flex:none;display:flex;align-items:center;gap:8px;padding:calc(4px + env(safe-area-inset-top)) calc(12px + env(safe-area-inset-right)) 6px calc(6px + env(safe-area-inset-left));border-bottom:1px solid var(--line,#2E323A)}
 .geg .gh h2{flex:1;margin:0;font-size:18px}
 .geg .gp{font-weight:800;font-size:15px;white-space:nowrap}
 .geg .gb{flex:1;overflow-y:auto;padding:8px calc(14px + env(safe-area-inset-right)) calc(30px + env(safe-area-inset-bottom)) calc(14px + env(safe-area-inset-left))}
-.geg .bar2{height:8px;border-radius:4px;background:#2a2e35;overflow:hidden;margin:8px 0 4px}.geg .bar2 i{display:block;height:100%;background:#FF7A1A}
+.geg .bar2{height:8px;border-radius:4px;background:var(--track);overflow:hidden;margin:8px 0 4px}.geg .bar2 i{display:block;height:100%;background:var(--prog-in)}
 .geg h3{font-size:19px;margin:22px 0 8px}
-.geg .fr{background:var(--card,#181b20);border:2px solid var(--line,#33383f);border-radius:14px;padding:10px 12px;margin-bottom:8px}
-.geg .fr.mist{border-color:#FF7A1A}
+.geg .fr{background:var(--card,#1C1F25);border:2px solid var(--line,#2E323A);border-radius:14px;padding:10px 12px;margin-bottom:8px}
+.geg .fr.mist{border-color:var(--warn)}
 .geg .fl{display:flex;align-items:center;gap:8px;font-weight:700;font-size:16px;margin-bottom:6px}
 .geg .fl span:first-child{flex:1}.geg .fl .bd{flex:none}
 .geg .bd{font-size:12px;font-weight:800;padding:2px 8px;border-radius:20px;text-transform:lowercase}
-.geg .bd.verplicht{background:#FF7A1A;color:#141414}.geg .bd.wenselijk{background:#2563eb;color:#fff}
-.geg input,.geg textarea{width:100%;min-height:48px;border-radius:12px;border:2px solid #3c434c;background:#0d0f12;color:inherit;padding:0 12px;font-size:16px}
+.geg .bd.verplicht{background:var(--warn);color:var(--on-acc)}.geg .bd.wenselijk{background:var(--f1);color:#fff}
+.geg input,.geg textarea{width:100%;min-height:48px;border-radius:12px;border:2px solid var(--line2);background:var(--bg);color:inherit;padding:0 12px;font-size:16px}
 .geg textarea{min-height:84px;padding:10px 12px;line-height:1.4;resize:vertical}
 .geg .ch{display:flex;flex-wrap:wrap;gap:6px}
-.geg .ch button{min-height:44px;padding:0 14px;border-radius:99px;border:2px solid #3c434c;background:#0d0f12;color:inherit;font-size:16px;font-weight:700;cursor:pointer}
-.geg .ch button.on{background:#FF7A1A;border-color:#FF7A1A;color:#141414}
+.geg .ch button{min-height:44px;padding:0 14px;border-radius:99px;border:2px solid var(--line2);background:var(--bg);color:inherit;font-size:16px;font-weight:700;cursor:pointer}
+.geg .ch button.on{background:var(--acc);border-color:var(--acc);color:var(--on-acc)}
 .geg .ft{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .geg .ft img{width:120px;height:90px;object-fit:cover;border-radius:10px;border:1px solid #444}
 .geg .ft .btn{min-height:44px}
-.geg .info{color:var(--mute,#b9bec6);font-size:15px}
-.geg .vgg{margin:10px 0 4px;font-weight:800;color:var(--mute,#b9bec6)}
-.geg .vgr{border-top:1px solid #2a2e35;padding:8px 0}
+.geg .info{color:var(--mute,#A7ADB8);font-size:15px}
+.geg .vgg{margin:10px 0 4px;font-weight:800;color:var(--mute,#A7ADB8)}
+.geg .vgr{border-top:1px solid var(--track);padding:8px 0}
 .geg .vgr label{display:flex;gap:10px;align-items:center;min-height:44px;font-size:16px}
-.geg .vgr input[type=checkbox]{width:24px;height:24px;min-height:0;accent-color:#FF7A1A}
+.geg .vgr input[type=checkbox]{width:24px;height:24px;min-height:0;accent-color:var(--acc)}
 .geg .vgr .vx{display:grid;gap:6px;margin:4px 0 4px 34px}
 .geg .vgr .vx input{min-height:44px;font-size:15px}
 .geg .ok{display:flex;gap:10px;align-items:center;min-height:48px;font-weight:800;margin-top:10px}
-.geg .ok input{width:26px;height:26px;min-height:0;accent-color:#16a34a}`;
+.geg .ok input{width:26px;height:26px;min-height:0;accent-color:var(--ok)}`;
   function css(){if(document.getElementById('gegcss'))return;const s=document.createElement('style');s.id='gegcss';s.textContent=CSS;document.head.appendChild(s);}
   let st=null;
   async function open(survey,mode,opts={}){
@@ -58,7 +58,7 @@
     const c=Velden.cfg(),s=st.s,R=st.root;
     R.innerHTML=`<div class="gh"><button class="back" id="gX">‹ Klaar</button><h2>${st.mode==='intake'?'Intake':'Gegevens voor het document'}</h2><span class="gp"></span></div>
     <div class="gb"><div class="bar2"><i></i></div>
-    <p class="info">${st.mode==='intake'?'Vul in wat je vóór het lopen weet. Oranje omrand = verplicht en nog leeg.':'Alles wat in het document komt. Oranje omrand = verplicht en nog leeg.'} Je kunt dit later altijd aanvullen.</p>
+    <p class="info">${st.mode==='intake'?'Vul in wat je vóór het lopen weet. Geel omrand = verplicht en nog leeg.':'Alles wat in het document komt. Geel omrand = verplicht en nog leeg.'} Je kunt dit later altijd aanvullen.</p>
     ${Velden.SECTIES.map(sc=>{const fs=Velden.VELDEN.filter(f=>f.s===sc.id&&zichtbaar(f,c));if(!fs.length)return'';
       return `<h3>${esc(sc.naam)}</h3>${fs.map(f=>row(f,niveau(f,c))).join('')}`;}).join('')}
     ${st.mode==='alles'?'<p class="info">Tellers en foto\'s vul je in het schouwscherm en de storyline.</p>':''}</div>`;

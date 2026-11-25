@@ -5,15 +5,16 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#0d0f12">
-<title>Instellingen – Sisu</title>
+<meta name="theme-color" content="#121418">
+<title>Zoofi · Instellingen</title>
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
 <link rel="stylesheet" href="shared/base.css">
 <style>
 .versie{font-size:14px;font-weight:700;color:var(--mute);white-space:nowrap;padding-right:4px}
-.todo{margin:10px 0 6px;padding:12px 14px;border-radius:14px;background:#3a2a06;border:2px solid #FF7A1A;color:#ffe0c2}
-.todo b{display:block;font-size:18px;color:#FF7A1A;margin-bottom:4px}.todo ul{margin:0;padding-left:20px;font-size:16px;line-height:1.45}
+.todo{margin:10px 0 6px;padding:12px 14px;border-radius:var(--r);background:#2A2612;border:2px solid var(--warn);color:var(--ink)}
+.todo b{display:block;font-size:18px;color:var(--warn);margin-bottom:4px}.todo ul{margin:0;padding-left:20px;font-size:16px;line-height:1.45}
 .uitleg{color:var(--mute);margin:4px 0 12px}
 .uitleg b{color:var(--ink)}
 .lg{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;font-size:15px;color:var(--mute);margin-bottom:8px}
@@ -23,9 +24,9 @@
 .veld .nm{font-weight:700;font-size:15px;line-height:1.25}
 .veld .vb{color:var(--mute);font-size:13px;font-weight:400;margin-top:1px}
 .cyc{width:80px;min-height:44px;border-radius:10px;border:2px solid transparent;padding:0 4px;cursor:pointer;font-size:14px;font-weight:800;text-align:center}
-.cyc.verplicht{background:#FF7A1A;color:#141414}
-.cyc.wenselijk{background:#2563eb;color:#fff}
-.cyc.nee{background:#0d0f12;color:#b9bec6;border-color:#3a3f47}
+.cyc.verplicht{background:var(--acc);color:var(--on-acc)}
+.cyc.wenselijk{background:var(--f1);color:#fff}
+.cyc.nee{background:var(--bg);color:var(--mute);border-color:var(--line2)}
 .cyc[disabled]{opacity:.45;cursor:default}
 .kop{display:grid;grid-template-columns:1fr 80px 80px;gap:6px;align-items:end;position:sticky;top:57px;background:var(--bg);padding:8px 6px 6px 0;z-index:2}
 .kop h2{font-size:19px;margin:0}

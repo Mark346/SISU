@@ -127,11 +127,11 @@
   ].map((r,i)=>({id:'a'+i,groep:r[0],aspect:r[1],risico:r[2],afspraak:r[3]}));
 
   const STATUS=[
-    {id:'new',naam:'New',kleur:'#6b7280'},
-    {id:'intake',naam:'Intake compleet',kleur:'#2563eb'},
-    {id:'gelopen',naam:'Gelopen',kleur:'#d97706'},
-    {id:'klaar',naam:'Klaar',kleur:'#16a34a'},
-    {id:'archief',naam:'Archief',kleur:'#475569'}
+    {id:'new',naam:'New',kleur:'var(--st-new)'},
+    {id:'intake',naam:'Intake compleet',kleur:'var(--st-intake)'},
+    {id:'gelopen',naam:'Gelopen',kleur:'var(--st-gelopen)'},
+    {id:'klaar',naam:'Klaar',kleur:'var(--st-klaar)'},
+    {id:'archief',naam:'Archief',kleur:'var(--st-archief)'}
   ];
   /* oude statussen omzetten: 'open' -> 'new' */
   const statusOf=s=>{const v=s&&s.status;return v==='open'||!v?'new':STATUS.some(x=>x.id===v)?v:'new';};

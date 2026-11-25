@@ -1,15 +1,84 @@
-/* Gedeelde stijl voor de hoofdpagina en de nieuwe varianten.
+/* Gedeelde stijl van Zoofi, richting "Glasvezel" (zie design/zoofi-glasvezel/DESIGN.md).
    Donker en hoog contrast, zodat het buiten in de zon leesbaar blijft. */
+@font-face{font-family:Archivo;font-weight:400;font-display:swap;src:url('../fonts/archivo-400.woff2') format('woff2')}
+@font-face{font-family:Archivo;font-weight:600;font-display:swap;src:url('../fonts/archivo-600.woff2') format('woff2')}
+@font-face{font-family:Archivo;font-weight:800;font-display:swap;src:url('../fonts/archivo-800.woff2') format('woff2')}
+
 :root{
-  --bg:#0d0f12;--card:#181b20;--card2:#22262d;--line:#33383f;
-  --ink:#f5f6f7;--mute:#b9bec6;--acc:#FF7A1A;--on-acc:#141414;
-  --ok:#2BB24C;--warn:#F2B705;--red:#D7261E;
-  --r:16px;
   font-size:16px;
+  /* vlakken */
+  --bg:#121418;        /* grafiet: achtergrond */
+  --card:#1C1F25;      /* mantel: kaarten, balken */
+  --card2:#2A2E35;     /* chips, ingedrukt */
+  --well:#121418;      /* verdiept vlak in een kaart (ringen, invoervelden) */
+  --line:#2E323A;      /* randen en scheidingslijnen */
+  --line2:#3A3E46;     /* rand van invoervelden en ronde knoppen */
+
+  /* tekst */
+  --ink:#F3F4F6;       /* hoofdtekst */
+  --mute:#A7ADB8;      /* bijtekst (7:1 op --card) */
+
+  /* acties: de hoofdknop is licht met donkere tekst, niet oranje */
+  --acc:#F3F4F6;
+  --on-acc:#121418;
+
+  /* voortgang */
+  --prog-in:#1E6BFF;   /* intake-ring */
+  --prog-doc:#2EC5D3;  /* document-ring */
+  --track:#2E323A;     /* lege ring of balk */
+
+  /* signalen */
+  --ok:#22C55E;
+  --warn:#FFD84D;      /* ontbrekende verplichte velden, "let op" */
+  --red:#E4232B;
+
+  /* statussen van een schouw (bolletje + tekst, geen gekleurd vlak) */
+  --st-new:#8E9AA6;
+  --st-intake:#1E6BFF;
+  --st-gelopen:#FF8A1F;
+  --st-klaar:#22C55E;
+  --st-archief:#A0703F;
+
+  /* secties */
+  --sec-buiten:#22A447;
+  --sec-binnen:#8A4FFF;
+
+  /* vezelkleurcode 1–12 (IEC 60304 / TIA-598), voor de vezelband en accenten */
+  --f1:#1E6BFF;  /* blauw */
+  --f2:#FF7A1A;  /* oranje */
+  --f3:#22A447;  /* groen */
+  --f4:#A0703F;  /* bruin */
+  --f5:#8E9AA6;  /* grijs */
+  --f6:#F5F5F5;  /* wit */
+  --f7:#E4232B;  /* rood */
+  --f8:#3A3E46;  /* zwart (iets lichter, anders onzichtbaar op grafiet) */
+  --f9:#FFD400;  /* geel */
+  --f10:#8A4FFF; /* violet */
+  --f11:#FF8FB8; /* roze */
+  --f12:#2EC5D3; /* aqua */
+
+  /* vormen */
+  --r:20px;            /* kaarten */
+  --r-pill:999px;      /* knoppen, chips, schakelaars */
+  --r-thumb:14px;      /* fotominiaturen */
+  --overlay:rgba(18,20,24,.72); /* knoppen en labels over een foto */
+
+  --font:Archivo,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
 }
+
+/* De vezelband onder de bovenbalk: 12 lijnen van 2 px met 2 px tussenruimte. */
+.vezelband{display:flex;flex-direction:column;gap:2px}
+.vezelband span{height:2px}
+.vezelband span:nth-child(1){background:var(--f1)}  .vezelband span:nth-child(2){background:var(--f2)}
+.vezelband span:nth-child(3){background:var(--f3)}  .vezelband span:nth-child(4){background:var(--f4)}
+.vezelband span:nth-child(5){background:var(--f5)}  .vezelband span:nth-child(6){background:var(--f6)}
+.vezelband span:nth-child(7){background:var(--f7)}  .vezelband span:nth-child(8){background:var(--f8)}
+.vezelband span:nth-child(9){background:var(--f9)}  .vezelband span:nth-child(10){background:var(--f10)}
+.vezelband span:nth-child(11){background:var(--f11)} .vezelband span:nth-child(12){background:var(--f12)}
+
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--bg);color:var(--ink);
-  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Arial,sans-serif;
+  font-family:var(--font);
   font-size:16px;line-height:1.4;-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
 button,input,select,textarea{font:inherit;color:inherit}
 [hidden]{display:none!important}
@@ -22,14 +91,16 @@ a{color:var(--acc)}
 /* bovenbalk met terug naar het hoofdmenu */
 .bar{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:8px;background:var(--bg);
   padding:calc(6px + env(safe-area-inset-top)) calc(12px + env(safe-area-inset-right)) 6px calc(12px + env(safe-area-inset-left));border-bottom:1px solid var(--line)}
-.bar h1{font-size:18px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar h1{font-size:18px;font-weight:800;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .back{display:inline-flex;align-items:center;min-height:44px;padding:0 12px 0 4px;border-radius:12px;color:var(--ink);text-decoration:none;font-weight:700;font-size:16px;background:none;border:0;cursor:pointer}
 .back:active{background:var(--card2)}
 
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;min-width:44px;padding:0 18px;border-radius:14px;
-  border:2px solid var(--line);background:var(--card);color:var(--ink);font-weight:700;font-size:16px;cursor:pointer;text-decoration:none}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;min-width:44px;padding:0 20px;border-radius:var(--r-pill);
+  border:1px solid var(--line2);background:transparent;color:var(--ink);font-weight:600;font-size:16px;cursor:pointer;text-decoration:none}
 .btn:active{transform:translateY(1px)}
-.btn.pri{background:var(--acc);border-color:var(--acc);color:var(--on-acc)}
+.btn.pri{background:var(--acc);border-color:var(--acc);color:var(--on-acc);font-weight:800;min-height:56px}
+.hlogo{flex:none;width:32px;height:32px;display:block}
+.bar .hlogo+h1{font-size:22px}
 .btn[disabled]{opacity:.5}
 .note{color:var(--mute);font-size:16px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px}
