@@ -76,6 +76,7 @@
 .sui .sprg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .sui .spb{display:flex;align-items:center;min-height:72px;border:0;border-radius:16px;background:var(--well);color:var(--ink);padding:0 12px;cursor:pointer;text-align:left;font:inherit}
 .sui .spb:active{background:var(--card2)}.sui .spb .ring b{font-size:18px}
+.sui .saanv{width:100%;margin-top:10px}
 .sui .smist{margin:12px 2px 0;font-size:14px;line-height:1.4;color:var(--warn)}
 .sui .sblk .row{margin-top:14px;flex-wrap:nowrap}.sui .sblk .row .btn{flex:1;min-width:0;min-height:50px;font-size:15px;padding:0 10px;white-space:nowrap}
 .sui .sect{display:flex;align-items:center;gap:10px;margin-top:16px}.sui .sect>span{color:var(--mute);font-size:15px;white-space:nowrap}
@@ -194,7 +195,7 @@
     const idx=Velden.STATUS.findIndex(x=>x.id===cur);
     const knop={new:{l:'Intake afronden',to:'intake',check:'in'},intake:{l:'Schouw gelopen',to:'gelopen'},gelopen:{l:'Afronden (klaar)',to:'klaar',check:'uit'},klaar:{l:'Archiveren',to:'archief'},archief:{l:'Terugzetten',to:'klaar'}}[cur];
     const terug={intake:'new',gelopen:'intake',klaar:'gelopen'}[cur];
-    const mist=v=>v.mist.length?`<p class="smist">Nog verplicht: ${v.mist.slice(0,6).map(f=>esc(f.l)).join(', ')}${v.mist.length>6?' en '+(v.mist.length-6)+' meer':''}</p>`:'';
+    const mist=v=>v.mist.length?`<p class="smist">Nog verplicht: ${v.mist.slice(0,6).map(f=>esc(f.l)).join(', ')}${v.mist.length>6?' en '+(v.mist.length-6)+' meer':''}</p><button class="btn saanv" id="sbA">Gegevens aanvullen</button>`:'';
     el.innerHTML=`<div class="sblk">
       <ol class="sstep" aria-label="Status">${Velden.STATUS.map((x,i)=>`<li class="${i<idx?'af':i===idx?'nu':''}" ${i===idx?'aria-current="step"':''}><i style="${i<=idx?'background:'+x.kleur:''}"></i><span>${esc(x.naam)}</span></li>`).join('')}</ol>
       <div class="sprg"><button class="spb" id="sbI">${ring('Intake',vi,'var(--prog-in)',48)}</button><button class="spb" id="sbO">${ring('Document',vo,'var(--prog-doc)',48)}</button></div>
@@ -203,6 +204,7 @@
     const reopen=()=>{if(na)na();else show(s);};
     $('sbI').onclick=()=>Gegevens.open(s,'intake',{onClose:reopen});
     $('sbO').onclick=()=>Gegevens.open(s,'alles',{onClose:reopen});
+    if($('sbA'))$('sbA').onclick=()=>Gegevens.open(s,cur==='new'?'intake':'alles',{onClose:reopen,naarLeeg:true});
     if($('sbB'))$('sbB').onclick=async()=>{s.status=terug;await Store.surveys.put(s);reopen();};
     $('sbN').onclick=async()=>{
       const v=knop.check==='in'?vi:knop.check==='uit'?vo:null;
@@ -255,7 +257,7 @@
        <div class="r"><div class="l">Boringen/persingen</div><button class="step" id="bm" aria-label="Eén minder">−</button><span class="v" id="tb">${T.boringen||0}</span><button class="step" id="bp" aria-label="Eén meer">+</button></div>
      </div>
      <div class="sfoot">
-       <a class="btn pri" href="shared/storyline.html?survey=${encodeURIComponent(s.id)}">Naar document</a>
+       <a class="btn pri" href="shared/storyline.html?survey=${encodeURIComponent(s.id)}">Naar controle &amp; aanvullen</a>
        <button class="slink" id="other">Andere schouw</button>
        <button class="btn sdelx" id="sdel">Schouw verwijderen</button>
      </div>`;

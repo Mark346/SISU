@@ -45,6 +45,8 @@
     const fotos=await Store.photos.bySurvey(survey.id,true);
     const root=document.createElement('div');root.className='geg';root.setAttribute('role','dialog');document.body.appendChild(root);
     st={s:survey,mode,opts,root,fotos,urls:[]};render();
+    const doel=opts.veld?root.querySelector(`.fr[data-k="${opts.veld}"]`):opts.naarLeeg?root.querySelector('.fr.mist'):null;
+    if(doel)requestAnimationFrame(()=>{doel.scrollIntoView({block:'center'});const i=doel.querySelector('input,textarea,button');if(i)i.focus({preventScroll:true});});
   }
   function close(silent){if(!st)return;st.urls.forEach(u=>URL.revokeObjectURL(u));st.root.remove();const o=st.opts;st=null;if(!silent&&o.onClose)o.onClose();}
   let svT=null;

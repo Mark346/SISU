@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#121418">
-<title>Zoofi · Storyline</title>
+<title>Zoofi · Controle &amp; aanvullen</title>
 <link rel="manifest" href="../manifest.webmanifest">
 <link rel="apple-touch-icon" href="../apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="32x32" href="../favicon-32.png">
@@ -40,15 +40,26 @@ h2{font-size:22px;font-weight:800;margin:24px 0 10px}
 .tel input{width:92px;min-height:46px;border-radius:14px;border:1px solid var(--line2);background:var(--well);text-align:right;padding:0 12px;font-size:18px;font-weight:800}
 .tel .v{min-width:48px;text-align:center;font-size:22px;font-weight:800;white-space:nowrap}
 .step{flex:none;width:44px;height:44px;border-radius:22px;border:1px solid var(--line2);background:var(--well);font-size:22px;font-weight:800;cursor:pointer;padding:0}
+.geg2{margin:6px 0 18px}
+.geg2 .gk{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:10px}
+.geg2 .gt{display:flex;align-items:baseline;justify-content:space-between;gap:10px}.geg2 h2{margin:0;font-size:20px}
+.geg2 .gt span{font-size:15px;font-weight:600}.geg2 .gt .mis{color:var(--warn)}.geg2 .gt .ok{color:var(--ok)}
+.geg2 .gbar{height:8px;border-radius:4px;background:var(--track);overflow:hidden}.geg2 .gbar i{display:block;height:100%;background:var(--prog-doc)}
+.geg2 .gm{margin:0;color:var(--mute)}.geg2 .gm.ok{color:var(--ok)}
+.geg2 .gl{display:flex;flex-wrap:wrap;gap:8px}
+.geg2 .gch{display:flex;flex-direction:column;align-items:flex-start;min-height:44px;padding:6px 14px;border-radius:16px;border:1px solid var(--warn);background:transparent;color:var(--ink);font-size:15px;font-weight:600;cursor:pointer;text-align:left}
+.geg2 .gch small{color:var(--mute);font-weight:400;font-size:13px}
+.geg2 .btn{width:100%}
 .foot{position:sticky;bottom:0;margin:20px -16px 0;padding:12px 16px calc(12px + env(safe-area-inset-bottom));background:var(--bg);border-top:1px solid var(--line);display:flex;gap:10px}
 .foot .btn{flex:1;min-height:56px;font-size:18px}
 .msg{min-height:22px;color:var(--mute)}
 </style>
 </head>
 <body>
-<header class="bar"><a class="back bpill" id="back" href="../index.html"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>Terug</a><h1>Storyline</h1></header>
+<header class="bar"><a class="back bpill" id="back" href="../index.html"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>Terug</a><h1>Controle &amp; aanvullen</h1></header>
 <main class="page">
   <div id="top"></div>
+  <section class="geg2" id="geg2" aria-label="Gegevens voor het document"></section>
   <p class="msg" id="msg" role="status"></p>
   <div class="story" id="story"></div>
   <div id="tel"></div>
@@ -58,6 +69,8 @@ h2{font-size:22px;font-weight:800;margin:24px 0 10px}
 <script src="legend.js"></script>
 <script src="editor.js"></script>
 <script src="velden.js"></script>
+<script src="camera.js"></script>
+<script src="gegevens.js"></script>
 <script>
 /* Storyline: alle foto's en teksten van een schouw op een rij, om na te lopen en aan te passen
    voordat het echte document wordt gemaakt. */
@@ -90,7 +103,7 @@ async function load(){
 function render(){
   Object.values(urls).forEach(u=>URL.revokeObjectURL(u));urls={};P.forEach(p=>urls[p.id]=URL.createObjectURL(p.blob));
   const ok=P.filter(p=>p.status!=='vervallen').length,c=Velden.cfg().binnen_fotos,binnen=c.in!=='nee'||c.uit!=='nee';
-  $('top').innerHTML=`<div class="adr">${esc(S.adres||'Schouw')}</div><p class="intro">Loop het verhaal na. Pas foto's en teksten aan, zet foto's in de goede volgorde en maak daarna het document. ${ok} van ${P.length} foto's komen in het document.</p>`;
+  $('top').innerHTML=`<div class="adr">${esc(S.adres||'Schouw')}</div><p class="intro">Controleer en vul aan: de gegevens, en daarna de foto's en teksten in de goede volgorde. Daarna maak je het document. ${ok} van ${P.length} foto's komen in het document.</p>`;
   let n=0;
   $('story').innerHTML=P.length?P.map((p,i)=>{const vv=p.status==='vervallen';if(!vv)n++;
     return `<article class="st${vv?' vv':''}" data-i="${i}">
@@ -113,6 +126,7 @@ function render(){
     clearTimeout(t);del(+b.dataset.del);};});
   document.querySelectorAll('[data-tx]').forEach(t=>{let tm=null;t.oninput=()=>{clearTimeout(tm);tm=setTimeout(()=>saveText(+t.dataset.tx,t.value),400);};t.onblur=()=>{clearTimeout(tm);saveText(+t.dataset.tx,t.value);};});
   renderTel();
+  renderGeg();
 }
 async function saveText(i,v){
   const p=P[i];if(!p||(p.bijschrift||'')===v)return;
@@ -134,6 +148,21 @@ function edit(i){
   const p=P[i];if(p.status==='vervallen'){msg('Zet de foto eerst terug om hem te bewerken.');return;}
   Editor.openEditor(p.id,{onClose:async()=>{P=await Store.photos.bySurvey(S.id,true);await recount();render();},
     onChange:async q=>{if(S.variant==='loop'){q.bron='loop';q.bijgeveegd=true;await Store.photos.put(q);}}}).catch(e=>msg('Kon de foto niet openen: '+(e.message||e)));
+}
+/* gegevens voor het document: wat ontbreekt nog, en direct invullen */
+function renderGeg(){
+  const vo=Velden.voortgang(S,P,'uit'),el=$('geg2'),sec=k=>{const x=Velden.SECTIES.find(y=>y.id===k);return x?x.naam:'';};
+  el.innerHTML=`<div class="gk"><div class="gt"><h2>Gegevens</h2><span class="${vo.mist.length?'mis':'ok'}">${vo.klaar}/${vo.totaal} verplicht ingevuld</span></div>
+    <div class="gbar"><i style="width:${vo.pct}%"></i></div>
+    ${vo.mist.length?`<p class="gm">Nog leeg (${vo.mist.length}). Tik op een veld om het in te vullen:</p>
+      <div class="gl">${vo.mist.map(f=>`<button class="gch" data-veld="${f.k}">${esc(f.l)}<small>${esc(sec(f.s))}</small></button>`).join('')}</div>
+      <button class="btn pri" id="gAanv">Ontbrekende gegevens invullen</button>`
+     :'<p class="gm ok">Alle verplichte gegevens zijn ingevuld.</p>'}
+    <button class="btn" id="gAlles">Alle gegevens bekijken en aanpassen</button></div>`;
+  const open=opts=>Gegevens.open(S,'alles',{...opts,onClose:async()=>{S=await Store.surveys.get(S.id);await recount();render();}});
+  el.querySelectorAll('[data-veld]').forEach(b=>b.onclick=()=>open({veld:b.dataset.veld}));
+  if($('gAanv'))$('gAanv').onclick=()=>open({naarLeeg:true});
+  $('gAlles').onclick=()=>open({});
 }
 function renderTel(){
   const T=S.tellers||{},auto=S.variant!=='veeg';
