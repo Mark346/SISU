@@ -30,7 +30,7 @@
   // type: text | lang | datum | tel | mail | getal | keuze | janee | foto | fotos | vg | legenda | teller
   const VELDEN=[
     {k:'projectnummer',s:'alg',l:'Projectnummer',t:'text',in:V,uit:V,vb:'5222119 - 00172403 - 00046005-SID000883900'},
-    {k:'type_aansluiting',s:'alg',l:'Type aansluiting',t:'keuze',opties:['OFFNET','ONNET','FTTS'],in:V,uit:V,vb:'OFFNET'},
+    {k:'type_aansluiting',s:'alg',l:'Type aansluiting',t:'keuze',opties:['OFFNET','ONNET'],streng:true,in:V,uit:V,vb:'OFFNET (buiten en binnen) of ONNET (alleen binnen)'},
     {k:'datum_survey',s:'alg',l:'Datum site survey',t:'datum',in:W,uit:V,vb:'07-11-2025'},
     {k:'aanw_org_naam',s:'alg',g:'aanw',l:'Aanwezig organisatie: naam',t:'text',in:W,uit:W,vb:'Dhr. J. Jansen'},
     {k:'aanw_org_bedrijf',s:'alg',g:'aanw',l:'Aanwezig organisatie: bedrijf',t:'text',in:W,uit:W,vb:'Woningcorporatie'},
@@ -241,6 +241,7 @@
       case 'foto':return !!((s.bijlagen||{})[f.k])||v==='nvt';
       case 'vg':return !!(v&&v.nagelopen);
       case 'legenda':return true;
+      case 'keuze':if(f.streng)return f.opties.includes(v); // oude waarde (FTTS, Anders) telt als leeg: opnieuw kiezen
       default:return v!=null&&String(v).trim()!=='';
     }
   }

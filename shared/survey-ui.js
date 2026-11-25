@@ -26,6 +26,11 @@
 .sui .snew{width:100%;min-height:60px;font-size:19px}
 .sui .snp{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px}
 .sui .snp label{margin:0 0 8px}
+.sui .snp .styp{display:block;font-weight:700;margin:14px 0 8px}
+.sui .snp .tseg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.sui .snp .tseg button{min-height:60px;border-radius:16px;border:1px solid var(--line2);background:transparent;color:var(--ink);font-size:17px;font-weight:800;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+.sui .snp .tseg button small{font-size:13px;font-weight:600;color:var(--mute)}
+.sui .snp .tseg button.on{background:var(--acc);border-color:var(--acc);color:var(--on-acc)}.sui .snp .tseg button.on small{color:var(--on-acc)}
 .sui .snp .take{display:block;width:100%;margin-top:10px;text-align:left;font-weight:600;min-height:48px;border-radius:14px;padding:12px 16px;line-height:1.3}
 .sui .snp .take span{color:var(--mute);font-weight:400;margin-right:4px}
 .sui .surv{display:flex;flex-direction:column;gap:12px;margin-top:14px}
@@ -143,6 +148,7 @@
        <label for="adr">Adres van de nieuwe schouw</label>
        <input class="f" id="adr" autocomplete="street-address" placeholder="Straat en huisnummer, plaats">
        ${lastOpen&&lastOpen.adres?`<button class="btn take" id="take"><span>Adres overnemen:</span>${esc(lastOpen.adres)}</button>`:''}
+       ${cfg.typeKiezen?`<span class="styp" id="stypL">Type aansluiting</span><div class="tseg" role="group" aria-labelledby="stypL"><button data-typ="OFFNET" aria-pressed="false">OFFNET<small>buiten en binnen</small></button><button data-typ="ONNET" aria-pressed="false">ONNET<small>alleen binnen</small></button></div>`:''}
        <div class="row">${all.length?'<button class="btn" id="cancel">Annuleren</button>':''}<button class="btn pri" id="go" style="flex:1.4">Start schouw</button></div>
      </div>
      ${open.length?`<div class="surv">${open.map(x=>`<button class="sv" data-id="${esc(x.id)}"><span><b>${esc(x.adres||'zonder adres')}</b>${sst(x)}${docr(x)}</span><span class="go">${ICO.pijl}</span></button>`).join('')}</div>`
@@ -168,9 +174,11 @@
     if($('cancel'))$('cancel').onclick=()=>{newOpen=false;$('adr').value='';$('snp').hidden=true;$('new').hidden=false;$('new').setAttribute('aria-expanded','false');$('new').focus();};
     $('adr').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();$('go').click();}};
     if($('take'))$('take').onclick=()=>{$('adr').value=lastOpen.adres;};
+    let typ=null;main.querySelectorAll('[data-typ]').forEach(b=>b.onclick=()=>{typ=b.dataset.typ;main.querySelectorAll('[data-typ]').forEach(x=>{const on=x===b;x.classList.toggle('on',on);x.setAttribute('aria-pressed',on);});});
     $('go').onclick=async()=>{const a=$('adr').value.trim();if(!a){toast('Vul eerst het adres in');$('adr').focus();return;}
+      if(cfg.typeKiezen&&!typ){toast('Kies eerst OFFNET of ONNET');main.querySelector('[data-typ]').focus();return;}
       newOpen=false;
-      const x=await Store.surveys.put({adres:a,variant:cfg.variant,status:'voorbereiden'});await show(x);
+      const x=await Store.surveys.put({adres:a,variant:cfg.variant,status:'voorbereiden',...(typ?{velden:{type_aansluiting:typ},sectie:typ==='ONNET'?'binnen':'buiten'}:{})});await show(x);
       // eerst wat je vooraf moet weten (alleen als daar iets verplicht is)
       const i=Velden.voortgang(x,[],'in');if(i.mist.length)Gegevens.open(x,{filter:'todo',moment:'vooraf',onClose:()=>show(x)});};
   }

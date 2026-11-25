@@ -44,7 +44,7 @@ function edit(survey,id){
   }).catch(e=>SurveyUI.toast('Kon de foto niet openen: '+(e.message||e)));
 }
 SurveyUI.init({
-  variant:'veeg',naam:'Veeg & Klik',startTitel:'Zoofi',metersZelf:true,
+  variant:'veeg',naam:'Veeg & Klik',startTitel:'Zoofi',metersZelf:true,typeKiezen:true,
   startExtra:'<a class="slink" href="opties.html">Andere opties</a>',
   onScreen:w=>{const $=id=>document.getElementById(id),st=w==="start",b=$("hb");b.hidden=st;$("hlogo").hidden=!st;$("hset").hidden=!st;$("hband").hidden=false;$("hbar").classList.toggle("start",st);b.onclick=()=>SurveyUI.start();},
   invoerUitleg:"Telt de app: IN-symbolen op geldige foto's.",
