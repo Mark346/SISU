@@ -7,24 +7,24 @@
   const CSS=`
 .geg{position:fixed;inset:0;z-index:55;background:var(--bg,#121418);color:var(--ink,#F3F4F6);display:flex;flex-direction:column}
 .geg .gh{flex:none;display:flex;align-items:center;gap:8px;padding:calc(4px + env(safe-area-inset-top)) calc(12px + env(safe-area-inset-right)) 6px calc(6px + env(safe-area-inset-left));border-bottom:1px solid var(--line,#2E323A)}
-.geg .gh h2{flex:1;margin:0;font-size:18px}
+.geg .gh h2{flex:1;min-width:0;margin:0;font-size:18px;font-weight:800;line-height:1.2}
 .geg .gp{font-weight:800;font-size:15px;white-space:nowrap}
 .geg .gb{flex:1;overflow-y:auto;padding:8px calc(14px + env(safe-area-inset-right)) calc(30px + env(safe-area-inset-bottom)) calc(14px + env(safe-area-inset-left))}
 .geg .bar2{height:8px;border-radius:4px;background:var(--track);overflow:hidden;margin:8px 0 4px}.geg .bar2 i{display:block;height:100%;background:var(--prog-in)}
-.geg h3{font-size:19px;margin:22px 0 8px}
-.geg .fr{background:var(--card,#1C1F25);border:2px solid var(--line,#2E323A);border-radius:14px;padding:10px 12px;margin-bottom:8px}
-.geg .fr.mist{border-color:var(--warn)}
+.geg h3{font-size:20px;font-weight:800;margin:24px 0 10px}
+.geg .fr{background:var(--card,#1C1F25);border:1px solid var(--line,#2E323A);border-radius:var(--r,20px);padding:12px 14px;margin-bottom:8px}
+.geg .fr.mist{border-color:var(--warn);box-shadow:inset 0 0 0 1px var(--warn)}
 .geg .fl{display:flex;align-items:center;gap:8px;font-weight:700;font-size:16px;margin-bottom:6px}
 .geg .fl span:first-child{flex:1}.geg .fl .bd{flex:none}
-.geg .bd{font-size:12px;font-weight:800;padding:2px 8px;border-radius:20px;text-transform:lowercase}
+.geg .bd{font-size:13px;font-weight:800;padding:2px 9px;border-radius:var(--r-pill,999px);text-transform:lowercase}
 .geg .bd.verplicht{background:var(--warn);color:var(--on-acc)}.geg .bd.wenselijk{background:var(--f1);color:#fff}
-.geg input,.geg textarea{width:100%;min-height:48px;border-radius:12px;border:2px solid var(--line2);background:var(--bg);color:inherit;padding:0 12px;font-size:16px}
+.geg input,.geg textarea{width:100%;min-height:48px;border-radius:14px;border:1px solid var(--line2);background:var(--well,#121418);color:inherit;padding:0 12px;font-size:16px}
 .geg textarea{min-height:84px;padding:10px 12px;line-height:1.4;resize:vertical}
 .geg .ch{display:flex;flex-wrap:wrap;gap:6px}
-.geg .ch button{min-height:44px;padding:0 14px;border-radius:99px;border:2px solid var(--line2);background:var(--bg);color:inherit;font-size:16px;font-weight:700;cursor:pointer}
-.geg .ch button.on{background:var(--acc);border-color:var(--acc);color:var(--on-acc)}
+.geg .ch button{min-height:44px;padding:0 16px;border-radius:99px;border:1px solid var(--line2);background:transparent;color:inherit;font-size:16px;font-weight:600;cursor:pointer}
+.geg .ch button.on{background:var(--acc);border-color:var(--acc);color:var(--on-acc);font-weight:800}
 .geg .ft{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.geg .ft img{width:120px;height:90px;object-fit:cover;border-radius:10px;border:1px solid #444}
+.geg .ft img{width:120px;height:90px;object-fit:cover;border-radius:var(--r-thumb,14px);border:1px solid var(--line2)}
 .geg .ft .btn{min-height:44px}
 .geg .info{color:var(--mute,#A7ADB8);font-size:15px}
 .geg .vgg{margin:10px 0 4px;font-weight:800;color:var(--mute,#A7ADB8)}
@@ -56,7 +56,7 @@
     st.root.querySelectorAll('.fr[data-k]').forEach(el=>{const f=Velden.VELDEN.find(x=>x.k===el.dataset.k),c=Velden.cfg();el.classList.toggle('mist',niveau(f,c)==='verplicht'&&!Velden.gevuld(st.s,f,st.fotos));});}
   function render(){
     const c=Velden.cfg(),s=st.s,R=st.root;
-    R.innerHTML=`<div class="gh"><button class="back" id="gX">‹ Klaar</button><h2>${st.mode==='intake'?'Intake':'Gegevens voor het document'}</h2><span class="gp"></span></div>
+    R.innerHTML=`<div class="gh"><button class="back bpill" id="gX"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>Klaar</button><h2>${st.mode==='intake'?'Intake':'Gegevens voor het document'}</h2><span class="gp"></span></div>
     <div class="gb"><div class="bar2"><i></i></div>
     <p class="info">${st.mode==='intake'?'Vul in wat je vóór het lopen weet. Geel omrand = verplicht en nog leeg.':'Alles wat in het document komt. Geel omrand = verplicht en nog leeg.'} Je kunt dit later altijd aanvullen.</p>
     ${Velden.SECTIES.map(sc=>{const fs=Velden.VELDEN.filter(f=>f.s===sc.id&&zichtbaar(f,c));if(!fs.length)return'';

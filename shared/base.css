@@ -106,8 +106,8 @@ a{color:var(--acc)}
 /* startscherm en schouwoverzicht: geen lijn onder de bovenbalk, daar komt de vezelband */
 .bar.metband{border-bottom:0;padding-bottom:10px}
 .bar.start .hlogo+h1{font-size:22px}
-/* terugknop als pil (schouwoverzicht) */
-.bar .bpill{flex:none;gap:4px;min-height:44px;padding:0 14px 0 8px;border:1px solid var(--line);border-radius:22px;background:var(--card);font-weight:600;font-size:15px}
+/* terugknop als pil (alle schermen) */
+.bpill{flex:none;gap:4px;min-height:44px;padding:0 14px 0 8px;border:1px solid var(--line);border-radius:22px;background:var(--card);font-weight:600;font-size:15px}
 .btn[disabled]{opacity:.5}
 .note{color:var(--mute);font-size:16px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px}

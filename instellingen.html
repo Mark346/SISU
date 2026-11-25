@@ -12,32 +12,32 @@
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
 <link rel="stylesheet" href="shared/base.css">
 <style>
-.versie{font-size:14px;font-weight:700;color:var(--mute);white-space:nowrap;padding-right:4px}
-.todo{margin:10px 0 6px;padding:12px 14px;border-radius:var(--r);background:#2A2612;border:2px solid var(--warn);color:var(--ink)}
+.versie{flex:none;display:flex;flex-direction:column;align-items:flex-end;font-size:13px;font-weight:600;line-height:1.25;color:var(--mute);white-space:nowrap;padding-right:2px}
+.todo{margin:10px 0 6px;padding:12px 14px;border-radius:var(--r);background:#2A2612;border:1px solid var(--warn);color:var(--ink)}
 .todo b{display:block;font-size:18px;color:var(--warn);margin-bottom:4px}.todo ul{margin:0;padding-left:20px;font-size:16px;line-height:1.45}
 .uitleg{color:var(--mute);margin:4px 0 12px}
 .uitleg b{color:var(--ink)}
 .lg{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;font-size:15px;color:var(--mute);margin-bottom:8px}
 .lg b{color:var(--ink)}
 .sec{margin-top:14px}
-.veld{display:grid;grid-template-columns:1fr 80px 80px;gap:6px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:6px 6px 6px 12px;margin-bottom:6px}
+.veld{display:grid;grid-template-columns:1fr 80px 80px;gap:6px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:8px 8px 8px 14px;margin-bottom:6px}
 .veld .nm{font-weight:700;font-size:15px;line-height:1.25}
 .veld .vb{color:var(--mute);font-size:13px;font-weight:400;margin-top:1px}
-.cyc{width:80px;min-height:44px;border-radius:10px;border:2px solid transparent;padding:0 4px;cursor:pointer;font-size:14px;font-weight:800;text-align:center}
+.cyc{width:80px;min-height:44px;border-radius:var(--r-pill);border:1px solid transparent;padding:0 4px;cursor:pointer;font-size:14px;font-weight:800;text-align:center}
 .cyc.verplicht{background:var(--acc);color:var(--on-acc)}
 .cyc.wenselijk{background:var(--f1);color:#fff}
 .cyc.nee{background:var(--bg);color:var(--mute);border-color:var(--line2)}
 .cyc[disabled]{opacity:.45;cursor:default}
 .kop{display:grid;grid-template-columns:1fr 80px 80px;gap:6px;align-items:end;position:sticky;top:57px;background:var(--bg);padding:8px 6px 6px 0;z-index:2}
-.kop h2{font-size:19px;margin:0}
-.kop span{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--mute);text-align:center}
+.kop h2{font-size:20px;font-weight:800;margin:0}
+.kop span{font-size:13px;font-weight:600;color:var(--mute);text-align:center}
 .tot{display:flex;gap:10px;margin:6px 0 4px;flex-wrap:wrap}
-.tot span{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:4px 12px;font-size:14px;font-weight:700}
+.tot span{background:var(--card);border:1px solid var(--line);border-radius:var(--r-pill);padding:5px 12px;font-size:14px;font-weight:600}
 .foot{margin:24px 0 10px;display:flex;gap:10px}.foot .btn{flex:1}
 </style>
 </head>
 <body>
-<header class="bar"><a class="back" href="index.html">‹ Terug</a><h1>Instellingen</h1><span class="versie" id="versie"></span></header>
+<header class="bar"><a class="back bpill" href="index.html"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>Terug</a><h1>Instellingen</h1><span class="versie" id="versie"></span></header>
 <main class="page">
   <div class="todo" role="note"><b>Nog toevoegen</b><ul><li>Foto's: welke foto's verplicht of wenselijk zijn</li><li>ONNET en OFFNET: aparte instellingen per type aansluiting</li></ul></div>
   <p class="uitleg">Alle onderdelen van het site survey document. Kies per onderdeel wat er nodig is bij de <b>input</b> (de intake, vóór je gaat lopen) en bij de <b>output</b> (het document). Tik op een knop om te wisselen: Verplicht → Wenselijk → Nee.</p>
@@ -71,7 +71,7 @@ let sure=null;
 $('reset').onclick=()=>{const b=$('reset');if(!sure){b.textContent='Zeker? Tik nog eens';sure=setTimeout(()=>{b.textContent='Standaard herstellen';sure=null;},3000);return;}
   clearTimeout(sure);sure=null;b.textContent='Standaard herstellen';Velden.resetCfg();render();};
 render();
-$('versie').textContent='Versie '+SISU_VERSIE.nummer+' · '+SISU_VERSIE.datum;
+{const v=$('versie');v.textContent='';const a=document.createElement('span'),b=document.createElement('span');a.textContent='Versie '+SISU_VERSIE.nummer;b.textContent=SISU_VERSIE.datum;v.append(a,b);}
 if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
 </body>
