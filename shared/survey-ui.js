@@ -91,6 +91,14 @@
 .sstat{display:flex;flex-direction:column;gap:8px;margin-top:6px}
 .sui .stodo{margin-top:4px}
 .sui .spaf{width:100%;margin-top:10px}
+.sui .stip{margin-top:6px;font-size:14px}
+.sui .stip summary{display:inline-flex;align-items:center;gap:6px;min-height:44px;color:var(--warn);font-weight:700;cursor:pointer;list-style:none}
+.sui .stip summary::-webkit-details-marker{display:none}
+.sui .stip summary::after{content:'›';font-size:18px;line-height:1;transition:transform .15s}
+.sui .stip[open] summary::after{transform:rotate(90deg)}
+.sui .stip ol{margin:0 0 4px;padding-left:20px;color:var(--mute);line-height:1.45}
+.sui .stip li{margin-bottom:6px}
+@media (prefers-reduced-motion:reduce){.sui .stip summary::after{transition:none}}
 .sui .kastk{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:10px}
 .sui .kastk.wrn{border-color:var(--warn)}
 .sui .kastk .kh{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:17px}
@@ -183,7 +191,10 @@
        <input class="f" id="adr" autocomplete="street-address" placeholder="Straat en huisnummer, plaats">
        ${lastOpen&&lastOpen.adres?`<button class="btn take" id="take"><span>Adres overnemen:</span>${esc(lastOpen.adres)}</button>`:''}
        <div class="row">${all.length?'<button class="btn" id="cancel">Annuleren</button>':''}<button class="btn pri" id="go" style="flex:1.4">Start schouw</button></div>
-       ${window.Paf&&cfg.typeKiezen?'<button class="btn spaf" id="gopaf">Start met een PAF (pdf)</button><p class="note">De gegevens uit de PAF worden ingevuld; wat ontbreekt vul je daarna aan.</p>':''}
+       ${window.Paf&&cfg.typeKiezen?`<button class="btn spaf" id="gopaf">Start met een PAF (pdf)</button><p class="note">De gegevens uit de PAF worden ingevuld; wat ontbreekt vul je daarna aan.</p><details class="stip"><summary>Doe je dit op je iPhone? Hier een tip</summary><ol>
+         <li>Maak op de iPhone in de app Opdrachten een nieuwe opdracht (bijvoorbeeld "PAF naar Zoofi") en zet aan dat hij in het deelmenu staat, alleen voor pdf's.</li>
+         <li>Voeg de actie Bewaar bestand toe, naar een vaste map in iCloud Drive, bijvoorbeeld "Zoofi PAF", en laat hem bestaande bestanden vervangen.</li>
+         <li>Gebruik: tik in Outlook op de bijlage, kies Deel, kies PAF naar Zoofi. Open daarna Zoofi en tik Start met een PAF. De bestandskiezer toont de laatst bewaarde pdf meestal bovenaan bij Recent.</li></ol></details>`:''}
      </div>
      ${open.length?`<div class="surv">${open.map(x=>`<button class="sv" data-id="${esc(x.id)}"><span><b>${esc(x.adres||'zonder adres')}</b>${sst(x)}${docr(x)}</span><span class="go">${ICO.pijl}</span></button>`).join('')}</div>`
        :(all.length?'<p class="sleeg">Niets bezig. Tik op Nieuwe schouw om te beginnen.</p>':'')}
