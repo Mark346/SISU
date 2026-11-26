@@ -42,19 +42,19 @@
     {k:'afh_aan',s:'alg',l:'Afhankelijkheden aannemer (onderwerp, datum gereed)',t:'lang',in:N,uit:W},
 
     {k:'klant_org',s:'klant',l:'Organisatie',t:'text',in:W,uit:W},
-    {k:'klant_adres',s:'klant',l:'Adres',t:'text',in:V,uit:V,vb:'Oranjelaan 2'},
-    {k:'klant_postcode',s:'klant',l:'Postcode',t:'text',in:V,uit:V,vb:'2341CC'},
-    {k:'klant_plaats',s:'klant',l:'Plaats',t:'text',in:V,uit:V,vb:'Oegstgeest'},
+    {k:'klant_zelfde',s:'klant',l:'Zelfde als locatie',t:'janee',schakel:true,std:'Ja',bron:{klant_adres:'loc_adres',klant_postcode:'loc_postcode',klant_plaats:'loc_plaats'},in:N,uit:N},
+    {k:'klant_adres',s:'klant',zelfde:{veld:'klant_zelfde',bron:'loc_adres'},l:'Adres',t:'text',in:V,uit:V,vb:'Oranjelaan 2'},
+    {k:'klant_postcode',s:'klant',zelfde:{veld:'klant_zelfde',bron:'loc_postcode'},l:'Postcode',t:'text',in:V,uit:V,vb:'2341CC'},
+    {k:'klant_plaats',s:'klant',zelfde:{veld:'klant_zelfde',bron:'loc_plaats'},l:'Plaats',t:'text',in:V,uit:V,vb:'Oegstgeest'},
     {k:'klant_contact',s:'klant',l:'Contactpersoon',t:'text',in:V,uit:V,vb:'Dhr. R. Jansen'},
     {k:'klant_tel',s:'klant',l:'Telefoonnummer',t:'tel',in:V,uit:V,vb:'06-12345678'},
     {k:'klant_mail',s:'klant',l:'E-mail',t:'mail',in:W,uit:W,vb:'naam@bedrijf.nl'},
 
-    {k:'loc_zelfde',s:'loc',l:'Zelfde als klant',t:'janee',schakel:true,std:'Ja',bron:{loc_adres:'klant_adres',loc_postcode:'klant_postcode',loc_plaats:'klant_plaats'},in:N,uit:N},
     {k:'loc_gebouw',s:'loc',l:'Gebouwnaam',t:'text',in:W,uit:W},
     {k:'loc_soort',s:'loc',l:'Soort gebouw',t:'text',in:W,uit:V,vb:'Studentenhuisvesting'},
-    {k:'loc_adres',s:'loc',zelfde:{veld:'loc_zelfde',bron:'klant_adres'},l:'Adres',t:'text',in:V,uit:V,vb:'Oranjelaan 2'},
-    {k:'loc_postcode',s:'loc',zelfde:{veld:'loc_zelfde',bron:'klant_postcode'},l:'Postcode',t:'text',in:V,uit:V,vb:'2341CC'},
-    {k:'loc_plaats',s:'loc',zelfde:{veld:'loc_zelfde',bron:'klant_plaats'},l:'Plaats',t:'text',in:V,uit:V,vb:'Oegstgeest'},
+    {k:'loc_adres',s:'loc',l:'Adres',t:'text',in:V,uit:V,vb:'Oranjelaan 2'},
+    {k:'loc_postcode',s:'loc',l:'Postcode',t:'text',in:V,uit:V,vb:'2341CC'},
+    {k:'loc_plaats',s:'loc',l:'Plaats',t:'text',in:V,uit:V,vb:'Oegstgeest'},
 
     {k:'eig_klant_is_eigenaar',s:'eig',l:'Is de klant eigenaar van het gebouw?',t:'janee',in:V,uit:V,vb:'Ja'},
     {k:'eig_naam',s:'eig',l:'Naam eigenaar',t:'text',in:W,uit:W,als:nietEigenaar},
@@ -183,11 +183,9 @@
     if(f&&f.pre){const d=standaard()[k];if(!leeg(d))return d;}
     if(f&&f.schakel)return zelfdeAan(s,k)?'Ja':'Nee';
     const ad=adresDelen(s);
-    // het adres van de schouw is het adres van het pand (de locatie). De klant krijgt dat adres alleen
-    // als de locatie "zelfde als klant" is en de schouw niet uit een PAF komt (daar staat het klantadres niet in).
-    const klantVolgt=!s.paf&&(s.velden||{}).loc_zelfde!=='Nee'&&leeg((s.velden||{}).loc_adres);
-    if(k==='loc_adres'||(k==='klant_adres'&&klantVolgt))return ad.adres||'';
-    if(k==='loc_plaats'||(k==='klant_plaats'&&klantVolgt))return ad.plaats||'';
+    // het adres van de schouw is het adres van het pand (de locatie); de klant neemt het over via "Zelfde als locatie"
+    if(k==='loc_adres')return ad.adres||'';
+    if(k==='loc_plaats')return ad.plaats||'';
     if(k==='datum_survey'){const d=s.eersteFoto||s.gelopenOp;if(d)return d.slice(0,10);}
     return v;
   }
@@ -204,6 +202,13 @@
     return{m:parseFloat(m[0].replace(',','.')),rest:(t.slice(0,m.index)+t.slice(m.index+m[0].length)).replace(/\s+/g,' ').trim()};}
   /* oude waarden omzetten; geeft true als er iets veranderd is (opslaan doet de aanroeper) */
   function migreer(s){let ch=false;const vv={...(s.velden||{})};
+    // eenmalig: vroeger nam de locatie het adres van de klant over ("Zelfde als klant"); nu neemt de klant het over van de locatie
+    if(!s.zelfdeV2){const P=[['adres'],['postcode'],['plaats']].map(([d])=>d);
+      const had=P.some(d=>!leeg(vv['klant_'+d])),oud=vv.loc_zelfde;
+      const volgde=oud==='Ja'||(oud==null&&!P.some(d=>!leeg(vv['loc_'+d])&&String(vv['loc_'+d]).trim()!==String(vv['klant_'+d]||'').trim()));
+      if(had){if(volgde){P.forEach(d=>{if(leeg(vv['loc_'+d])&&!leeg(vv['klant_'+d]))vv['loc_'+d]=vv['klant_'+d];});if(vv.klant_zelfde==null)vv.klant_zelfde='Ja';}
+        else if(vv.klant_zelfde==null)vv.klant_zelfde='Nee';}
+      delete vv.loc_zelfde;s.zelfdeV2=true;ch=true;}
     if(typeof vv.binnen_meters==='string'){const o=binnenOud(s);
       if((s.tellers||{}).metersBinnen==null&&o.m!=null)s.tellers={...(s.tellers||{}),metersBinnen:o.m};
       const rest=o.m==null?vv.binnen_meters.trim():o.rest.replace(/^(meter|m)\b\s*/i,'').trim();
@@ -233,7 +238,7 @@
     if(s.adres&&s.adres!==bn)return false;
     // naam = adres van het pand: eerst de locatie, dan de klant, dan een adresregel uit de PAF
     const nm=(x,y)=>{const a=String(vv[x]||'').trim(),pl=String(vv[y]||'').trim();return a?a+(pl?', '+pl:''):'';};
-    const n=(vv.loc_zelfde!=='Nee'&&leeg(vv.loc_adres)?'':nm('loc_adres','loc_plaats'))||nm('klant_adres','klant_plaats');
+    const n=nm('loc_adres','loc_plaats')||(vv.klant_zelfde==='Nee'?nm('klant_adres','klant_plaats'):'');
     if(n){if(s.adres===n)return false;s.adres=n;return true;}
     // geen adres: dan een adres uit de PAF-info (bijv. Itemnaam "… 2665MT Hollandweg 36 BLEISWIJK")
     if(window.Paf&&s.paf&&s.paf.info){for(const i of s.paf.info){const x=Paf.adres(i.waarde);if(x){const m=x.adres+', '+x.plaats;if(s.adres===m)return false;s.adres=m;return true;}}}
@@ -254,10 +259,12 @@
     VELDEN.forEach(f=>{if(f.schakel||f.t==='legenda'||!actief(s,f)||verborgen(s,f)||!nodig(c,f,kant)||gevuld(s,f,fotos))return;o[vak(f)].push(f);});
     return o;}
   /* open verplichte velden per sectie van het gegevensscherm: [{sc, velden, open}] */
+  /* volgorde in het gegevensscherm: locatie direct na de algemene gegevens (het document houdt zijn eigen volgorde) */
+  const UI_ORDE=['alg','loc','aanw','klant','eig','aanm','afw','trace','buiten','binnen','vg','leg'];
   function secties(s,fotos,o={}){
     const c=cfg();
     // bij moment 'vooraf' met kant 'in' tellen ook andere secties mee als daar iets verplicht is bij input
-    return SECTIES.filter(sc=>sc.lijst!==false).map(sc=>{
+    return SECTIES.filter(sc=>sc.lijst!==false).slice().sort((a,b)=>UI_ORDE.indexOf(a.id)-UI_ORDE.indexOf(b.id)).map(sc=>{
       const fs=VELDEN.filter(f=>groep(f)===sc.id&&inLijst(f)&&zichtbaar(c,f)&&actief(s,f));
       const open=fs.filter(f=>!f.schakel&&!verborgen(s,f)&&nodig(c,f,o.kant)&&!gevuld(s,f,fotos));
       return{sc,velden:fs,open};}).filter(x=>x.velden.length&&!(o.zonder||[]).includes(x.sc.id)&&(!o.moment||x.sc.moment===o.moment||(o.kant==='in'&&x.open.length)));

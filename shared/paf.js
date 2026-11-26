@@ -124,17 +124,19 @@
   /* de items invullen in schouw s; bestaande waarden blijven staan tenzij o.vervang */
   function toepassen(s,items,o={}){
     const res={gevuld:[],bestond:[],info:0};s.velden={...(s.velden||{})};
+    if(!s.zelfdeV2){Velden.migreer(s);}
     const info=[];
     const zet=(k,v,label)=>{if(leeg(v))return;const f=Velden.VELDEN.find(x=>x.k===k);if(!f)return;
       const nu=(s.velden||{})[k];
       if(!leeg(nu)&&String(nu)!==String(v)&&!o.vervang){res.bestond.push(f.kort||f.l);return;}
-      if(String(nu)===String(v))return;s.velden[k]=v;res.gevuld.push(f.kort||f.l);};
+      if(String(nu)===String(v))return;s.velden[k]=v;res.gevuld.push(f.kort||f.l);
+      if(/^klant_(adres|postcode|plaats)$/.test(k))s.velden.klant_zelfde='Nee';}; // eigen klantadres uit de PAF
     for(const i of items){if(leeg(i.waarde))continue;const doel=koppeling(i.key);
       if(doel==='nee')continue;
       if(doel==='info'){info.push({groep:i.groep,sectie:i.sectie,label:i.label,waarde:i.waarde});continue;}
       if(doel==='@adres_klant'||doel==='@adres_loc'){const a=adres(i.waarde);if(!a){info.push({groep:i.groep,sectie:i.sectie,label:i.label,waarde:i.waarde});continue;}
         const p=doel==='@adres_klant'?'klant':'loc';zet(p+'_adres',a.adres);zet(p+'_postcode',a.postcode);zet(p+'_plaats',a.plaats);
-        if(p==='loc'&&(a.adres!==Velden.waarde(s,'klant_adres')))s.velden.loc_zelfde='Nee';continue;}
+        continue;}
       const f=Velden.VELDEN.find(x=>x.k===doel);if(!f)continue;
       // een hele adresregel gekoppeld aan één adresveld: alleen het juiste deel nemen
       const ad=/^(klant|loc)_(adres|postcode|plaats)$/.exec(doel),a=ad&&adres(i.waarde);

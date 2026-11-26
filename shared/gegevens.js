@@ -162,7 +162,7 @@
   const secties=()=>Velden.secties(st.s,st.fotos,{moment:st.moment,kant:kant(),zonder:st.opts.zonder});
   const docTxt=()=>{const v=Velden.voortgang(st.s,st.fotos,'uit');return `<div class="gdoc"><span>Document ${v.klaar} van ${v.totaal} compleet</span><i><b style="width:${v.pct}%"></b></i></div>`;};
   function sub(x){const s=st.s;
-    if(x.sc.id==='loc'&&Velden.zelfdeAan(s,'loc_zelfde'))return 'Zelfde als klant'+(Velden.waarde(s,'loc_gebouw')?' · '+Velden.waarde(s,'loc_gebouw'):'');
+    if(x.sc.id==='klant'&&Velden.zelfdeAan(s,'klant_zelfde'))return 'Adres zelfde als locatie';
     if(x.sc.id==='aanm'&&Velden.zelfdeAan(s,'aanm_zelfde'))return 'Contact zelfde als klant';
     if(x.sc.id==='eig'&&Velden.waarde(s,'eig_klant_is_eigenaar')==='Ja')return 'Klant is eigenaar';
     return x.sc.sub||'';}
