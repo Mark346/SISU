@@ -1,6 +1,7 @@
 /* Het gegevensscherm van een schouw (één scherm voor alles), op basis van de instellingen (shared/velden.js).
    Gegevens.open(survey, {filter:'todo'|'alles', moment:'vooraf'|'terplekke'|'achteraf', sectie:'klant', onClose, onChange})
-     niveau 1: lijst met secties ("Nog te doen" of "Alles"), niveau 2: de velden van één sectie.
+     één lange lijst: per sectie een kop (blijft bovenaan staan tijdens scrollen) met daaronder de velden.
+     filter 'todo' toont alleen secties waar nog iets open is; sectie = meteen naar die kop scrollen.
      moment 'vooraf' = alleen secties die je vóór het schouwen invult; verplicht = verplicht bij input.
    Gegevens.naKast(photoId, klaar)  vraagt na de eerste serverkast op een foto waar de kast komt.
    Gegevens.bron = id => survey-object dat de pagina al in handen heeft (zodat niets wordt overschreven).
@@ -26,13 +27,13 @@
 :is(.geg,.gin) .gseg button.on{background:var(--acc);color:var(--on-acc);font-weight:800}
 :is(.geg,.gin) .gmom{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 2px 10px;color:var(--mute);font-size:15px}
 :is(.geg,.gin) .gmom button{border:0;background:none;color:var(--ink);font-weight:700;font-size:15px;min-height:44px;padding:0 4px;cursor:pointer;text-decoration:underline}
-:is(.geg,.gin) .glist{background:var(--card);border:1px solid var(--line);border-radius:var(--r,20px);overflow:hidden}
-:is(.geg,.gin) .gsr{display:flex;align-items:center;gap:12px;width:100%;min-height:68px;padding:10px 14px;border:0;border-bottom:1px solid var(--line);background:transparent;color:var(--ink);text-align:left;cursor:pointer;font:inherit}
-:is(.geg,.gin) .gsr:last-child{border-bottom:0}:is(.geg,.gin) .gsr:active{background:var(--card2)}
-:is(.geg,.gin) .gsr .ic{flex:none;width:40px;height:40px;border-radius:12px;background:var(--well);display:grid;place-items:center;color:var(--mute)}
-:is(.geg,.gin) .gsr .nm{flex:1;min-width:0}:is(.geg,.gin) .gsr .nm b{display:block;font-size:17px;font-weight:700;line-height:1.2}
-:is(.geg,.gin) .gsr .nm small{display:block;color:var(--mute);font-size:14px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-:is(.geg,.gin) .gsr .sx{flex:none;font-weight:800;font-size:15px;white-space:nowrap}:is(.geg,.gin) .gsr .ch2{flex:none;color:var(--mute)}
+:is(.geg,.gin) .gsec{margin-top:22px}:is(.geg,.gin) .gsec.eerst{margin-top:2px}
+:is(.geg,.gin) .gsh{position:sticky;top:-12px;z-index:3;display:flex;align-items:center;gap:12px;min-height:60px;margin:0 calc(-14px - env(safe-area-inset-right)) 10px calc(-14px - env(safe-area-inset-left));padding:10px calc(14px + env(safe-area-inset-right)) 10px calc(14px + env(safe-area-inset-left));background:var(--bg,#121418);border-bottom:1px solid var(--line,#2E323A)}
+:is(.geg,.gin) .gsh .ic{flex:none;width:40px;height:40px;border-radius:12px;background:var(--card);display:grid;place-items:center;color:var(--mute)}
+:is(.geg,.gin) .gsh .nm{flex:1;min-width:0}:is(.geg,.gin) .gsh h3{margin:0;font-size:19px;font-weight:800;line-height:1.2}
+:is(.geg,.gin) .gsh small{display:block;color:var(--mute);font-size:14px;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+:is(.geg,.gin) .gsh .sx{flex:none;font-weight:800;font-size:15px;white-space:nowrap}
+:is(.geg,.gin) .gsec .gopt{margin-top:4px}
 :is(.geg,.gin) .gleeg{background:var(--card);border:1px solid var(--line);border-radius:var(--r,20px);padding:18px;text-align:center}
 :is(.geg,.gin) .gleeg p{margin:0 0 12px;font-weight:700}:is(.geg,.gin) .gleeg .btn{width:100%}
 :is(.geg,.gin) .fr{background:var(--card,#1C1F25);border:1px solid var(--line,#2E323A);border-radius:var(--r,20px);padding:12px 14px;margin-bottom:8px}
@@ -99,18 +100,18 @@
     if(Velden.migreer(survey))await Store.surveys.put(survey);
     const fotos=await Store.photos.bySurvey(survey.id,true);
     const root=document.createElement('div');root.className='geg';root.setAttribute('role','dialog');root.setAttribute('aria-label','Gegevens');document.body.appendChild(root);
-    st={s:survey,opts,root,fotos,urls:[],filter:opts.filter==='alles'?'alles':'todo',moment:opts.moment||null,sec:null,optOpen:false,vgMeer:false};
+    st={s:survey,opts,root,fotos,urls:[],filter:opts.filter==='alles'?'alles':'todo',moment:opts.moment||null,zicht:null,optOpen:new Set(),vgMeer:false,naar:null,eerst:true};
     root.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();terug();}});
     // terug-gebaar/terugknop van de telefoon: stap terug binnen het scherm
     history.pushState({...(history.state||{}),geg:1},'');st.diepte=1;
-    if(opts.sectie&&Velden.SECTIES.some(x=>x.id===opts.sectie))openSectie(opts.sectie);else lijst();
+    if(opts.sectie&&Velden.SECTIES.some(x=>x.id===opts.sectie))st.naar=opts.sectie;
+    lijst();
   }
   function close(silent){if(!st)return;const me=st;clearTimeout(svT);if(svP)Store.surveys.put(me.s);st.urls.forEach(u=>URL.revokeObjectURL(u));st.root.remove();st=null;if(!silent&&me.opts.onClose)me.opts.onClose();}
-  function terug(){if(!st)return;if(st.sec)naarLijst();else sluit();}
-  function naarLijst(){if(!st)return;save(true);if(st.diepte===2)history.back();else lijst();}
+  function terug(){sluit();}
   function sluit(){if(!st)return;save(true);const d=st.diepte||0;st.diepte=0;close();if(d)history.go(-d);}
   addEventListener('popstate',e=>{if(!st||!st.diepte)return;const g=(e.state&&e.state.geg)||0;
-    if(g>=2)return;if(g===1){st.diepte=1;save(true);lijst();return;}
+    if(g>=1)return;
     st.diepte=0;save(true);close();});
   let svT=null,svP=false;
   function save(now){clearTimeout(svT);svP=true;const go=async()=>{svP=false;if(!st)return;const me=st;await Store.surveys.put(me.s);if(me.opts.onChange)me.opts.onChange(me.s);};if(now)return go();svT=setTimeout(go,350);}
@@ -123,27 +124,42 @@
     if(x.sc.id==='eig'&&Velden.waarde(s,'eig_klant_is_eigenaar')==='Ja')return 'Klant is eigenaar';
     return x.sc.sub||'';}
 
-  /* ---------- niveau 1: secties ---------- */
+  /* ---------- één lange lijst: kop per sectie, velden eronder ---------- */
+  const telHtml=x=>x.open.length?`<span class="sx wrn" data-sh="${x.sc.id}">${x.open.length} open</span>`:`<span class="sx okk" data-sh="${x.sc.id}" aria-label="compleet">✓</span>`;
   function lijst(){
-    st.sec=null;const R=st.root,L=secties(),n=L.reduce((t,x)=>t+x.open.length,0);
-    const toon=st.filter==='todo'?L.filter(x=>x.open.length):L;
+    const R=st.root,L=secties(),n=L.reduce((t,x)=>t+x.open.length,0);
+    // welke secties staan in de lijst: vast zolang je op dit scherm bezig bent, zodat een sectie niet verdwijnt terwijl je hem invult
+    if(!st.zicht){st.zicht=new Set((st.filter==='todo'?L.filter(x=>x.open.length):L).map(x=>x.sc.id));if(st.naar)st.zicht.add(st.naar);}
+    const toon=L.filter(x=>st.zicht.has(x.sc.id));
+    st.urls.forEach(u=>URL.revokeObjectURL(u));st.urls=[];
     R.innerHTML=`<div class="gh"><button class="back bpill" id="gX">${svg(TERUG,18)}Terug</button><h2>Gegevens</h2></div>
     <div class="gb">
       <div class="gseg" role="group" aria-label="Filter"><button data-f="todo" class="${st.filter==='todo'?'on':''}" aria-pressed="${st.filter==='todo'}">Nog te doen (${n})</button><button data-f="alles" class="${st.filter==='alles'?'on':''}" aria-pressed="${st.filter==='alles'}">Alles</button></div>
       ${st.moment?`<div class="gmom"><span>Alleen wat je ${esc(Velden.MOMENT[st.moment])} invult</span><button id="gAlle">Alle secties</button></div>`:''}
-      ${toon.length?`<div class="glist">${toon.map(x=>`<button class="gsr" data-sc="${x.sc.id}"><span class="ic">${svg(x.sc.ic||'')}</span><span class="nm"><b>${esc(x.sc.kort)}</b><small>${esc(sub(x))}</small></span>${x.open.length?`<span class="sx wrn">${x.open.length} open</span>`:'<span class="sx okk" aria-label="compleet">✓</span>'}<span class="ch2">${svg(VERDER,18)}</span></button>`).join('')}</div>`
+      ${toon.length?toon.map((x,i)=>blok(x,i)).join('')
         :`<div class="gleeg"><p>${st.moment==='vooraf'?'Alles wat je vooraf nodig hebt, is ingevuld.':'Alles wat nodig is, is ingevuld.'}</p><button class="btn" id="gToon">Alles bekijken</button></div>`}
     </div><div class="gf">${docTxt()}</div>`;
     R.querySelector('#gX').onclick=sluit;
-    R.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{st.filter=b.dataset.f;lijst();});
-    R.querySelectorAll('[data-sc]').forEach(b=>b.onclick=()=>openSectie(b.dataset.sc));
-    const al=R.querySelector('#gAlle');if(al)al.onclick=()=>{st.moment=null;lijst();};
-    const tn=R.querySelector('#gToon');if(tn)tn.onclick=()=>{st.filter='alles';lijst();};
-    R.querySelector('#gX').focus({preventScroll:true});
+    R.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{if(st.filter===b.dataset.f)return;save(true);st.filter=b.dataset.f;st.zicht=null;lijst();R.querySelector('.gb').scrollTop=0;});
+    const al=R.querySelector('#gAlle');if(al)al.onclick=()=>{st.moment=null;st.zicht=null;lijst();};
+    const tn=R.querySelector('#gToon');if(tn)tn.onclick=()=>{st.filter='alles';st.zicht=null;lijst();};
+    R.querySelectorAll('[data-opt]').forEach(b=>b.onclick=()=>{const id=b.dataset.opt,aan=!st.optOpen.has(id);aan?st.optOpen.add(id):st.optOpen.delete(id);
+      b.setAttribute('aria-expanded',aan);R.querySelector(`[data-optl="${id}"]`).hidden=!aan;});
+    bind();upd();
+    if(st.naar){const k=R.querySelector(`[data-gsec="${st.naar}"]`),g=R.querySelector('.gb');if(k&&g)g.scrollTop=k.offsetTop-g.offsetTop;st.naar=null;}
+    if(st.eerst){st.eerst=false;R.querySelector('#gX').focus({preventScroll:true});}
   }
-
-  /* ---------- niveau 2: één sectie ---------- */
-  function openSectie(id){if(st.diepte===1){history.pushState({...(history.state||{}),geg:2},'');st.diepte=2;}st.sec=id;st.optOpen=false;st.vgMeer=false;sectie();const b=st.root.querySelector('.gb');if(b)b.scrollTop=0;}
+  function blok(x,i){
+    const it=items(x),req=it.filter(i=>i.req),opt=it.filter(i=>!i.req),sch=x.velden.filter(f=>f.schakel),id=x.sc.id;
+    const html=i=>i.ct?contact(i):i.f.t==='vg'?vgHtml(i.f):row(i.f);
+    return `<section class="gsec${i?'':' eerst'}" data-gsec="${id}" aria-labelledby="gk_${id}">
+      <div class="gsh"><span class="ic">${svg(x.sc.ic||'')}</span><span class="nm"><h3 id="gk_${id}">${esc(x.sc.kort)}</h3><small>${esc(sub(x))}</small></span>${telHtml(x)}</div>
+      ${sch.map(f=>{const on=Velden.zelfdeAan(st.s,f.k);return `<div class="fr zw"><span id="l_${f.k}">${esc(f.l)}</span><button class="sw" role="switch" aria-checked="${on}" aria-labelledby="l_${f.k}" data-sw="${f.k}"><i></i></button></div>`;}).join('')}
+      ${req.map(html).join('')}
+      ${opt.length?`<button class="gopt" data-opt="${id}" aria-expanded="${st.optOpen.has(id)}"><span>Optioneel (${opt.length})</span>${svg(VERDER,18)}</button><div data-optl="${id}"${st.optOpen.has(id)?'':' hidden'}>${opt.map(html).join('')}</div>`:''}
+      ${!req.length&&!opt.length&&!sch.length?'<p class="info">Hier hoef je nu niets in te vullen.</p>':''}
+    </section>`;
+  }
   function items(x){ // velden van de sectie, met contactkaarten samengevoegd; verborgen "zelfde als"-velden weg
     const c=Velden.cfg(),s=st.s,gezien={},out=[];
     x.velden.forEach(f=>{if(f.schakel||Velden.verborgen(s,f))return;
@@ -153,26 +169,6 @@
         out.push({ct,leden,req:leden.some(g=>Velden.nodig(c,g,kant()))});return;}
       out.push({f,req:Velden.nodig(c,f,kant())});});
     return out;
-  }
-  function volgende(){const L=secties(),i=L.findIndex(x=>x.sc.id===st.sec);
-    const rest=L.slice(i+1).concat(L.slice(0,Math.max(i,0)));return rest.find(x=>x.open.length&&x.sc.id!==st.sec)||null;}
-  function sectie(){
-    const R=st.root,x=secties().find(y=>y.sc.id===st.sec);
-    if(!x){naarLijst();return;}
-    st.urls.forEach(u=>URL.revokeObjectURL(u));st.urls=[];
-    const it=items(x),req=it.filter(i=>i.req),opt=it.filter(i=>!i.req),sch=x.velden.filter(f=>f.schakel),nx=volgende();
-    const html=i=>i.ct?contact(i):i.f.t==='vg'?vgHtml(i.f):row(i.f);
-    R.innerHTML=`<div class="gh"><button class="back bpill" id="gX">${svg(TERUG,18)}Gegevens</button><h2>${esc(x.sc.kort)}</h2><span class="gst"></span></div>
-    <div class="gb">
-      ${sch.map(f=>{const on=Velden.zelfdeAan(st.s,f.k);return `<div class="fr zw"><span id="l_${f.k}">${esc(f.l)}</span><button class="sw" role="switch" aria-checked="${on}" aria-labelledby="l_${f.k}" data-sw="${f.k}"><i></i></button></div>`;}).join('')}
-      ${req.map(html).join('')}
-      ${opt.length?`<button class="gopt" id="gOpt" aria-expanded="${st.optOpen}"><span>Optioneel (${opt.length})</span>${svg(VERDER,18)}</button><div id="gOptL"${st.optOpen?'':' hidden'}>${opt.map(html).join('')}</div>`:''}
-      ${!req.length&&!opt.length?'<p class="info">Hier hoef je nu niets in te vullen.</p>':''}
-    </div><div class="gf"><button class="btn pri" id="gNx">${nx?'Volgende sectie: '+esc(nx.sc.kort):'Terug naar gegevens'}</button></div>`;
-    R.querySelector('#gX').onclick=naarLijst;
-    R.querySelector('#gNx').onclick=()=>{save(true);const n=volgende();if(n)openSectie(n.sc.id);else naarLijst();};
-    const go=R.querySelector('#gOpt');if(go)go.onclick=()=>{st.optOpen=!st.optOpen;go.setAttribute('aria-expanded',st.optOpen);R.querySelector('#gOptL').hidden=!st.optOpen;};
-    bind();upd();
   }
   function invoer(f,id){
     const v=Velden.waarde(st.s,f.k);
@@ -220,15 +216,16 @@
       <button class="btn vgok${v.nagelopen?' af':' pri'}" id="vgOk" aria-pressed="${!!v.nagelopen}">${v.nagelopen?'✓ V&amp;G nagelopen':'V&amp;G nagelopen'}</button></div>`;}
 
   /* vinkjes, gele randen en tellers bijwerken zonder opnieuw te tekenen */
-  function upd(){if(!st||!st.sec)return;const R=st.root,s=st.s,c=Velden.cfg(),K=kant();
+  function upd(){if(!st)return;const R=st.root,s=st.s,c=Velden.cfg(),K=kant();
     const F=k=>Velden.VELDEN.find(x=>x.k===k);
     R.querySelectorAll('[data-r]').forEach(el=>{const f=F(el.dataset.r);if(!f)return;const vol=Velden.gevuld(s,f,st.fotos);
       el.classList.toggle('mist',!vol&&Velden.nodig(c,f,K)&&f.t!=='vg');const v=el.querySelector('.vink');if(v)v.hidden=!vol;});
     R.querySelectorAll('.ccard').forEach(el=>{const ct=Velden.CONTACTEN.find(y=>y.id===el.dataset.c);let alles=true,iets=false;
       el.querySelectorAll('[data-k]').forEach(i=>{const f=F(i.dataset.k),vol=Velden.gevuld(s,f,st.fotos),nd=Velden.nodig(c,f,K);if(vol)iets=true;if(nd&&!vol)alles=false;i.classList.toggle('mist',nd&&!vol);});
       const v=el.querySelector('.vink');if(v)v.hidden=!(alles&&iets);});
-    const x=secties().find(y=>y.sc.id===st.sec),g=R.querySelector('.gst');
-    if(g&&x){g.textContent=x.open.length?x.open.length+' open':'✓';g.className='gst '+(x.open.length?'wrn':'okk');}
+    const L=secties();L.forEach(x=>{const g=R.querySelector(`[data-sh="${x.sc.id}"]`);if(g)g.outerHTML=telHtml(x);});
+    const t=R.querySelector('[data-f="todo"]');if(t)t.textContent=`Nog te doen (${L.reduce((n,x)=>n+x.open.length,0)})`;
+    const d=R.querySelector('.gf');if(d)d.innerHTML=docTxt();
   }
   function bind(){
     const R=st.root,s=st.s;
@@ -260,7 +257,7 @@
         const k=await vraag('Geen enkele situatie gekozen. Klopt dat?','',[['klopt','Klopt','pri'],['terug','Terug','']]);if(k!=='klopt')return;}
       v.nagelopen=!v.nagelopen;Velden.zet(s,'vg',v);await save(true);herteken();};
   }
-  function herteken(){if(!st)return;const b=st.root.querySelector('.gb'),y=b?b.scrollTop:0;if(st.sec)sectie();else lijst();const n=st.root.querySelector('.gb');if(n)n.scrollTop=y;}
+  function herteken(){if(!st)return;const b=st.root.querySelector('.gb'),y=b?b.scrollTop:0;lijst();const n=st.root.querySelector('.gb');if(n)n.scrollTop=y;}
 
   /* ---------- bladen ---------- */
   function vraag(titel,tekst,knoppen){css();return new Promise(res=>{
