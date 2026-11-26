@@ -28,53 +28,72 @@
 .it select{box-sizing:border-box;width:100%;min-height:46px;border-radius:12px;border:1px solid var(--line2);background:var(--well);color:var(--ink);padding:0 12px;font-size:16px}
 .it.nee .nm b{color:var(--mute)}
 .k-veld{color:var(--ok)}.k-info{color:var(--mute)}.k-nee{color:var(--mute)}
-.filt{display:flex;background:var(--card);border:1px solid var(--line);border-radius:var(--r-pill);padding:3px;margin:8px 0 0}
-.filt button{flex:1;min-height:42px;border:0;border-radius:var(--r-pill);background:none;color:var(--ink);font-weight:600;font-size:14px;cursor:pointer}
-.filt button.on{background:var(--acc);color:var(--on-acc);font-weight:800}
+.x-filt{display:flex;background:var(--card);border:1px solid var(--line);border-radius:var(--r-pill);padding:3px;margin:8px 0 0}
+.x-filt button{flex:1;min-height:42px;border:0;border-radius:var(--r-pill);background:none;color:var(--ink);font-weight:600;font-size:14px;cursor:pointer}
+.x-filt button.on{background:var(--acc);color:var(--on-acc);font-weight:800}
 .foot{margin:24px 0 10px;display:flex;gap:10px}.foot .btn{flex:1}
+.rest{text-align:left}
+.sw2 .nm{align-items:center}
+.sw{flex:none;position:relative;width:56px;height:34px;border-radius:17px;border:1px solid var(--line2);background:var(--well);cursor:pointer;padding:0}
+.sw i{position:absolute;top:3px;left:3px;width:26px;height:26px;border-radius:13px;background:var(--mute);transition:left .15s}
+.sw[aria-checked="true"]{background:var(--acc);border-color:var(--acc)}.sw[aria-checked="true"] i{left:25px;background:var(--on-acc)}
 </style>
 </head>
 <body>
 <header class="bar"><a class="back bpill" href="instellingen.html"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>Instellingen</a><h1>PAF-import</h1></header>
 <main class="page">
-  <p class="uitleg">Een PAF (pdf uit het aannemersportaal) kun je inlezen bij <b>Nieuwe schouw</b> of in een schouw. Kies hier per item uit de PAF wat ermee gebeurt: <b>koppelen</b> aan een veld van de schouw, alleen <b>bewaren als info</b> (zichtbaar bij Gegevens), of <b>niet importeren</b>. Bestaande waarden in een schouw worden niet overschreven.</p>
+  <p class="uitleg">Per veld van de schouw kies je welk item uit de PAF (pdf uit het aannemersportaal) het invult. Een PAF lees je in bij <b>Nieuwe schouw</b> of in een schouw; bestaande waarden worden niet overschreven.</p>
   <button class="btn inl" id="lees">PAF inlezen om de items bij te werken</button>
   <p class="res" id="res" role="status"></p>
   <div class="tot" id="tot"></div>
-  <div class="filt" role="group" aria-label="Filter"><button data-f="alle" class="on" aria-pressed="true">Alle</button><button data-f="veld" aria-pressed="false">Gekoppeld</button><button data-f="info" aria-pressed="false">Info</button><button data-f="nee" aria-pressed="false">Niet</button></div>
   <div id="lijst"></div>
+  <section class="grp"><button class="btn inl rest" id="restK" aria-expanded="false">Overige PAF-items <span id="restN"></span></button>
+    <p class="uitleg" id="restU" hidden>Items die aan geen veld gekoppeld zijn. Aan: bewaren als info (zichtbaar bij Gegevens). Uit: niet importeren.</p>
+    <div id="rest" hidden></div></section>
   <div class="foot"><button class="btn" id="reset">Standaard herstellen</button><a class="btn pri" href="instellingen.html">Klaar</a></div>
 </main>
 <script src="shared/versie.js"></script>
 <script src="shared/velden.js"></script>
 <script src="shared/paf.js"></script>
 <script>
+/* omgekeerd: per veld van de schouw kiezen welk PAF-item het invult (de koppeling wordt per PAF-item bewaard) */
 const $=id=>document.getElementById(id),esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-let filt='alle';
-const soort=d=>d==='nee'?'nee':d==='info'?'info':'veld';
-const doelNaam=d=>{if(d==='nee')return'Niet importeren';if(d==='info')return'Info';if(d==='@adres_klant')return'Adres klant';if(d==='@adres_loc')return'Adres locatie';
-  const f=Velden.VELDEN.find(x=>x.k===d);return f?(f.kort||f.l):d;};
-function opties(sel){
-  const D=Paf.doelen();
-  return `<option value="nee"${sel==='nee'?' selected':''}>Niet importeren</option><option value="info"${sel==='info'?' selected':''}>Alleen bewaren als info</option>
-    <optgroup label="Adres (straat, postcode en plaats in één keer)"><option value="@adres_klant"${sel==='@adres_klant'?' selected':''}>Adres klant</option><option value="@adres_loc"${sel==='@adres_loc'?' selected':''}>Adres locatie</option></optgroup>
-    ${D.map(x=>`<optgroup label="${esc(x.sc.kort||x.sc.naam)}">${x.velden.map(f=>`<option value="${f.k}"${sel===f.k?' selected':''}>${esc(f.kort||f.l)}</option>`).join('')}</optgroup>`).join('')}`;
-}
+const SAMEN={'@adres_klant':{naam:'Adres klant',sub:'Straat, postcode en plaats in één keer',na:'klant_adres'},'@adres_loc':{naam:'Adres locatie',sub:'Straat, postcode en plaats in één keer',na:'loc_adres'}};
+const vbNaam=i=>`${i.groep} › ${i.sectie} › ${i.label}`;
+function itemOpties(L,sel){let g='',h='<option value="">Niet uit PAF</option>';
+  L.forEach(i=>{const grp=i.groep+' › '+i.sectie;if(grp!==g){if(g)h+='</optgroup>';g=grp;h+=`<optgroup label="${esc(grp)}">`;}
+    h+=`<option value="${esc(i.key)}"${i.key===sel?' selected':''}>${esc(i.label)}</option>`;});
+  return h+(g?'</optgroup>':'');}
+function rij(doel,naam,sub,L,id){
+  const it=L.find(i=>Paf.koppeling(i.key)===doel);
+  return `<div class="it${it?'':' nee'}"><div class="nm"><b><label for="${id}">${esc(naam)}</label></b><small class="${it?'k-veld':'k-nee'}">${it?'uit PAF':'—'}</small></div>
+    ${sub?`<div class="vb">${esc(sub)}</div>`:''}<select id="${id}" data-doel="${esc(doel)}">${itemOpties(L,it&&it.key)}</select>
+    ${it&&it.vb?`<div class="vb">Laatst: ${esc(it.vb)}</div>`:''}</div>`;}
 function render(){
-  const L=Paf.bekend(),n={veld:0,info:0,nee:0};L.forEach(i=>n[soort(Paf.koppeling(i.key))]++);
-  $('tot').innerHTML=`<span>${n.veld} gekoppeld</span><span>${n.info} als info</span><span>${n.nee} niet importeren</span>`;
-  let html='',g='',s='';
-  L.filter(i=>filt==='alle'||soort(Paf.koppeling(i.key))===filt).forEach(i=>{
-    if(i.groep!==g){if(g)html+='</section>';g=i.groep;s='';html+=`<section class="grp"><h2>${esc(g)}</h2>`;}
-    if(i.sectie!==s){s=i.sectie;html+=`<h3>${esc(s)}</h3>`;}
-    const d=Paf.koppeling(i.key),k=soort(d),id='s'+btoa(unescape(encodeURIComponent(i.key))).replace(/[^a-z0-9]/gi,'');
-    html+=`<div class="it ${k}"><div class="nm"><b><label for="${id}">${esc(i.label)}</label></b><small class="k-${k}">${k==='veld'?'→ '+esc(doelNaam(d)):k==='info'?'Info':'Niet'}</small></div>
-      ${i.vb?`<div class="vb">Laatst: ${esc(i.vb)}</div>`:''}<select id="${id}" data-key="${esc(i.key)}">${opties(d)}</select></div>`;});
-  if(g)html+='</section>';
-  $('lijst').innerHTML=html||'<p class="uitleg">Geen items in deze keuze.</p>';
-  document.querySelectorAll('select[data-key]').forEach(x=>x.onchange=()=>{Paf.zetKoppeling(x.dataset.key,x.value);render();});
+  const L=Paf.bekend(),D=Paf.doelen(),c=Velden.cfg();let n=0;
+  let html='';
+  D.forEach(x=>{
+    let rows='';
+    Object.entries(SAMEN).forEach(([d,o])=>{if(x.velden.some(f=>f.k===o.na))rows+=rij(d,o.naam,o.sub,L,'d'+d.slice(1));});
+    x.velden.forEach(f=>{const via=f.k.match(/^(klant|loc)_(adres|postcode|plaats)$/)?(f.k.startsWith('klant')?'@adres_klant':'@adres_loc'):null;
+      const viaIt=via&&L.find(i=>Paf.koppeling(i.key)===via);
+      const verpl=c[f.k]&&(c[f.k].in==='verplicht'||c[f.k].uit==='verplicht');
+      rows+=rij(f.k,f.kort||f.l,[verpl?'Verplicht':'',viaIt?'Al via '+SAMEN[via].naam:''].filter(Boolean).join(' · '),L,'d_'+f.k);});
+    html+=`<section class="grp"><h2>${esc(x.sc.kort||x.sc.naam)}</h2>${rows}</section>`;});
+  $('lijst').innerHTML=html;
+  const gek=new Set(L.filter(i=>!['info','nee'].includes(Paf.koppeling(i.key))).map(i=>i.key));
+  const rest=L.filter(i=>!gek.has(i.key)),uit=rest.filter(i=>Paf.koppeling(i.key)==='nee').length;
+  $('tot').innerHTML=`<span>${gek.size} velden uit PAF</span><span>${rest.length-uit} als info</span><span>${uit} niet importeren</span>`;
+  $('restN').textContent=`(${rest.length})`;
+  let g='';$('rest').innerHTML=rest.map(i=>{const h=i.groep+' › '+i.sectie,kop=h!==g?`<h3>${esc(h)}</h3>`:'';g=h;const aan=Paf.koppeling(i.key)!=='nee';
+    return `${kop}<div class="it sw2"><div class="nm"><b id="r_${btoa(unescape(encodeURIComponent(i.key))).replace(/[^a-z0-9]/gi,'')}">${esc(i.label)}</b>
+      <button class="sw" role="switch" aria-checked="${aan}" aria-label="${esc(i.label)} bewaren als info" data-info="${esc(i.key)}"><i></i></button></div>${i.vb?`<div class="vb">Laatst: ${esc(i.vb)}</div>`:''}</div>`;}).join('');
+  document.querySelectorAll('select[data-doel]').forEach(x=>x.onchange=()=>{const d=x.dataset.doel;
+    Paf.bekend().filter(i=>Paf.koppeling(i.key)===d).forEach(i=>Paf.zetKoppeling(i.key,'info')); // het vorige item voor dit veld wordt weer info
+    if(x.value)Paf.zetKoppeling(x.value,d);render();});
+  document.querySelectorAll('[data-info]').forEach(b=>b.onclick=()=>{const k=b.dataset.info;Paf.zetKoppeling(k,Paf.koppeling(k)==='nee'?'info':'nee');render();});
 }
-document.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{filt=b.dataset.f;document.querySelectorAll('[data-f]').forEach(x=>{x.classList.toggle('on',x===b);x.setAttribute('aria-pressed',x===b);});render();});
+$('restK').onclick=()=>{const o=$('rest').hidden;$('rest').hidden=!o;$('restU').hidden=!o;$('restK').setAttribute('aria-expanded',o);};
 $('lees').onclick=()=>Paf.kies().then(async f=>{$('res').textContent='PAF lezen…';
   try{const r=await Paf.lees(f);$('res').textContent=`${r.items.length} items gevonden in ${f.name} (${r.items.filter(i=>i.waarde).length} met een waarde).`;render();}
   catch(e){$('res').textContent='Deze pdf kon niet gelezen worden.';}}).catch(()=>{});
