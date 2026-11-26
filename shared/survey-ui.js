@@ -219,7 +219,7 @@
       try{r=await Paf.lees(f);}catch(e){toast('Deze pdf kon niet gelezen worden');return;}
       const x={variant:cfg.variant,status:'uitwerking',velden:{}};const res=Paf.toepassen(x,r.items,{bestand:f.name});
       if(!x.velden.type_aansluiting&&typ)x.velden.type_aansluiting=typ;
-      const a=$('adr').value.trim();if(a&&!x.adres)x.adres=a;if(!x.adres)x.adres=f.name.replace(/\.pdf$/i,'');
+      const a=$('adr').value.trim();if(a&&!x.adres)x.adres=a;if(!x.adres)x.adres=''; // geen adres in de PAF: leeg laten (niet de bestandsnaam), het klantadres blijft open
       x.sectie=Velden.onnet(x)?'binnen':'buiten';newOpen=false;
       const y=await Store.surveys.put(x);await show(y);toast(`${res.gevuld.length} gegevens uit de PAF ingevuld`);
       const i=Velden.voortgang(y,[],'in');if(i.mist.length)Gegevens.open(y,{filter:'todo',moment:'vooraf',onClose:()=>show(y)});}).catch(()=>{});
@@ -297,6 +297,10 @@
     return T;
   }
   async function show(s){
+    { // eerder als adres gebruikte bestandsnaam van een PAF weghalen; adres van de schouw volgt het klantadres als dat er (later) is
+      let ch=false;if(s.paf&&s.paf.bestand&&s.adres===s.paf.bestand.replace(/\.pdf$/i,'')){s.adres='';ch=true;}
+      if(!s.adres&&(s.velden||{}).klant_adres){s.adres=s.velden.klant_adres+(s.velden.klant_plaats?', '+s.velden.klant_plaats:'');ch=true;}
+      if(ch)await Store.surveys.put(s);}
     survey=s;history.replaceState(view?{zf:view,via:!!(history.state&&history.state.via)}:null,'','?survey='+encodeURIComponent(s.id));title(s.adres||cfg.naam);
     // een schouw uit een andere variant gaat vanaf nu verder in deze variant (terugknoppen en 'Doorgaan met' volgen dat)
     if(s.variant!==cfg.variant){const was=NAMEN[s.variant]||s.variant;s.variant=cfg.variant;await Store.surveys.put(s);if(was)toast(`Deze schouw gaat nu verder in ${cfg.naam} (was ${was})`);}
