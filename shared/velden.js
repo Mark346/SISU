@@ -225,6 +225,12 @@
   /* staat dit veld in het gegevensscherm? (tellers, foto-reeksen en de legenda niet) */
   const inLijst=f=>!['teller','fotos','rolfoto','legenda'].includes(f.t);
   /* verplichte foto's met een rol (aansluitpunt, invoer pand, beginpunt binnen) per sectie */
+  /* naam van de schouw (s.adres) uit het klantadres als die nog leeg is of de bestandsnaam van een PAF; geeft true als hij veranderd is */
+  function adresNaam(s){const vv=s.velden||{},bn=s.paf&&s.paf.bestand?s.paf.bestand.replace(/\.pdf$/i,''):null;
+    if(s.adres&&s.adres!==bn)return false;
+    const a=String(vv.klant_adres||'').trim(),pl=String(vv.klant_plaats||'').trim(),n=a?a+(pl?', '+pl:''):'';
+    if(n){if(s.adres===n)return false;s.adres=n;return true;}
+    if(s.adres&&s.adres===bn){s.adres='';return true;}return false;}
   const ROLLEN=s=>VELDEN.filter(f=>f.t==='rolfoto'&&actief(s,f)&&cfg()[f.k].uit!=='nee');
   /* verplicht voor het scherm: kant 'in' (vooraf), 'uit' (document) of beide */
   function nodig(c,f,kant){const x=c[f.k];return kant?x[kant]==='verplicht':(x.in==='verplicht'||x.uit==='verplicht');}
@@ -269,5 +275,5 @@
     return{klaar:fs.length-mis.length,totaal:fs.length,mist:mis,pct:fs.length?Math.round((fs.length-mis.length)/fs.length*100):100};
   }
   window.Velden={VELDEN,SECTIES,MOMENT,VG,VG_VAAK,VG_VOORSTEL,CONTACTEN,STATUS,V,W,N,cfg,setCfg,resetCfg,waarde,zet,actief,gevuld,voortgang,
-    ROLLEN,todo,vak,vakken,VAK_SECTIES,onnet,onnetFix,standaard,setStandaard,statusOf,statusMeta,gearchiveerd,groep,inLijst,nodig,secties,verborgen,zelfdeAan,migreer};
+    ROLLEN,todo,vak,vakken,VAK_SECTIES,onnet,onnetFix,adresNaam,standaard,setStandaard,statusOf,statusMeta,gearchiveerd,groep,inLijst,nodig,secties,verborgen,zelfdeAan,migreer};
 })();

@@ -138,7 +138,7 @@
       const ad=/^(klant|loc)_(adres|postcode|plaats)$/.exec(doel),a=ad&&adres(i.waarde);
       zet(doel,a?a[ad[2]]:omzetten(f,i.waarde));}
     s.paf={bestand:o.bestand||'',op:new Date().toISOString(),info};res.info=info.length;
-    if(!s.adres||o.adres){const a=Velden.waarde(s,'klant_adres'),pl=Velden.waarde(s,'klant_plaats');if(a)s.adres=a+(pl?', '+pl:'');}
+    if(o.adres)s.adres='';Velden.adresNaam(s); // naam van de schouw = adres en plaats van de klant
     return res;
   }
   /* waar een item aan gekoppeld kan worden */

@@ -161,6 +161,7 @@
     if(want){const s=await Store.surveys.get(want);if(s){const zf=new URLSearchParams(location.search).get('fotos')||(history.state&&history.state.zf);
       if(cfg.fotoVakken&&(zf==='buiten'||zf==='binnen'))view=zf;return show(s);}}
     const all=await Store.surveys.list(),st=x=>Velden.statusOf(x);
+    for(const x of all)if(Velden.adresNaam(x))await Store.surveys.put(x); // naam = adres en plaats van de klant
     const arch=all.filter(x=>Velden.gearchiveerd(x)),rest=all.filter(x=>!Velden.gearchiveerd(x));
     const open=rest.filter(x=>st(x)!=='klaar'),done=rest.filter(x=>st(x)==='klaar'),lastOpen=open[0];
     title(cfg.startTitel||cfg.naam);survey=null;if(cfg.onScreen)cfg.onScreen('start');
@@ -298,9 +299,7 @@
   }
   async function show(s){
     { // eerder als adres gebruikte bestandsnaam van een PAF weghalen; adres van de schouw volgt het klantadres als dat er (later) is
-      let ch=false;if(s.paf&&s.paf.bestand&&s.adres===s.paf.bestand.replace(/\.pdf$/i,'')){s.adres='';ch=true;}
-      if(!s.adres&&(s.velden||{}).klant_adres){s.adres=s.velden.klant_adres+(s.velden.klant_plaats?', '+s.velden.klant_plaats:'');ch=true;}
-      if(ch)await Store.surveys.put(s);}
+      if(Velden.adresNaam(s))await Store.surveys.put(s);}
     survey=s;history.replaceState(view?{zf:view,via:!!(history.state&&history.state.via)}:null,'','?survey='+encodeURIComponent(s.id));title(s.adres||cfg.naam);
     // een schouw uit een andere variant gaat vanaf nu verder in deze variant (terugknoppen en 'Doorgaan met' volgen dat)
     if(s.variant!==cfg.variant){const was=NAMEN[s.variant]||s.variant;s.variant=cfg.variant;await Store.surveys.put(s);if(was)toast(`Deze schouw gaat nu verder in ${cfg.naam} (was ${was})`);}

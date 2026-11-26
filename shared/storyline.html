@@ -116,7 +116,7 @@ async function load(){
   $('back').href='../'+(PAGE[S.variant]||'index.html')+'?survey='+encodeURIComponent(S.id);
   P=await Store.photos.bySurvey(S.id,true);
   // naar afronding = status Afronding (vanaf Uitwerking, als er foto's zijn)
-  let ch=Velden.migreer(S);
+  let ch=Velden.migreer(S);if(Velden.adresNaam(S))ch=true;
   for(const p of Velden.onnetFix(S,P)){await Store.photos.put(p);ch=true;} // ONNET: geen buiten tracé
   if(S.status==='archief'&&S.gearchiveerd==null){S.gearchiveerd=true;ch=true;}
   const cur=Velden.statusOf(S);if(S.status!==cur){S.status=cur;ch=true;}
