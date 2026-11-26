@@ -14,9 +14,9 @@
 .plv .plp{flex:none;color:var(--mute)}
 .ple{position:fixed;inset:0;z-index:200;background:#0d0f12;display:flex;flex-direction:column;color:#fff;touch-action:none;user-select:none;-webkit-user-select:none}
 .ple .plh{display:flex;align-items:center;gap:8px;padding:calc(8px + env(safe-area-inset-top)) 12px 8px;background:#15181d;border-bottom:1px solid #2a2e35}
-.ple .plh b{flex:1;font-size:17px}
+.ple .plh b{flex:1;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .ple button{font:inherit}
-.ple .plk{min-height:40px;padding:0 14px;border-radius:999px;border:1px solid #3a3e46;background:transparent;color:#fff;font-weight:600}
+.ple .plk{min-height:40px;padding:0 12px;border-radius:999px;border:1px solid #3a3e46;background:transparent;color:#fff;font-weight:600}
 .ple .plk.pri{background:#f2f3f5;color:#111;border-color:#f2f3f5}
 .ple .plk.rood{color:#ff9b95;border-color:#7a2e2b}
 .ple .plv2{flex:1;position:relative;overflow:hidden;background:#22262c}
@@ -24,7 +24,7 @@
 .ple .plw img,.ple .plw svg{position:absolute;left:0;top:0;width:100%;height:100%;display:block}
 .ple .plb{display:flex;gap:8px;align-items:center;padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:#15181d;border-top:1px solid #2a2e35;flex-wrap:wrap}
 .ple .plseg{display:flex;border:1px solid #3a3e46;border-radius:999px;overflow:hidden}
-.ple .plseg button{min-height:44px;padding:0 16px;border:0;background:transparent;color:#cfd3da;font-weight:700;display:flex;align-items:center;gap:6px}
+.ple .plseg button{min-height:44px;padding:0 12px;border:0;background:transparent;color:#cfd3da;font-weight:700;display:flex;align-items:center;gap:6px}
 .ple .plseg button[aria-pressed="true"]{background:${ROOD};color:#fff}
 .ple .plhint{width:100%;font-size:13px;color:#9aa1ab;margin:0}
 .ple .plsp{flex:1}
@@ -104,44 +104,58 @@
     d.innerHTML=`<div class="plh"><button class="plk" id="plX">Annuleren</button><b>Kaart met tracé</b><button class="plk" id="plM" aria-label="Meer">•••</button><button class="plk pri" id="plOk">Klaar</button></div>
       <div class="plv2" id="plV"><div class="plw" id="plW" style="width:${P.w}px;height:${P.h}px"><img src="${u}" alt="Kaart" draggable="false"><svg viewBox="0 0 ${P.w} ${P.h}" id="plS"></svg></div></div>
       <div class="plb"><div class="plseg" role="group" aria-label="Gereedschap"><button data-m="lijn" aria-pressed="true"><svg width="22" height="10" viewBox="0 0 22 10"><path d="M1 5h20" stroke="currentColor" stroke-width="3" stroke-dasharray="5 3"/></svg>Lijn</button><button data-m="kruis" aria-pressed="false"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>Kruis</button></div>
-        <span class="plsp"></span><button class="plk" id="plU" aria-label="Ongedaan maken">↶ Terug</button>
-        <p class="plhint" id="plH">Teken met één vinger het nieuwe tracé. Met twee vingers zoom en schuif je.</p></div>`;
+        <span class="plsp"></span><button class="plk pri" id="plAf" hidden>✓ Lijn af</button><button class="plk" id="plU" aria-label="Ongedaan maken">↶ Terug</button>
+        <p class="plhint" id="plH">Tik punt voor punt: elke tik is een hoek, de lijn ertussen is recht. Schuif je vinger om het punt precies te zetten. Klaar met ✓ Lijn af of tik nog eens op het laatste punt.</p></div>`;
     document.body.appendChild(d);
     history.pushState({...(history.state||{}),pg:1},'');
     const V=d.querySelector('#plV'),W=d.querySelector('#plW'),S=d.querySelector('#plS');
-    const teken=(extra)=>{S.innerHTML=svgTek({...P,lijnen:extra?P.lijnen.concat([extra]):P.lijnen});d.querySelector('#plU').disabled=!hist.length;};
+    let bezig=null,voor=null; // bezig: hoekpunten van de lijn in wording, voor: het punt onder de vinger
+    const teken=()=>{const L=bezig?bezig.concat(voor?[voor]:[]):null;
+      let o=svgTek({...P,lijnen:L&&L.length>1?P.lijnen.concat([L]):P.lijnen});
+      const r=Math.max(P.w,P.h)/260/Math.max(z,.05)*2.2;
+      if(L)L.forEach((q,i)=>{o+=`<circle cx="${q[0]}" cy="${q[1]}" r="${(i===L.length-1&&voor?1.4:1)*r}" fill="#fff" stroke="${ROOD}" stroke-width="${r*.5}"/>`;});
+      S.innerHTML=o;d.querySelector('#plU').disabled=!hist.length&&!bezig;d.querySelector('#plAf').hidden=!bezig;};
+    /* recht trekken: binnen 8 graden van horizontaal, verticaal of 45 graden klikt de lijn vast */
+    const vast=p=>{if(!bezig||!bezig.length)return p;const q=bezig[bezig.length-1],dx=p[0]-q[0],dy=p[1]-q[1],L=Math.hypot(dx,dy);if(!L)return p;
+      const h=Math.atan2(dy,dx),st=Math.PI/4,n=Math.round(h/st)*st;return Math.abs(h-n)<8*Math.PI/180?[q[0]+Math.cos(n)*L,q[1]+Math.sin(n)*L]:p;};
+    const rond=p=>[Math.round(p[0]*10)/10,Math.round(p[1]*10)/10];
+    const lijnAf=()=>{if(!bezig)return;if(bezig.length>1){snap();P.lijnen.push(bezig.map(rond));gewijzigd=true;}bezig=null;voor=null;teken();};
     // passend in beeld
-    let z=1,tx=0,ty=0;const zet=()=>{W.style.transform=`translate(${tx}px,${ty}px) scale(${z})`;};
+    let z=1,tx=0,ty=0;const zet=()=>{W.style.transform=`translate(${tx}px,${ty}px) scale(${z})`;if(typeof teken==='function'&&bezig)teken();};
     const pas=()=>{const r=V.getBoundingClientRect();z=Math.min(r.width/P.w,r.height/P.h);tx=(r.width-P.w*z)/2;ty=(r.height-P.h*z)/2;zet();};
     pas();teken();
     const naarBeeld=(cx,cy)=>{const r=V.getBoundingClientRect();return [(cx-r.left-tx)/z,(cy-r.top-ty)/z];};
     const pt=new Map();let lijn=null,pinch=null,tik=null;
     V.addEventListener('pointerdown',e=>{V.setPointerCapture(e.pointerId);pt.set(e.pointerId,[e.clientX,e.clientY]);
-      if(pt.size===2){lijn=null;tik=null;teken();const [a,b]=[...pt.values()];pinch={d:Math.hypot(a[0]-b[0],a[1]-b[1]),m:[(a[0]+b[0])/2,(a[1]+b[1])/2],z,tx,ty};return;}
+      if(pt.size===2){voor=null;tik=null;teken();const [a,b]=[...pt.values()];pinch={d:Math.hypot(a[0]-b[0],a[1]-b[1]),m:[(a[0]+b[0])/2,(a[1]+b[1])/2],z,tx,ty};return;}
       if(pt.size>2)return;
-      if(modus==='lijn')lijn=[naarBeeld(e.clientX,e.clientY)];else tik=[e.clientX,e.clientY];});
+      tik=[e.clientX,e.clientY];if(modus==='lijn'){voor=vast(naarBeeld(e.clientX,e.clientY));teken();}});
     V.addEventListener('pointermove',e=>{if(!pt.has(e.pointerId))return;pt.set(e.pointerId,[e.clientX,e.clientY]);
       if(pinch&&pt.size===2){const [a,b]=[...pt.values()],dd=Math.hypot(a[0]-b[0],a[1]-b[1]),m=[(a[0]+b[0])/2,(a[1]+b[1])/2],r=V.getBoundingClientRect();
         const nz=Math.max(.2,Math.min(12,pinch.z*dd/pinch.d)),bx=(pinch.m[0]-r.left-pinch.tx)/pinch.z,by=(pinch.m[1]-r.top-pinch.ty)/pinch.z;
         z=nz;tx=m[0]-r.left-bx*z;ty=m[1]-r.top-by*z;zet();return;}
-      if(lijn){const p=naarBeeld(e.clientX,e.clientY),q=lijn[lijn.length-1];if(Math.hypot(p[0]-q[0],p[1]-q[1])*z>2){lijn.push(p);teken(lijn);}}});
+      if(modus==='lijn'&&voor&&pt.size===1){voor=vast(naarBeeld(e.clientX,e.clientY));teken();}});
     const op=e=>{if(!pt.has(e.pointerId))return;pt.delete(e.pointerId);
       if(pinch){if(pt.size<2)pinch=null;return;}
-      if(lijn){if(lijn.length>1){snap();P.lijnen.push(rdp(lijn,1.2/z).map(p=>[Math.round(p[0]*10)/10,Math.round(p[1]*10)/10]));gewijzigd=true;}lijn=null;teken();}
+      if(modus==='lijn'){if(voor&&e.type==='pointerup'){const q=bezig&&bezig[bezig.length-1];
+          if(q&&Math.hypot(voor[0]-q[0],voor[1]-q[1])*z<14)lijnAf(); // nog eens op het laatste punt: lijn af
+          else{bezig=(bezig||[]).concat([voor]);gewijzigd=true;}}
+        voor=null;tik=null;teken();return;}
       else if(tik&&e.type==='pointerup'&&Math.hypot(e.clientX-tik[0],e.clientY-tik[1])<10){snap();P.kruizen.push(naarBeeld(e.clientX,e.clientY).map(v=>Math.round(v)));gewijzigd=true;teken();}
       tik=null;};
     V.addEventListener('pointerup',op);V.addEventListener('pointercancel',op);
     V.addEventListener('wheel',e=>{e.preventDefault();const r=V.getBoundingClientRect(),k=e.deltaY<0?1.15:1/1.15,bx=(e.clientX-r.left-tx)/z,by=(e.clientY-r.top-ty)/z;
       z=Math.max(.2,Math.min(12,z*k));tx=e.clientX-r.left-bx*z;ty=e.clientY-r.top-by*z;zet();},{passive:false});
-    d.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{modus=b.dataset.m;d.querySelectorAll('[data-m]').forEach(x=>x.setAttribute('aria-pressed',x===b));
-      d.querySelector('#plH').textContent=modus==='lijn'?'Teken met één vinger het nieuwe tracé. Met twee vingers zoom en schuif je.':'Tik op het oude tracé om een rood kruis te zetten. Met twee vingers zoom en schuif je.';});
-    d.querySelector('#plU').onclick=()=>{if(!hist.length)return;const h=JSON.parse(hist.pop());P.lijnen=h.l;P.kruizen=h.k;gewijzigd=true;teken();};
+    d.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{lijnAf();modus=b.dataset.m;d.querySelectorAll('[data-m]').forEach(x=>x.setAttribute('aria-pressed',x===b));
+      d.querySelector('#plH').textContent=modus==='lijn'?'Tik punt voor punt: elke tik is een hoek, de lijn ertussen is recht. Schuif je vinger om het punt precies te zetten. Klaar met ✓ Lijn af of tik nog eens op het laatste punt.':'Tik op het oude tracé om een rood kruis te zetten. Met twee vingers zoom en schuif je.';});
+    d.querySelector('#plAf').onclick=lijnAf;
+    d.querySelector('#plU').onclick=()=>{if(bezig){bezig.pop();if(!bezig.length)bezig=null;teken();return;}if(!hist.length)return;const h=JSON.parse(hist.pop());P.lijnen=h.l;P.kruizen=h.k;gewijzigd=true;teken();};
     let dicht=false;
     const sluit=(viaTerug)=>{if(dicht)return;dicht=true;removeEventListener('popstate',pop);URL.revokeObjectURL(u);d.remove();if(!viaTerug&&history.state&&history.state.pg)history.back();};
     const pop=()=>{if(gewijzigd&&!confirm('Wijzigingen in de kaart weggooien?')){history.pushState({...(history.state||{}),pg:1},'');return;}sluit(true);};
     addEventListener('popstate',pop);
     d.querySelector('#plX').onclick=()=>{if(gewijzigd&&!confirm('Wijzigingen in de kaart weggooien?'))return;sluit(false);};
-    d.querySelector('#plOk').onclick=async()=>{const b=d.querySelector('#plOk');b.disabled=true;b.textContent='Opslaan…';
+    d.querySelector('#plOk').onclick=async()=>{lijnAf();const b=d.querySelector('#plOk');b.disabled=true;b.textContent='Opslaan…';
       s.kaartTrace={orig:P.orig,w:P.w,h:P.h,lijnen:P.lijnen,kruizen:P.kruizen};
       s.bijlagen={...(s.bijlagen||{}),trace_geo:await samenstellen(s.kaartTrace)};
       if(window.Velden&&Velden.waarde(s,'trace_geo')==='nvt')Velden.zet(s,'trace_geo','');
@@ -151,7 +165,7 @@
       d.appendChild(m);m.onclick=e=>{if(e.target===m)m.remove();};
       m.querySelectorAll('[data-a]').forEach(b=>b.onclick=async()=>{const a=b.dataset.a;m.remove();
         if(a==='pas')pas();
-        else if(a==='wis'){if(!P.lijnen.length&&!P.kruizen.length)return;snap();P.lijnen=[];P.kruizen=[];gewijzigd=true;teken();}
+        else if(a==='wis'){bezig=null;if(!P.lijnen.length&&!P.kruizen.length)return;snap();P.lijnen=[];P.kruizen=[];gewijzigd=true;teken();}
         else if(a==='nw'){kies().then(async f=>{let blob;try{blob=await naarBeeld(f);}catch(e){melding('Dit bestand kon niet gelezen worden');return;}
             const im=await laadImg(blob);s.kaartTrace={orig:blob,w:im.naturalWidth,h:im.naturalHeight,lijnen:[],kruizen:[]};
             s.bijlagen={...(s.bijlagen||{}),trace_geo:blob};await Store.surveys.put(s);gewijzigd=false;sluit(false);setTimeout(()=>editor(s,klaar),50);}).catch(()=>{});}
