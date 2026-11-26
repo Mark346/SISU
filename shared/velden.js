@@ -42,7 +42,7 @@
     {k:'afh_aan',s:'alg',l:'Afhankelijkheden aannemer (onderwerp, datum gereed)',t:'lang',in:N,uit:W},
 
     {k:'klant_org',s:'klant',l:'Organisatie',t:'text',in:W,uit:W},
-    {k:'klant_zelfde',s:'klant',l:'Zelfde als locatie',t:'janee',schakel:true,std:'Ja',bron:{klant_adres:'loc_adres',klant_postcode:'loc_postcode',klant_plaats:'loc_plaats'},in:N,uit:N},
+    {k:'klant_zelfde',s:'klant',l:'Zelfde als locatie',t:'janee',schakel:true,std:'Nee',bron:{klant_adres:'loc_adres',klant_postcode:'loc_postcode',klant_plaats:'loc_plaats'},in:N,uit:N},
     {k:'klant_adres',s:'klant',zelfde:{veld:'klant_zelfde',bron:'loc_adres'},l:'Adres',t:'text',in:V,uit:V,vb:'Oranjelaan 2'},
     {k:'klant_postcode',s:'klant',zelfde:{veld:'klant_zelfde',bron:'loc_postcode'},l:'Postcode',t:'text',in:V,uit:V,vb:'2341CC'},
     {k:'klant_plaats',s:'klant',zelfde:{veld:'klant_zelfde',bron:'loc_plaats'},l:'Plaats',t:'text',in:V,uit:V,vb:'Oegstgeest'},
@@ -193,6 +193,7 @@
   function zelfdeAan(s,k){
     const v=(s.velden||{})[k];if(v==='Ja')return true;if(v==='Nee')return false;
     const f=VELDEN.find(x=>x.k===k),vv=s.velden||{};
+    if(f.std==='Nee')return false; // standaard uit (bijv. klant zelfde als locatie)
     return !Object.entries(f.bron).some(([doel,bron])=>!leeg(vv[doel])&&String(vv[doel]).trim()!==String(waarde(s,bron)||'').trim());
   }
   function verborgen(s,f){return !!(f.zelfde&&zelfdeAan(s,f.zelfde.veld));}
