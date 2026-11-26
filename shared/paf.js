@@ -69,7 +69,7 @@
     pdfjs=await import(new URL('pdf.min.mjs',dir).href);pdfjs.GlobalWorkerOptions.workerSrc=new URL('pdf.worker.min.mjs',dir).href;return pdfjs;}
   const SKIP=/^(https?:\/\/|\d+\/\d+$|Work Order Approval Request Detail|\d{2}-\d{2}-\d{4}, \d{2}:\d{2}$)|Alle rechten voorbehouden|^Exporteren naar CSV$|^(Add|Related Product)$/;
   /* tekst opschonen: links naar het portaal en losse symbolen weg */
-  const schoon=t=>String(t||'').replace(/\(\/contractor[^)]*\)?/g,'').replace(/\b(?=[0-9A-Za-z]*[a-z])(?=[0-9A-Za-z]*\d)[0-9A-Za-z]{12,}\)/g,'').replace(/[▼▶►▸☐☑✓✔]/g,'').replace(/\s+/g,' ').trim();
+  const schoon=t=>String(t||'').replace(/^null\s+/i,'').replace(/^null$/i,'').replace(/\(\/contractor[^)]*\)?/g,'').replace(/\b(?=[0-9A-Za-z]*[a-z])(?=[0-9A-Za-z]*\d)[0-9A-Za-z]{12,}\)/g,'').replace(/[▼▶►▸☐☑✓✔]/g,'').replace(/\s+/g,' ').trim();
   async function lees(file){
     const lib=await laad(),data=new Uint8Array(await file.arrayBuffer());
     const doc=await lib.getDocument({data,isEvalSupported:false,useSystemFonts:true}).promise;
@@ -111,7 +111,20 @@
   /* ---------- waarden omzetten ---------- */
   const hoofdletters=t=>t.toLowerCase().replace(/(^|[\s\-'])([a-zà-ÿ])/g,(m,a,b)=>a+b.toUpperCase());
   /* "… NL 2665MT Hollandweg 36 BLEISWIJK" of "…-2665MT-Hollandweg-36-BLEISWIJK" -> straat + nummer, postcode, plaats */
-  function adres(t){const m=String(t).match(/(\d{4})\s?([A-Z]{2})[\s\-]+(.+?)[\s\-]+(\d+(?:\s?[A-Za-z]{1,2})?(?:[\-\s]\d+)?)[\s\-]+([A-Za-zÀ-ÿ'\- ]+?)\s*$/);
+  /* adres uit een regel halen. Twee vormen:
+     B: "… HH thv Poeldijkseweg 31, 2291 GB Wateringen 52.02842, 4.26106 …"  (straat nr, postcode plaats)
+     A: "… NL 2665MT Hollandweg 36 BLEISWIJK" of "…-2665MT-Hollandweg-36-BLEISWIJK"  (postcode straat nr plaats) */
+  const STRAATWOORD=/^([A-ZÀ-Ý][A-Za-zÀ-ÿ'.\-]*[a-zà-ÿ][A-Za-zÀ-ÿ'.\-]*|van|de|der|den|het|'t|ten|ter|te|aan|op|in|bij|la|le)$/;
+  function straatVoor(tekst){ // de woorden direct vóór het huisnummer die samen de straatnaam vormen
+    const w=tekst.trim().split(/\s+/),uit=[];
+    for(let i=w.length-1;i>=0;i--){if(!STRAATWOORD.test(w[i])||/^(thv|nabij|Single|Connection|Network)$/i.test(w[i]))break;uit.unshift(w[i]);}
+    while(uit.length&&/^(van|de|der|den|het|'t|ten|ter|te|aan|op|in|bij|la|le)$/.test(uit[0])&&uit.length>1&&!/^[A-Z]/.test(uit[0]))uit.shift();
+    return uit.join(' ');}
+  function adres(t){t=String(t||'');
+    let m=t.match(/^(.*?)\s(\d+\s?[A-Za-z]{0,2}(?:-\d+)?)\s*,\s*(\d{4})\s?([A-Z]{2})\s+([A-Za-zÀ-ÿ'`\-]+(?:\s+[A-Za-zÀ-ÿ'`\-]+)*)/);
+    if(m){const st=straatVoor(m[1]);const pl=m[5].split(/\s+/).filter(x=>x!=='NL').join(' ');
+      if(st)return{adres:`${st} ${m[2].replace(/\s+/g,'')}`,postcode:m[3]+m[4],plaats:hoofdletters(pl)};}
+    m=t.match(/(\d{4})\s?([A-Z]{2})[\s\-]+(.+?)[\s\-]+(\d+(?:\s?[A-Za-z]{1,2})?(?:[\-\s]\d+)?)[\s\-]+([A-Za-zÀ-ÿ'\- ]+?)\s*$/);
     if(!m)return null;return{adres:`${m[3].replace(/-/g,' ')} ${m[4].replace(/\s+/g,'')}`.trim(),postcode:m[1]+m[2],plaats:hoofdletters(m[5].replace(/-/g,' ').trim())};}
   /* vaste vertalingen van PAF-waarden (Indicatie On Net: OnNetBuilding = ONNET, NotConnected = OFFNET) */
   const VERTAAL={type_aansluiting:[[/on\s*net/i,'ONNET'],[/off\s*net|not\s*connected/i,'OFFNET']]};
@@ -137,7 +150,8 @@
     for(const i of items){if(leeg(i.waarde))continue;const doel=koppeling(i.key);
       if(doel==='nee')continue;
       if(doel==='info'){info.push({groep:i.groep,sectie:i.sectie,label:i.label,waarde:i.waarde});continue;}
-      if(doel==='@adres_klant'||doel==='@adres_loc'){const a=adres(i.waarde);if(!a){info.push({groep:i.groep,sectie:i.sectie,label:i.label,waarde:i.waarde});continue;}
+      if(doel==='@adres_klant'||doel==='@adres_loc'){let a=adres(i.waarde);
+        if(!a)for(const j of items){const b=adres(j.waarde);if(b){a=b;break;}} // ander item met een adres (bijv. Ordernaam)if(!a){info.push({groep:i.groep,sectie:i.sectie,label:i.label,waarde:i.waarde});continue;}
         const p=doel==='@adres_klant'?'klant':'loc';zet(p+'_adres',a.adres);zet(p+'_postcode',a.postcode);zet(p+'_plaats',a.plaats);
         continue;}
       const f=Velden.VELDEN.find(x=>x.k===doel);if(!f)continue;
