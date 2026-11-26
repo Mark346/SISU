@@ -192,7 +192,7 @@
       ${voortgang()}</div></div>
     <div class="gb">
       ${st.moment?`<div class="gmom"><span>Alleen wat je ${esc(Velden.MOMENT[st.moment])} invult</span><button id="gAlle">Alle secties</button></div>`:''}
-      ${blokken.length?blokken.join('')
+      ${blokken.length?blokken.join('')+pafHtml()
         :`<div class="gleeg"><p>${st.moment==='vooraf'?'Alles wat je vooraf nodig hebt, is ingevuld.':'Alles wat verplicht is, is ingevuld.'}</p><button class="btn" id="gToon">Bekijk alles</button></div>`}
     </div><div class="gf"${n?'':' hidden'}><button class="btn pri" id="gNx">Volgende open veld</button></div>`;
     R.querySelector('#gX').onclick=sluit;
@@ -249,6 +249,10 @@
       ${opt.length?`<button class="grj gopr" data-opt="${id}" aria-expanded="${optOpen}"><span class="l">Optioneel (${opt.length})</span><span class="v"></span>${svg('M6 9l6 6 6-6',16)}</button><div data-optl="${id}"${optOpen?'':' hidden'}>${opt.map(f=>rij(f,c)).join('')}</div>`:''}</div>
     </section>`;
   }
+  /* info uit een ingelezen PAF (alleen lezen), onderaan in Alles */
+  function pafHtml(){const p=st.s.paf;if(st.filter!=='alles'||!p||!(p.info||[]).length)return'';
+    return `<section class="gsec" aria-labelledby="gk_paf"><div class="gsh"><h3 id="gk_paf">Uit PAF</h3><span class="sx" style="color:var(--mute)">${p.info.length}</span></div>${p.bestand?`<p class="gm" style="margin:-6px 0 10px;font-size:13px;overflow-wrap:anywhere">${esc(p.bestand)}</p>`:''}
+      <div class="grs">${p.info.map(i=>`<div class="grj" style="cursor:default"><span class="l">${esc(i.label)}<br><small class="gm">${esc(i.groep)} · ${esc(i.sectie)}</small></span><span class="v">${esc(i.waarde)}</span></div>`).join('')}</div></section>`;}
   function openRij(k){if(!st)return;save(true);st.edit=k;lijst();focusVeld(k);}
   function focusVeld(k){const R=st.root,el=R.querySelector(`[data-r="${k}"]`);if(!el)return;st.cur=k;
     el.scrollIntoView({block:'center',behavior:'smooth'});const i=el.querySelector('input:not([type=checkbox]),textarea,button');if(i)i.focus({preventScroll:true});}

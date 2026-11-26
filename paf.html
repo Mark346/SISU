@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#121418">
+<title>Zoofi · PAF-import</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="stylesheet" href="shared/base.css">
+<style>
+.uitleg{color:var(--mute);margin:4px 0 12px}.uitleg b{color:var(--ink)}
+.inl{width:100%;margin:4px 0 6px}
+.res{color:var(--mute);font-size:14px;min-height:20px;margin:0 2px 8px}
+.tot{display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 6px}
+.tot span{background:var(--card);border:1px solid var(--line);border-radius:var(--r-pill);padding:5px 12px;font-size:14px;font-weight:600}
+.grp{margin-top:22px}
+.grp h2{font-size:20px;margin:0}
+.grp h3{font-size:15px;color:var(--mute);margin:14px 0 6px;font-weight:700}
+.it{display:flex;flex-direction:column;gap:6px;padding:10px 0;border-bottom:1px solid var(--line)}
+.it .nm{display:flex;align-items:baseline;gap:8px}
+.it .nm b{flex:1;min-width:0;font-size:16px}
+.it .nm small{flex:none;font-size:13px;font-weight:700}
+.it .vb{color:var(--mute);font-size:13px;overflow-wrap:anywhere}
+.it select{box-sizing:border-box;width:100%;min-height:46px;border-radius:12px;border:1px solid var(--line2);background:var(--well);color:var(--ink);padding:0 12px;font-size:16px}
+.it.nee .nm b{color:var(--mute)}
+.k-veld{color:var(--ok)}.k-info{color:var(--mute)}.k-nee{color:var(--mute)}
+.filt{display:flex;background:var(--card);border:1px solid var(--line);border-radius:var(--r-pill);padding:3px;margin:8px 0 0}
+.filt button{flex:1;min-height:42px;border:0;border-radius:var(--r-pill);background:none;color:var(--ink);font-weight:600;font-size:14px;cursor:pointer}
+.filt button.on{background:var(--acc);color:var(--on-acc);font-weight:800}
+.foot{margin:24px 0 10px;display:flex;gap:10px}.foot .btn{flex:1}
+</style>
+</head>
+<body>
+<header class="bar"><a class="back bpill" href="instellingen.html"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>Instellingen</a><h1>PAF-import</h1></header>
+<main class="page">
+  <p class="uitleg">Een PAF (pdf uit het aannemersportaal) kun je inlezen bij <b>Nieuwe schouw</b> of in een schouw. Kies hier per item uit de PAF wat ermee gebeurt: <b>koppelen</b> aan een veld van de schouw, alleen <b>bewaren als info</b> (zichtbaar bij Gegevens), of <b>niet importeren</b>. Bestaande waarden in een schouw worden niet overschreven.</p>
+  <button class="btn inl" id="lees">PAF inlezen om de items bij te werken</button>
+  <p class="res" id="res" role="status"></p>
+  <div class="tot" id="tot"></div>
+  <div class="filt" role="group" aria-label="Filter"><button data-f="alle" class="on" aria-pressed="true">Alle</button><button data-f="veld" aria-pressed="false">Gekoppeld</button><button data-f="info" aria-pressed="false">Info</button><button data-f="nee" aria-pressed="false">Niet</button></div>
+  <div id="lijst"></div>
+  <div class="foot"><button class="btn" id="reset">Standaard herstellen</button><a class="btn pri" href="instellingen.html">Klaar</a></div>
+</main>
+<script src="shared/versie.js"></script>
+<script src="shared/velden.js"></script>
+<script src="shared/paf.js"></script>
+<script>
+const $=id=>document.getElementById(id),esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let filt='alle';
+const soort=d=>d==='nee'?'nee':d==='info'?'info':'veld';
+const doelNaam=d=>{if(d==='nee')return'Niet importeren';if(d==='info')return'Info';if(d==='@adres_klant')return'Adres klant';if(d==='@adres_loc')return'Adres locatie';
+  const f=Velden.VELDEN.find(x=>x.k===d);return f?(f.kort||f.l):d;};
+function opties(sel){
+  const D=Paf.doelen();
+  return `<option value="nee"${sel==='nee'?' selected':''}>Niet importeren</option><option value="info"${sel==='info'?' selected':''}>Alleen bewaren als info</option>
+    <optgroup label="Adres (straat, postcode en plaats in één keer)"><option value="@adres_klant"${sel==='@adres_klant'?' selected':''}>Adres klant</option><option value="@adres_loc"${sel==='@adres_loc'?' selected':''}>Adres locatie</option></optgroup>
+    ${D.map(x=>`<optgroup label="${esc(x.sc.kort||x.sc.naam)}">${x.velden.map(f=>`<option value="${f.k}"${sel===f.k?' selected':''}>${esc(f.kort||f.l)}</option>`).join('')}</optgroup>`).join('')}`;
+}
+function render(){
+  const L=Paf.bekend(),n={veld:0,info:0,nee:0};L.forEach(i=>n[soort(Paf.koppeling(i.key))]++);
+  $('tot').innerHTML=`<span>${n.veld} gekoppeld</span><span>${n.info} als info</span><span>${n.nee} niet importeren</span>`;
+  let html='',g='',s='';
+  L.filter(i=>filt==='alle'||soort(Paf.koppeling(i.key))===filt).forEach(i=>{
+    if(i.groep!==g){if(g)html+='</section>';g=i.groep;s='';html+=`<section class="grp"><h2>${esc(g)}</h2>`;}
+    if(i.sectie!==s){s=i.sectie;html+=`<h3>${esc(s)}</h3>`;}
+    const d=Paf.koppeling(i.key),k=soort(d),id='s'+btoa(unescape(encodeURIComponent(i.key))).replace(/[^a-z0-9]/gi,'');
+    html+=`<div class="it ${k}"><div class="nm"><b><label for="${id}">${esc(i.label)}</label></b><small class="k-${k}">${k==='veld'?'→ '+esc(doelNaam(d)):k==='info'?'Info':'Niet'}</small></div>
+      ${i.vb?`<div class="vb">Laatst: ${esc(i.vb)}</div>`:''}<select id="${id}" data-key="${esc(i.key)}">${opties(d)}</select></div>`;});
+  if(g)html+='</section>';
+  $('lijst').innerHTML=html||'<p class="uitleg">Geen items in deze keuze.</p>';
+  document.querySelectorAll('select[data-key]').forEach(x=>x.onchange=()=>{Paf.zetKoppeling(x.dataset.key,x.value);render();});
+}
+document.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{filt=b.dataset.f;document.querySelectorAll('[data-f]').forEach(x=>{x.classList.toggle('on',x===b);x.setAttribute('aria-pressed',x===b);});render();});
+$('lees').onclick=()=>Paf.kies().then(async f=>{$('res').textContent='PAF lezen…';
+  try{const r=await Paf.lees(f);$('res').textContent=`${r.items.length} items gevonden in ${f.name} (${r.items.filter(i=>i.waarde).length} met een waarde).`;render();}
+  catch(e){$('res').textContent='Deze pdf kon niet gelezen worden.';}}).catch(()=>{});
+let zeker=false;$('reset').onclick=()=>{if(!zeker){zeker=true;$('reset').textContent='Zeker? Tik nog eens';setTimeout(()=>{zeker=false;$('reset').textContent='Standaard herstellen';},3000);return;}
+  Paf.resetKoppelingen();zeker=false;$('reset').textContent='Standaard herstellen';render();};
+render();
+</script>
+</body>
+</html>

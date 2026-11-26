@@ -90,6 +90,7 @@
 .sui .snext .btn{flex:none;min-height:48px;padding:0 16px;font-size:15px}
 .sstat{display:flex;flex-direction:column;gap:8px;margin-top:6px}
 .sui .stodo{margin-top:4px}
+.sui .spaf{width:100%;margin-top:10px}
 .sui .kastk{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:10px}
 .sui .kastk.wrn{border-color:var(--warn)}
 .sui .kastk .kh{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:17px}
@@ -181,6 +182,7 @@
        <input class="f" id="adr" autocomplete="street-address" placeholder="Straat en huisnummer, plaats">
        ${lastOpen&&lastOpen.adres?`<button class="btn take" id="take"><span>Adres overnemen:</span>${esc(lastOpen.adres)}</button>`:''}
        <div class="row">${all.length?'<button class="btn" id="cancel">Annuleren</button>':''}<button class="btn pri" id="go" style="flex:1.4">Start schouw</button></div>
+       ${window.Paf&&cfg.typeKiezen?'<button class="btn spaf" id="gopaf">Start met een PAF (pdf)</button><p class="note">De gegevens uit de PAF worden ingevuld; wat ontbreekt vul je daarna aan.</p>':''}
      </div>
      ${open.length?`<div class="surv">${open.map(x=>`<button class="sv" data-id="${esc(x.id)}"><span><b>${esc(x.adres||'zonder adres')}</b>${sst(x)}${docr(x)}</span><span class="go">${ICO.pijl}</span></button>`).join('')}</div>`
        :(all.length?'<p class="sleeg">Niets bezig. Tik op Nieuwe schouw om te beginnen.</p>':'')}
@@ -212,6 +214,15 @@
       const x=await Store.surveys.put({adres:a,variant:cfg.variant,status:'uitwerking',...(typ?{velden:{type_aansluiting:typ},sectie:typ==='ONNET'?'binnen':'buiten'}:{})});await show(x);
       // eerst wat je vooraf moet weten (alleen als daar iets verplicht is)
       const i=Velden.voortgang(x,[],'in');if(i.mist.length)Gegevens.open(x,{filter:'todo',moment:'vooraf',onClose:()=>show(x)});};
+    // nieuwe schouw vanuit een PAF: adres, klant, type aansluiting enz. komen uit de pdf
+    if($('gopaf'))$('gopaf').onclick=()=>Paf.kies().then(async f=>{toast('PAF lezen…');let r;
+      try{r=await Paf.lees(f);}catch(e){toast('Deze pdf kon niet gelezen worden');return;}
+      const x={variant:cfg.variant,status:'uitwerking',velden:{}};const res=Paf.toepassen(x,r.items,{bestand:f.name});
+      if(!x.velden.type_aansluiting&&typ)x.velden.type_aansluiting=typ;
+      const a=$('adr').value.trim();if(a&&!x.adres)x.adres=a;if(!x.adres)x.adres=f.name.replace(/\.pdf$/i,'');
+      x.sectie=Velden.onnet(x)?'binnen':'buiten';newOpen=false;
+      const y=await Store.surveys.put(x);await show(y);toast(`${res.gevuld.length} gegevens uit de PAF ingevuld`);
+      const i=Velden.voortgang(y,[],'in');if(i.mist.length)Gegevens.open(y,{filter:'todo',moment:'vooraf',onClose:()=>show(y)});}).catch(()=>{});
   }
 
   /* oude status omzetten (alleen samen met een andere wijziging opslaan) */
@@ -338,10 +349,16 @@
   }
   const voet=s=>`<div class="sfoot">
        <a class="btn pri" href="shared/storyline.html?survey=${encodeURIComponent(s.id)}">Naar afronding</a>
+       ${window.Paf?'<button class="slink" id="spaf">PAF inlezen</button>':''}
        <button class="slink" id="other">Andere schouw</button>
        <button class="btn sdelx" id="sdel">Schouw verwijderen</button>
      </div>`;
-  function bindVoet(s){bindDel($('sdel'),s);$('other').onclick=()=>{history.replaceState(null,'',location.pathname);start();};}
+  function bindVoet(s){bindDel($('sdel'),s);
+    // PAF in een bestaande schouw: alleen lege velden worden ingevuld
+    if($('spaf'))$('spaf').onclick=()=>Paf.kies().then(async f=>{toast('PAF lezen…');let r;
+      try{r=await Paf.lees(f);}catch(e){toast('Deze pdf kon niet gelezen worden');return;}
+      const res=Paf.toepassen(s,r.items,{bestand:f.name});if(Velden.onnet(s))Velden.onnetFix(s,[]);await Store.surveys.put(s);
+      toast(`${res.gevuld.length} ingevuld${res.bestond.length?` · ${res.bestond.length} al ingevuld, niet vervangen`:''}`);show(s);}).catch(()=>{});$('other').onclick=()=>{history.replaceState(null,'',location.pathname);start();};}
 
   /* ---------- fotoscherm buiten / binnen (hoofdapp) ---------- */
   function naarFotos(x){if(!survey)return;view=x;history.pushState({zf:x,via:1},'','?survey='+encodeURIComponent(survey.id));show(survey);}
