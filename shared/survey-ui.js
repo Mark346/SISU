@@ -97,7 +97,13 @@
 .sui .kastk .row{margin:0}.sui .kastk .row .btn{flex:1}
 .sui .kastk .gopt{margin:0}
 .sui .gopt.gw{border-color:var(--warn)}
-.sui .kveld{margin-top:8px}
+.sui .kveld{padding:0 12px 4px}
+/* kastfoto en gegevens kast samen in één kader (geel zolang er iets ontbreekt) */
+.sui .kgrp{margin-top:8px;border:1px solid var(--line);border-radius:16px;background:var(--card);overflow:hidden}
+.sui .kgrp.wrn{border-color:var(--warn)}
+.sui .kgrp .rolk{border:0;border-radius:0;background:transparent}
+.sui .kgrp .gin{border-top:1px solid var(--line)}
+.sui .kgrp .gopt{margin:0;border:0;border-radius:0;min-height:56px;background:transparent;padding:0 16px}
 .sui .vink2{width:26px;height:26px;border-radius:50%;background:var(--ok);color:#0b1a10;font-style:normal;font-weight:800;display:grid;place-items:center}
 .sui .wrn2{color:var(--warn);font-weight:700;font-size:14px}
 .sui .rolg{display:flex;flex-direction:column;gap:8px}
@@ -357,9 +363,9 @@
      ${(()=>{const R=Velden.ROLLEN(s).filter(f=>f.sectie===x);if(!R.length&&!kast)return'';
        return `<h2>Verplichte foto's</h2><div class="rolg">${R.map(f=>{const p=ph.find(q=>q.status!=='vervallen'&&q.rol===f.rol);
          return `<button class="rolk${p?'':' wrn'}" data-rol="${f.k}"><span class="rt">${p?`<img src="${urls[p.id]}" alt="">`:'<i class="uitr" aria-hidden="true">!</i>'}</span><span class="rn"><b>${esc(f.kort||f.l)}</b><small>${p?'✓ Foto '+(ph.indexOf(p)+1):'Ontbreekt · tik om te maken of te kiezen'}</small></span>${ICO.pijl}</button>`;}).join('')}</div>`;})()}
-     ${kast?`<div class="rolg" style="margin-top:8px"><button class="rolk${kb?'':' wrn'}" id="kSlot"><span class="rt">${kb?`<img src="${ku}" alt="">`:'<i class="uitr" aria-hidden="true">!</i>'}</span><span class="rn"><b>Afwerkpunt klantlocatie (kast)</b><small>${kb?'✓ Foto van de kast':'Ontbreekt · tik om te maken of te kiezen'}</small></span>${ICO.pijl}</button></div>
-     <div class="gin" style="margin-top:8px"><button class="gopt${kOpen?' gw':''}" id="kMeer" aria-expanded="false" style="margin:0"><span>Gegevens kast${kOpen?` · ${kOpen} open`:' · ✓'}</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button></div>
-     <div id="kVeld" class="kveld" hidden></div>`:''}
+     ${kast?`<div class="kgrp${kb&&!kOpen?'':' wrn'}"><button class="rolk" id="kSlot"><span class="rt">${kb?`<img src="${ku}" alt="">`:'<i class="uitr" aria-hidden="true">!</i>'}</span><span class="rn"><b>Afwerkpunt klantlocatie (kast)</b><small>${kb?'✓ Foto van de kast':'Ontbreekt · tik om te maken of te kiezen'}</small></span>${ICO.pijl}</button>
+     <div class="gin"><button class="gopt" id="kMeer" aria-expanded="false"><span>Gegevens kast${kOpen?` · ${kOpen} open`:' · ✓'}</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button></div>
+     <div id="kVeld" class="kveld" hidden></div></div>`:''}
      <div class="fhead"><h2>Foto's ${x}</h2>${L.length?`<span>${L.filter(p=>p.status!=='vervallen').length} in document</span>`:''}</div>
      ${L.length?`<div class="strip">${L.map(p=>{const i=ph.indexOf(p);return `<button class="th${p.status==='vervallen'?' vv':''}" data-id="${p.id}" aria-label="Foto ${i+1}${p.status==='vervallen'?', vervalt':''}"><img src="${urls[p.id]}" alt=""><span>${i+1}${p.status==='vervallen'?' · vervalt':''}</span></button>`;}).join('')}</div>
      <p class="note">Tik om te bewerken. Lang drukken: vervalt of terugzetten.</p>`:`<p class="note">Nog geen foto's ${x}.</p>`}
