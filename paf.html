@@ -33,6 +33,13 @@
 .x-filt button.on{background:var(--acc);color:var(--on-acc);font-weight:800}
 .foot{margin:24px 0 10px;display:flex;gap:10px}.foot .btn{flex:1}
 .rest{text-align:left}
+.kh{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:10px;font-size:13px;font-weight:700;color:var(--mute);margin:10px 0 2px}
+.kr{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.kl{display:block;min-width:0;margin:0}.kl b{display:block;font-size:15px;line-height:1.25}
+.kl small{display:block;color:var(--mute);font-size:12px;font-weight:400;margin-top:2px;line-height:1.25}
+.kl .vbw{color:var(--ok);overflow-wrap:anywhere}
+.kr select{box-sizing:border-box;width:100%;min-width:0;min-height:44px;border-radius:12px;border:1px solid var(--line2);background:var(--well);color:var(--mute);padding:0 10px;font-size:15px}
+.kr.aan select{color:var(--ink);border-color:var(--ok)}
 .sw2 .nm{align-items:center}
 .sw{flex:none;position:relative;width:56px;height:34px;border-radius:17px;border:1px solid var(--line2);background:var(--well);cursor:pointer;padding:0}
 .sw i{position:absolute;top:3px;left:3px;width:26px;height:26px;border-radius:13px;background:var(--mute);transition:left .15s}
@@ -42,7 +49,7 @@
 <body>
 <header class="bar"><a class="back bpill" href="instellingen.html"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>Instellingen</a><h1>PAF-import</h1></header>
 <main class="page">
-  <p class="uitleg">Per veld van de schouw kies je welk item uit de PAF (pdf uit het aannemersportaal) het invult. Een PAF lees je in bij <b>Nieuwe schouw</b> of in een schouw; bestaande waarden worden niet overschreven.</p>
+  <p class="uitleg">Links de velden die nodig zijn voor de site survey, rechts kies je welk item uit de PAF (pdf uit het aannemersportaal) dat veld invult. Een PAF lees je in bij <b>Nieuwe schouw</b> of in een schouw; bestaande waarden worden niet overschreven.</p>
   <button class="btn inl" id="lees">PAF inlezen om de items bij te werken</button>
   <p class="res" id="res" role="status"></p>
   <div class="tot" id="tot"></div>
@@ -64,22 +71,22 @@ function itemOpties(L,sel){let g='',h='<option value="">Niet uit PAF</option>';
   L.forEach(i=>{const grp=i.groep+' › '+i.sectie;if(grp!==g){if(g)h+='</optgroup>';g=grp;h+=`<optgroup label="${esc(grp)}">`;}
     h+=`<option value="${esc(i.key)}"${i.key===sel?' selected':''}>${esc(i.label)}</option>`;});
   return h+(g?'</optgroup>':'');}
+/* één regel: links het veld van de site survey, rechts het PAF-item */
 function rij(doel,naam,sub,L,id){
   const it=L.find(i=>Paf.koppeling(i.key)===doel);
-  return `<div class="it${it?'':' nee'}"><div class="nm"><b><label for="${id}">${esc(naam)}</label></b><small class="${it?'k-veld':'k-nee'}">${it?'uit PAF':'—'}</small></div>
-    ${sub?`<div class="vb">${esc(sub)}</div>`:''}<select id="${id}" data-doel="${esc(doel)}">${itemOpties(L,it&&it.key)}</select>
-    ${it&&it.vb?`<div class="vb">Laatst: ${esc(it.vb)}</div>`:''}</div>`;}
+  return `<div class="kr${it?' aan':''}"><label class="kl" for="${id}"><b>${esc(naam)}</b>${sub?`<small>${esc(sub)}</small>`:''}${it&&it.vb?`<small class="vbw">${esc(it.vb)}</small>`:''}</label>
+    <select id="${id}" data-doel="${esc(doel)}">${itemOpties(L,it&&it.key)}</select></div>`;}
 function render(){
   const L=Paf.bekend(),D=Paf.doelen(),c=Velden.cfg();let n=0;
   let html='';
   D.forEach(x=>{
     let rows='';
     Object.entries(SAMEN).forEach(([d,o])=>{if(x.velden.some(f=>f.k===o.na))rows+=rij(d,o.naam,o.sub,L,'d'+d.slice(1));});
-    x.velden.forEach(f=>{const via=f.k.match(/^(klant|loc)_(adres|postcode|plaats)$/)?(f.k.startsWith('klant')?'@adres_klant':'@adres_loc'):null;
+    x.velden.filter(f=>c[f.k]&&(c[f.k].in!=='nee'||c[f.k].uit!=='nee')).forEach(f=>{const via=f.k.match(/^(klant|loc)_(adres|postcode|plaats)$/)?(f.k.startsWith('klant')?'@adres_klant':'@adres_loc'):null;
       const viaIt=via&&L.find(i=>Paf.koppeling(i.key)===via);
       const verpl=c[f.k]&&(c[f.k].in==='verplicht'||c[f.k].uit==='verplicht');
       rows+=rij(f.k,f.kort||f.l,[verpl?'Verplicht':'',viaIt?'Al via '+SAMEN[via].naam:''].filter(Boolean).join(' · '),L,'d_'+f.k);});
-    html+=`<section class="grp"><h2>${esc(x.sc.kort||x.sc.naam)}</h2>${rows}</section>`;});
+    if(rows)html+=`<section class="grp"><h2>${esc(x.sc.kort||x.sc.naam)}</h2><div class="kh"><span>Veld site survey</span><span>Uit de PAF</span></div>${rows}</section>`;});
   $('lijst').innerHTML=html;
   const gek=new Set(L.filter(i=>!['info','nee'].includes(Paf.koppeling(i.key))).map(i=>i.key));
   const rest=L.filter(i=>!gek.has(i.key)),uit=rest.filter(i=>Paf.koppeling(i.key)==='nee').length;
