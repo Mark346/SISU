@@ -74,8 +74,7 @@
 :is(.geg,.gin) .vgr label{display:flex;gap:10px;align-items:center;min-height:44px;font-size:16px}
 :is(.geg,.gin) .vgr input[type=checkbox]{width:24px;height:24px;min-height:0;accent-color:var(--acc)}
 :is(.geg,.gin) .vgr .vx{margin:4px 0 4px 34px}
-:is(.geg,.gin) .vgok{width:100%;min-height:60px;font-size:18px;margin-top:16px}
-:is(.geg,.gin) .vgok.af{background:var(--ok,#22C55E);border-color:var(--ok,#22C55E);color:#0b1a10}
+:is(.geg,.gin) .tile.geen{grid-column:1/-1;min-height:56px;text-align:center;align-items:center}
 .gbl{position:fixed;inset:0;z-index:72;background:rgba(0,0,0,.6);display:flex;align-items:flex-end;justify-content:center}
 .gblb{width:100%;max-width:560px;max-height:88vh;overflow-y:auto;background:var(--card,#1C1F25);color:var(--ink,#F3F4F6);border:1px solid var(--line,#2E323A);border-radius:var(--r,20px) var(--r,20px) 0 0;padding:18px calc(16px + env(safe-area-inset-right)) calc(18px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left));display:flex;flex-direction:column;gap:10px}
 .gblb h3{margin:0;font-size:21px}.gblb p{margin:0;color:var(--mute)}
@@ -237,7 +236,7 @@
   function waardeHtml(f,c){const v=Velden.waarde(st.s,f.k),req=Velden.nodig(c,f,kant()),vol=Velden.gevuld(st.s,f,st.fotos);
     if(f.t==='foto'){const b=(st.s.bijlagen||{})[f.k];if(b){const u=URL.createObjectURL(b);st.urls.push(u);return `<img class="gth" src="${u}" alt="">`;}
       if(v==='nvt')return esc(f.nvt||'Niet beschikbaar');}
-    else if(f.t==='vg'){const x=vg(),n=Object.values(x.items||{}).filter(i=>i.aan).length;if(x.nagelopen)return `${n} ${n===1?'situatie':'situaties'} · nagelopen`;}
+    else if(f.t==='vg'){const x=vg(),n=Object.values(x.items||{}).filter(i=>i.aan).length;if(x.nagelopen)return n?`${n} ${n===1?'situatie':'situaties'} · nagelopen`:'Geen bijzondere situaties';}
     else if(vol)return esc(f.t==='datum'?fmtD(v):String(v));
     return req?'<span class="wrn">Leeg</span>':'<span class="gm">–</span>';}
   function rij(f,c){if(st.edit===f.k)return `<div class="fed">${veld(f)}</div>`;
@@ -281,6 +280,9 @@
     }
   }
   function vg(){const v=Velden.waarde(st.s,'vg');return v&&typeof v==='object'?{items:{},...v}:{items:{}};}
+  /* V&G is nagelopen zodra er een situatie gekozen is, of "Geen bijzondere situaties" */
+  const vgAan=v=>Object.values(v.items||{}).some(x=>x.aan);
+  const vgGeen=v=>!vgAan(v)&&(!!v.geen||!!v.nagelopen);
   function vgHtml(){
     const v=vg(),it=v.items||{},A=Velden.VG,ok=st.fotos.filter(p=>p.status!=='vervallen');
     const voor=new Set();['binnen','buiten'].forEach(sx=>{if(ok.some(p=>(p.sectie||'buiten')===sx))Velden.VG_VOORSTEL[sx].forEach(a=>voor.add(a));});
@@ -294,11 +296,10 @@
     const rest=A.filter(a=>!Velden.VG_VAAK.includes(a.id)),nAan=rest.filter(a=>it[a.id]&&it[a.id].aan).length;let g='',meer='';
     rest.forEach(a=>{if(a.groep!==g){g=a.groep;meer+=`<div class="vgg">${esc(g)}</div>`;}const x=it[a.id]||{};
       meer+=`<div class="vgr"><label><input type="checkbox" data-vg="${a.id}" ${x.aan?'checked':''}>${esc(hoofd(a.aspect))}</label>${x.aan?vx(a):''}</div>`;});
-    return `<div data-r="vg"><p class="info" style="margin:0 2px 10px">Tik op wat hier speelt. Risico en afspraak zijn al ingevuld; pas ze aan als het nodig is.</p>
-      <div class="vgt">${tegels}</div>
+    return `<div data-r="vg"><p class="info" style="margin:0 2px 10px">Tik op wat hier speelt, of op Geen bijzondere situaties. Risico en afspraak zijn al ingevuld; pas ze aan als het nodig is.</p>
+      <div class="vgt">${tegels}<button class="tile geen${vgGeen(v)?' on':''}" data-vggeen aria-pressed="${vgGeen(v)}">Geen bijzondere situaties</button></div>
       <button class="gopt" id="vgMeer" aria-expanded="${st.vgMeer}"><span>Meer situaties (${rest.length})${nAan?' · '+nAan+' gekozen':''}</span>${svg(VERDER,18)}</button>
-      <div id="vgMeerL"${st.vgMeer?'':' hidden'}>${meer}</div>
-      <button class="btn vgok${v.nagelopen?' af':' pri'}" id="vgOk" aria-pressed="${!!v.nagelopen}">${v.nagelopen?'✓ V&amp;G nagelopen':'V&amp;G nagelopen'}</button></div>`;}
+      <div id="vgMeerL"${st.vgMeer?'':' hidden'}>${meer}</div></div>`;}
 
   /* bolletjes, tellers en voortgang bijwerken zonder opnieuw te tekenen (niets verspringt tijdens het typen) */
   function upd(){if(!st)return;const R=st.root,s=st.s,c=Velden.cfg(),F=k=>Velden.VELDEN.find(x=>x.k===k);
@@ -330,15 +331,16 @@
     R.querySelectorAll('[data-nvt]').forEach(b=>b.onclick=async()=>{const k=b.dataset.nvt;st.vast.add(k);Velden.zet(s,k,Velden.waarde(s,k)==='nvt'?'':'nvt');await save(true);herteken();});
     R.querySelectorAll('[data-weg]').forEach(b=>b.onclick=async()=>{const k=b.dataset.weg;const bl={...(s.bijlagen||{})};delete bl[k];s.bijlagen=bl;await save(true);herteken();});
     // V&G
-    const zetVg=async(id,aan)=>{const v=vg(),a=Velden.VG.find(x=>x.id===id);v.items={...v.items,[id]:{risico:a.risico,afspraak:a.afspraak,...(v.items[id]||{}),aan}};st.vast.add('vg');Velden.zet(s,'vg',v);await save(true);herteken();};
+    const zetVg=async(id,aan)=>{const v=vg(),a=Velden.VG.find(x=>x.id===id);v.items={...v.items,[id]:{risico:a.risico,afspraak:a.afspraak,...(v.items[id]||{}),aan}};
+      if(aan)v.geen=false;v.nagelopen=vgAan(v)||!!v.geen;st.vast.add('vg');Velden.zet(s,'vg',v);await save(true);herteken();};
     R.querySelectorAll('[data-vgt]').forEach(b=>b.onclick=()=>{const v=vg();zetVg(b.dataset.vgt,!(v.items[b.dataset.vgt]&&v.items[b.dataset.vgt].aan));});
     R.querySelectorAll('[data-vg]').forEach(c=>c.onchange=()=>zetVg(c.dataset.vg,c.checked));
     R.querySelectorAll('[data-vgr]').forEach(e=>e.oninput=()=>{const v=vg(),id=e.dataset.vgr;v.items={...v.items,[id]:{...(v.items[id]||{}),[e.dataset.f]:e.value}};Velden.zet(s,'vg',v);save();});
     const mr=R.querySelector('#vgMeer');if(mr)mr.onclick=()=>{st.vgMeer=!st.vgMeer;mr.setAttribute('aria-expanded',st.vgMeer);R.querySelector('#vgMeerL').hidden=!st.vgMeer;};
-    const ok=R.querySelector('#vgOk');if(ok)ok.onclick=async()=>{const v=vg();
-      if(!v.nagelopen&&!Object.values(v.items||{}).some(x=>x.aan)){
-        const k=await vraag('Geen enkele situatie gekozen. Klopt dat?','',[['klopt','Klopt','pri'],['terug','Terug','']]);if(k!=='klopt')return;}
-      v.nagelopen=!v.nagelopen;st.vast.add('vg');Velden.zet(s,'vg',v);await save(true);herteken();};
+    const gn=R.querySelector('[data-vggeen]');if(gn)gn.onclick=async()=>{const v=vg(),aan=!vgGeen(v);
+      // geen bijzondere situaties: gekozen situaties gaan uit (risico en afspraak blijven bewaard)
+      if(aan)Object.keys(v.items||{}).forEach(k=>{v.items[k]={...v.items[k],aan:false};});
+      v.geen=aan;v.nagelopen=aan;st.vast.add('vg');Velden.zet(s,'vg',v);await save(true);herteken();};
   }
   function herteken(){if(!st)return;lijst();}
 
