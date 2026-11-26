@@ -297,10 +297,12 @@
     else if(cur!=='klaar'){kaart=`<div class="stodo">${Gegevens.todoHtml(s,ph,cur==='afronding'?'uit':undefined)}</div>`;}
     if(cur!=='klaar'&&!cfg.fotoVakken){
       if(cur==='afronding'){const vo=Velden.voortgang(s,ph,'uit');kaart+=`<div class="snext"><div class="t"><b>Document ${vo.klaar} van ${vo.totaal} compleet</b></div><a class="btn pri" href="shared/storyline.html?survey=${encodeURIComponent(s.id)}">Naar afronding</a></div>`;}}
+    if(cfg.fotoVakken&&window.Plattegrond&&(s.velden||{}).type_aansluiting==='OFFNET')kaart+=Plattegrond.html(s);
     el.innerHTML=`<div class="sstat"><div class="shd" id="sbH" tabindex="0" role="group" aria-label="Status ${esc(Velden.statusMeta(cur).naam)}, stap ${idx+1} van ${Velden.STATUS.length}. Lang drukken om de status terug te zetten.">
       <div class="sht"><b>${esc(s.adres||'Schouw')}</b><span>stap ${idx+1} van ${Velden.STATUS.length}</span></div>
       <ol class="sstep" aria-hidden="true">${Velden.STATUS.map((x,i)=>`<li class="${i===idx?'nu':''}"><i style="${i<=idx?'background:'+x.kleur:''}"></i><span>${esc(x.naam)}</span></li>`).join('')}</ol></div>${pafNoot(s)}${kaart}</div>`;
     if(!el.isConnected)return;langDruk(el.querySelector('#sbH'),()=>terugBlad(s,reopen));
+    if(window.Plattegrond)Plattegrond.bind(el,s,reopen);
     const td=el.querySelector('.stodo');if(td&&cfg.fotoVakken)Gegevens.vakkenBind(td,s,reopen,{kant:cur==='afronding'?'uit':undefined,naar:naarFotos});
     else if(td)Gegevens.todoBind(td,s,reopen,{kant:cur==='afronding'?'uit':undefined,camera:()=>{const a=(cfg.acties(s,0)||[]).find(x=>x.pri);if(a)a.fn(s);else document.querySelector('.sacts .btn.pri')?.click();}});
   }

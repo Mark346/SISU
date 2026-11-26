@@ -170,5 +170,5 @@
   /* bestand kiezen (in de tik openen, zodat iOS het toestaat) */
   function kies(){return new Promise((res,rej)=>{const i=document.createElement('input');i.type='file';i.accept='application/pdf,.pdf';i.style.display='none';
     document.body.appendChild(i);i.onchange=()=>{const f=i.files&&i.files[0];i.remove();f?res(f):rej(new Error('geen bestand'));};i.click();});}
-  window.Paf={lees,kies,toepassen,koppeling,zetKoppeling,resetKoppelingen,bekend,doelen,sleutel,adres,STD};
+  window.Paf={pdfLib:laad,lees,kies,toepassen,koppeling,zetKoppeling,resetKoppelingen,bekend,doelen,sleutel,adres,STD};
 })();
