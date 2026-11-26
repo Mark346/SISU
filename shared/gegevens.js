@@ -88,6 +88,44 @@
 .gblb .grk button.on{border-color:var(--ok,#22C55E)}
 .gblb .grk img{width:100%;height:100%;max-height:none;object-fit:cover;border-radius:10px;display:block}
 .gblb .grk span{position:absolute;left:6px;bottom:6px;background:var(--overlay,rgba(0,0,0,.6));color:#fff;font-size:13px;font-weight:800;border-radius:99px;padding:2px 8px}
+/* gegevensscherm: rustig, één laag (geen kaarten per veld) */
+.geg .gtop{flex:none;background:var(--bg)}
+.geg .gtb{padding:10px calc(14px + env(safe-area-inset-right)) 8px calc(14px + env(safe-area-inset-left));border-bottom:1px solid var(--line)}
+.geg .gtb .gseg{margin:0}
+.geg .gpr{display:flex;align-items:center;gap:10px;margin-top:10px}
+.geg .gpr i{flex:1;height:4px;border-radius:2px;background:var(--track);overflow:hidden}.geg .gpr i b{display:block;height:100%;background:var(--prog-doc)}
+.geg .gpr span{flex:none;font-size:13px;color:var(--mute)}
+.geg .gb{padding-top:0}
+.geg .gsec{margin-top:24px}
+.geg .gsh{position:static;display:flex;align-items:baseline;gap:10px;min-height:0;margin:0 0 12px;padding:0;background:none;border:0}
+.geg .gsh h3{flex:1;margin:0;font-size:17px;font-weight:800}
+.geg .gsh .sx{flex:none;font-size:13px;font-weight:700;color:var(--warn)}
+.geg .fr{background:none;border:0;border-radius:0;padding:0;margin:0 0 14px}
+.geg .fl{display:flex;align-items:center;gap:0;font-size:14px;font-weight:400;color:var(--mute);margin:0 0 6px}
+.geg .fr .dot{display:none;flex:none;width:6px;height:6px;border-radius:50%;background:var(--warn);margin-right:7px}
+.geg .fr.open>.fl .dot{display:inline-block}
+.geg input,.geg textarea{border-radius:12px;border:1px solid var(--line2);background:var(--well);text-align:left}
+.geg input{height:48px;min-height:48px;line-height:46px;padding:0 12px}
+.geg input[type=date]{display:block;height:48px;line-height:46px;text-align:left;padding:0 12px}
+.geg input[type=date]::-webkit-date-and-time-value{text-align:left;margin:0}
+.geg input[type=date]::-webkit-datetime-edit{padding:0;line-height:46px}
+.geg .stp input{height:48px;text-align:center}
+.geg .g2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+.geg .ch button.on{background:var(--acc);border-color:var(--acc);color:var(--on-acc)}
+.geg .ging{display:block;width:100%;min-height:44px;margin:-4px 0 4px;padding:0;border:0;background:none;color:var(--mute);font-size:13px;text-align:left;cursor:pointer;line-height:1.35}
+.geg .zw{min-height:52px;padding:4px 0;margin:0 0 10px;font-weight:600}
+.geg .grs{border-top:1px solid var(--line)}
+.geg .grj{display:flex;align-items:center;gap:10px;width:100%;min-height:52px;padding:8px 0;border:0;border-bottom:1px solid var(--line);background:none;color:var(--ink);font:inherit;font-size:15px;text-align:left;cursor:pointer}
+.geg .grj .l{flex:1 1 50%;min-width:0;color:var(--mute)}
+.geg .grj .v{flex:1 1 50%;min-width:0;text-align:right;color:var(--ink);overflow-wrap:anywhere}
+.geg .grj>svg{flex:none;color:var(--mute)}
+.geg .grj.gopr .l{color:var(--mute)}
+.geg .gm{color:var(--mute)}
+.geg .gth{width:48px;height:36px;object-fit:cover;border-radius:6px;vertical-align:middle;border:1px solid var(--line2)}
+.geg .fed{padding:12px 0 2px;border-bottom:1px solid var(--line)}
+.geg .fed .fr{margin-bottom:8px}
+.geg .gf .btn{min-height:48px}
+.geg .gleeg{margin-top:32px;background:none;border:0;text-align:center}
 @media (prefers-reduced-motion:reduce){:is(.geg,.gin) .gopt svg,:is(.geg,.gin) .sw i{transition:none}}`;
   function css(){if(document.getElementById('gegcss'))return;const s=document.createElement('style');s.id='gegcss';s.textContent=CSS;document.head.appendChild(s);}
 
@@ -100,12 +138,18 @@
     if(Velden.migreer(survey))await Store.surveys.put(survey);
     const fotos=await Store.photos.bySurvey(survey.id,true);
     const root=document.createElement('div');root.className='geg';root.setAttribute('role','dialog');root.setAttribute('aria-label','Gegevens');document.body.appendChild(root);
-    st={s:survey,opts,root,fotos,urls:[],filter:opts.filter==='alles'?'alles':'todo',moment:opts.moment||null,zicht:null,optOpen:new Set(),vgMeer:false,naar:null,eerst:true};
+    st={s:survey,opts,root,fotos,urls:[],filter:opts.filter==='alles'?'alles':'todo',moment:opts.moment||null,optOpen:new Set(),vgMeer:false,naar:null,eerst:true,
+      vast:new Set(),uit:new Set(),edit:null,cur:null}; // vast: net ingevulde velden blijven staan; uit: uitgeklapte 'ingevuld'-regels; edit: open rij in Alles
     root.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();terug();}});
     // terug-gebaar/terugknop van de telefoon: stap terug binnen het scherm
     history.pushState({...(history.state||{}),geg:1},'');st.diepte=1;
     if(opts.sectie&&Velden.SECTIES.some(x=>x.id===opts.sectie))st.naar=opts.sectie;
+    // opts.veld: dat veld tonen (open verplicht -> Nog te doen, anders Alles met het veld uitgeklapt); opts.naarLeeg: eerste open veld
+    let doel=null;
+    if(opts.veld){const f=Velden.VELDEN.find(x=>x.k===opts.veld);if(f){doel=f.k;if(isOpen(f,Velden.cfg()))st.filter='todo';else{st.filter='alles';st.edit=f.k;}}}
+    else if(opts.naarLeeg){st.filter='todo';doel=openVolgorde()[0]||null;}
     lijst();
+    if(doel){st.eerst=false;focusVeld(doel);}
   }
   function close(silent){if(!st)return;const me=st;clearTimeout(svT);if(svP)Store.surveys.put(me.s);st.urls.forEach(u=>URL.revokeObjectURL(u));st.root.remove();st=null;if(!silent&&me.opts.onClose)me.opts.onClose();}
   function terug(){sluit();}
@@ -124,56 +168,106 @@
     if(x.sc.id==='eig'&&Velden.waarde(s,'eig_klant_is_eigenaar')==='Ja')return 'Klant is eigenaar';
     return x.sc.sub||'';}
 
-  /* ---------- één lange lijst: kop per sectie, velden eronder ---------- */
-  const telHtml=x=>x.open.length?`<span class="sx wrn" data-sh="${x.sc.id}">${x.open.length} open</span>`:`<span class="sx okk" data-sh="${x.sc.id}" aria-label="compleet">✓</span>`;
+  /* ---------- het scherm: vaste kop (filter + voortgang), daaronder alle secties onder elkaar ---------- */
+  const PAAR={klant_postcode:'klant_plaats',loc_postcode:'loc_plaats',klant_tel:'klant_mail',eig_tel:'eig_mail',aanm_tel:'aanm_mail'};
+  const PH={projectnummer:'5222119-00172403'};
+  /* voorbeeldtekst die past: niets tussen haakjes, alleen het eerste deel */
+  function vbTekst(f,half){if(PH[f.k])return 'bijv. '+PH[f.k];if(!f.vb)return'';
+    let v=String(f.vb).replace(/\s*\(.*?\)/g,'').split(/[;:→]/)[0].trim();
+    if(f.t!=='lang'&&v.length>(half?14:30))v=v.split(/,\s*/)[0];
+    if(f.t!=='lang'&&v.length>(half?14:30))return '';
+    return 'bijv. '+v;}
+  const fmtD=v=>{const d=new Date(v);return isNaN(d)?String(v):d.toLocaleDateString('nl-NL',{day:'2-digit',month:'2-digit',year:'numeric'});};
+  const lijstVelden=x=>x.velden.filter(f=>!f.schakel&&!Velden.verborgen(st.s,f));
+  const isOpen=(f,c)=>Velden.nodig(c,f,kant())&&!Velden.gevuld(st.s,f,st.fotos);
+  /* alle open verplichte velden in volgorde (voor "Volgende open veld" en Enter) */
+  const openVolgorde=()=>{const c=Velden.cfg();return secties().flatMap(x=>lijstVelden(x).filter(f=>isOpen(f,c)).map(f=>f.k));};
+  const voortgang=()=>{const v=Velden.voortgang(st.s,st.fotos,'uit');return `<div class="gpr" aria-label="Document ${v.klaar} van ${v.totaal} compleet"><i><b style="width:${v.pct}%"></b></i><span>${v.klaar} van ${v.totaal}</span></div>`;};
   function lijst(){
-    const R=st.root,L=secties(),n=L.reduce((t,x)=>t+x.open.length,0);
-    // welke secties staan in de lijst: vast zolang je op dit scherm bezig bent, zodat een sectie niet verdwijnt terwijl je hem invult
-    if(!st.zicht){st.zicht=new Set((st.filter==='todo'?L.filter(x=>x.open.length):L).map(x=>x.sc.id));if(st.naar)st.zicht.add(st.naar);}
-    const toon=L.filter(x=>st.zicht.has(x.sc.id));
+    const R=st.root,c=Velden.cfg(),L=secties(),n=L.reduce((t,x)=>t+x.open.length,0),gb=R.querySelector('.gb'),y=gb?gb.scrollTop:0;
     st.urls.forEach(u=>URL.revokeObjectURL(u));st.urls=[];
-    R.innerHTML=`<div class="gh"><button class="back bpill" id="gX">${svg(TERUG,18)}Terug</button><h2>Gegevens</h2></div>
+    const todo=st.filter==='todo';
+    const blokken=L.map(x=>todo?blokTodo(x,c):blokAlles(x,c)).filter(Boolean);
+    R.innerHTML=`<div class="gtop"><div class="gh"><button class="back bpill" id="gX">${svg(TERUG,18)}Terug</button><h2>Gegevens</h2></div>
+      <div class="gtb"><div class="gseg" role="group" aria-label="Filter"><button data-f="todo" class="${todo?'on':''}" aria-pressed="${todo}">Nog te doen (${n})</button><button data-f="alles" class="${todo?'':'on'}" aria-pressed="${!todo}">Alles</button></div>
+      ${voortgang()}</div></div>
     <div class="gb">
-      <div class="gseg" role="group" aria-label="Filter"><button data-f="todo" class="${st.filter==='todo'?'on':''}" aria-pressed="${st.filter==='todo'}">Nog te doen (${n})</button><button data-f="alles" class="${st.filter==='alles'?'on':''}" aria-pressed="${st.filter==='alles'}">Alles</button></div>
       ${st.moment?`<div class="gmom"><span>Alleen wat je ${esc(Velden.MOMENT[st.moment])} invult</span><button id="gAlle">Alle secties</button></div>`:''}
-      ${toon.length?toon.map((x,i)=>blok(x,i)).join('')
-        :`<div class="gleeg"><p>${st.moment==='vooraf'?'Alles wat je vooraf nodig hebt, is ingevuld.':'Alles wat nodig is, is ingevuld.'}</p><button class="btn" id="gToon">Alles bekijken</button></div>`}
-    </div><div class="gf">${docTxt()}</div>`;
+      ${blokken.length?blokken.join('')
+        :`<div class="gleeg"><p>${st.moment==='vooraf'?'Alles wat je vooraf nodig hebt, is ingevuld.':'Alles wat verplicht is, is ingevuld.'}</p><button class="btn" id="gToon">Bekijk alles</button></div>`}
+    </div><div class="gf"${n?'':' hidden'}><button class="btn pri" id="gNx">Volgende open veld</button></div>`;
     R.querySelector('#gX').onclick=sluit;
-    R.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{if(st.filter===b.dataset.f)return;save(true);st.filter=b.dataset.f;st.zicht=null;lijst();R.querySelector('.gb').scrollTop=0;});
-    const al=R.querySelector('#gAlle');if(al)al.onclick=()=>{st.moment=null;st.zicht=null;lijst();};
-    const tn=R.querySelector('#gToon');if(tn)tn.onclick=()=>{st.filter='alles';st.zicht=null;lijst();};
+    R.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{if(st.filter===b.dataset.f)return;save(true);st.filter=b.dataset.f;st.vast.clear();st.edit=null;lijst();R.querySelector('.gb').scrollTop=0;});
+    const al=R.querySelector('#gAlle');if(al)al.onclick=()=>{st.moment=null;lijst();};
+    const tn=R.querySelector('#gToon');if(tn)tn.onclick=()=>{st.filter='alles';st.vast.clear();lijst();};
+    R.querySelector('#gNx').onclick=()=>volgende();
+    R.querySelectorAll('[data-ing]').forEach(b=>b.onclick=()=>{const id=b.dataset.ing,aan=!st.uit.has(id);aan?st.uit.add(id):st.uit.delete(id);
+      b.setAttribute('aria-expanded',aan);R.querySelector(`[data-ingl="${id}"]`).hidden=!aan;});
     R.querySelectorAll('[data-opt]').forEach(b=>b.onclick=()=>{const id=b.dataset.opt,aan=!st.optOpen.has(id);aan?st.optOpen.add(id):st.optOpen.delete(id);
       b.setAttribute('aria-expanded',aan);R.querySelector(`[data-optl="${id}"]`).hidden=!aan;});
+    R.querySelectorAll('[data-rij]').forEach(b=>b.onclick=()=>openRij(b.dataset.rij));
     bind();upd();
-    if(st.naar){const k=R.querySelector(`[data-gsec="${st.naar}"]`),g=R.querySelector('.gb');if(k&&g)g.scrollTop=k.offsetTop-g.offsetTop;st.naar=null;}
+    const nb=R.querySelector('.gb');if(nb)nb.scrollTop=y;
+    if(st.naar){const k=R.querySelector(`[data-gsec="${st.naar}"]`);if(k&&nb)nb.scrollTop=k.offsetTop-nb.offsetTop-8;st.naar=null;}
     if(st.eerst){st.eerst=false;R.querySelector('#gX').focus({preventScroll:true});}
   }
-  function blok(x,i){
-    const it=items(x),req=it.filter(i=>i.req),opt=it.filter(i=>!i.req),sch=x.velden.filter(f=>f.schakel),id=x.sc.id;
-    const html=i=>i.ct?contact(i):i.f.t==='vg'?vgHtml(i.f):row(i.f);
-    return `<section class="gsec${i?'':' eerst'}" data-gsec="${id}" aria-labelledby="gk_${id}">
-      <div class="gsh"><span class="ic">${svg(x.sc.ic||'')}</span><span class="nm"><h3 id="gk_${id}">${esc(x.sc.kort)}</h3><small>${esc(sub(x))}</small></span>${telHtml(x)}</div>
-      ${sch.map(f=>{const on=Velden.zelfdeAan(st.s,f.k);return `<div class="fr zw"><span id="l_${f.k}">${esc(f.l)}</span><button class="sw" role="switch" aria-checked="${on}" aria-labelledby="l_${f.k}" data-sw="${f.k}"><i></i></button></div>`;}).join('')}
-      ${req.map(html).join('')}
-      ${opt.length?`<button class="gopt" data-opt="${id}" aria-expanded="${st.optOpen.has(id)}"><span>Optioneel (${opt.length})</span>${svg(VERDER,18)}</button><div data-optl="${id}"${st.optOpen.has(id)?'':' hidden'}>${opt.map(html).join('')}</div>`:''}
-      ${!req.length&&!opt.length&&!sch.length?'<p class="info">Hier hoef je nu niets in te vullen.</p>':''}
+  const kop=(x,open)=>`<div class="gsh"><h3 id="gk_${x.sc.id}">${esc(x.sc.kort)}</h3><span class="sx" data-sh="${x.sc.id}">${open?open+' open':''}</span></div>`;
+  const schakels=x=>x.velden.filter(f=>f.schakel).map(f=>{const on=Velden.zelfdeAan(st.s,f.k);
+    return `<div class="zw"><span id="l_${f.k}">${esc(f.l)}</span><button class="sw" role="switch" aria-checked="${on}" aria-labelledby="l_${f.k}" data-sw="${f.k}"><i></i></button></div>`;}).join('');
+  /* velden onder elkaar; postcode + plaats en telefoon + e-mail naast elkaar */
+  function veldenHtml(fs){let out='';
+    for(let i=0;i<fs.length;i++){const f=fs[i],n=fs[i+1];
+      if(n&&PAAR[f.k]===n.k){out+=`<div class="g2">${veld(f,true)}${veld(n,true)}</div>`;i++;}else out+=veld(f);}
+    return out;}
+  function veld(f,half){if(f.t==='vg')return `<div class="fr" data-r="vg"><span class="fl"><i class="dot" aria-hidden="true"></i>V&amp;G</span>${vgHtml(f)}</div>`;
+    const id='g_'+f.k;
+    return `<div class="fr" data-r="${f.k}"><label class="fl" for="${id}"><i class="dot" aria-hidden="true"></i>${esc(f.kort||f.l)}</label>${invoer(f,id,half)}</div>`;}
+  /* tabblad Nog te doen: alleen lege verplichte velden; ingevulde in één gedempte regel */
+  function blokTodo(x,c){
+    const fs=lijstVelden(x).filter(f=>Velden.nodig(c,f,kant()));
+    const open=fs.filter(f=>!Velden.gevuld(st.s,f,st.fotos)||st.vast.has(f.k)),vol=fs.filter(f=>!open.includes(f));
+    if(!open.length)return'';
+    const id=x.sc.id,uit=st.uit.has(id);
+    return `<section class="gsec" data-gsec="${id}" aria-labelledby="gk_${id}">${kop(x,x.open.length)}${schakels(x)}
+      ${veldenHtml(open)}
+      ${vol.length?`<button class="ging" data-ing="${id}" aria-expanded="${uit}">✓ ${vol.length} ingevuld · ${esc(vol.map(f=>f.kort||f.l).join(', '))}</button><div data-ingl="${id}"${uit?'':' hidden'}>${veldenHtml(vol)}</div>`:''}
     </section>`;
   }
-  function items(x){ // velden van de sectie, met contactkaarten samengevoegd; verborgen "zelfde als"-velden weg
-    const c=Velden.cfg(),s=st.s,gezien={},out=[];
-    x.velden.forEach(f=>{if(f.schakel||Velden.verborgen(s,f))return;
-      const ct=Velden.CONTACTEN.find(y=>['naam','bedrijf','tel','mail'].some(r=>y[r]===f.k));
-      if(ct){if(gezien[ct.id]||(f.k!==ct.naam&&x.velden.some(g=>g.k===ct.naam)))return;gezien[ct.id]=1; // kaart op de plek van de naam
-        const leden=['naam','bedrijf','tel','mail'].map(r=>ct[r]&&x.velden.find(g=>g.k===ct[r])).filter(g=>g&&!Velden.verborgen(s,g));
-        out.push({ct,leden,req:leden.some(g=>Velden.nodig(c,g,kant()))});return;}
-      out.push({f,req:Velden.nodig(c,f,kant())});});
-    return out;
+  /* tabblad Alles: rijen met label en waarde; tik klapt het invoerveld uit (één tegelijk) */
+  function waardeHtml(f,c){const v=Velden.waarde(st.s,f.k),req=Velden.nodig(c,f,kant()),vol=Velden.gevuld(st.s,f,st.fotos);
+    if(f.t==='foto'){const b=(st.s.bijlagen||{})[f.k];if(b){const u=URL.createObjectURL(b);st.urls.push(u);return `<img class="gth" src="${u}" alt="">`;}
+      if(v==='nvt')return esc(f.nvt||'Niet beschikbaar');}
+    else if(f.t==='vg'){const x=vg(),n=Object.values(x.items||{}).filter(i=>i.aan).length;if(x.nagelopen)return `${n} ${n===1?'situatie':'situaties'} · nagelopen`;}
+    else if(vol)return esc(f.t==='datum'?fmtD(v):String(v));
+    return req?'<span class="wrn">Leeg</span>':'<span class="gm">–</span>';}
+  function rij(f,c){if(st.edit===f.k)return `<div class="fed">${veld(f)}</div>`;
+    return `<button class="grj" data-rij="${f.k}"><span class="l">${esc(f.kort||f.l)}</span><span class="v">${waardeHtml(f,c)}</span>${svg(VERDER,16)}</button>`;}
+  function blokAlles(x,c){
+    const fs=lijstVelden(x),req=fs.filter(f=>Velden.nodig(c,f,kant())),opt=fs.filter(f=>!req.includes(f)),id=x.sc.id;
+    const optOpen=st.optOpen.has(id)||opt.some(f=>f.k===st.edit);if(optOpen)st.optOpen.add(id);
+    return `<section class="gsec" data-gsec="${id}" aria-labelledby="gk_${id}">${kop(x,x.open.length)}${schakels(x)}
+      <div class="grs">${req.map(f=>rij(f,c)).join('')}
+      ${opt.length?`<button class="grj gopr" data-opt="${id}" aria-expanded="${optOpen}"><span class="l">Optioneel (${opt.length})</span><span class="v"></span>${svg('M6 9l6 6 6-6',16)}</button><div data-optl="${id}"${optOpen?'':' hidden'}>${opt.map(f=>rij(f,c)).join('')}</div>`:''}</div>
+    </section>`;
   }
-  function invoer(f,id){
+  function openRij(k){if(!st)return;save(true);st.edit=k;lijst();focusVeld(k);}
+  function focusVeld(k){const R=st.root,el=R.querySelector(`[data-r="${k}"]`);if(!el)return;st.cur=k;
+    el.scrollIntoView({block:'center',behavior:'smooth'});const i=el.querySelector('input:not([type=checkbox]),textarea,button');if(i)i.focus({preventScroll:true});}
+  /* naar het volgende lege verplichte veld, ook in een andere sectie */
+  function volgende(){if(!st)return;save(true);
+    const L=openVolgorde();const na=L.find(k=>k!==st.cur&&L.indexOf(k)>L.indexOf(st.cur))||L.find(k=>k!==st.cur);
+    if(!na){st.edit=null;lijst();return;}
+    const F=k=>Velden.VELDEN.find(f=>f.k===k);
+    if(st.filter==='alles'){st.edit=na;lijst();}
+    else if(!st.root.querySelector(`[data-r="${na}"]`)||Velden.groep(F(na))!==Velden.groep(F(st.cur)||{})){
+      // naar een andere sectie: wat net is ingevuld mag nu naar de gedempte regel
+      st.vast=new Set([...st.vast].filter(k=>Velden.groep(F(k))===Velden.groep(F(na))));lijst();}
+    focusVeld(na);
+  }
+  function invoer(f,id,half){
     const v=Velden.waarde(st.s,f.k);
     switch(f.t){
-      case 'lang':return `<textarea id="${id}" data-k="${f.k}" placeholder="${esc(f.vb?'bijv. '+f.vb:'')}">${esc(v||'')}</textarea>`;
+      case 'lang':return `<textarea id="${id}" data-k="${f.k}" placeholder="${esc(vbTekst(f))}">${esc(v||'')}</textarea>`;
       case 'keuze':return `<div class="ch" role="group">${f.opties.map(o=>`<button data-k="${f.k}" data-v="${esc(o)}" class="${v===o?'on':''}" aria-pressed="${v===o}">${esc(o)}</button>`).join('')}</div>`;
       case 'janee':return `<div class="ch" role="group">${['Ja','Nee'].map(o=>`<button data-k="${f.k}" data-v="${o}" class="${v===o?'on':''}" aria-pressed="${v===o}">${o}</button>`).join('')}</div>`;
       case 'foto':{const b=(st.s.bijlagen||{})[f.k];let u='';if(b){u=URL.createObjectURL(b);st.urls.push(u);}
@@ -181,20 +275,11 @@
           <button class="btn" data-foto="${f.k}" data-g="0">Foto maken</button><button class="btn" data-foto="${f.k}" data-g="1">Uit galerij</button>
           ${f.nvt?`<button class="btn" data-nvt="${f.k}">${v==='nvt'?'Toch beschikbaar':'Niet beschikbaar'}</button>`:''}${b?`<button class="btn" data-weg="${f.k}">Weghalen</button>`:''}</div>`;}
       default:{
-        if(f.stap)return `<div class="stp"><button data-stp="${f.k}" data-d="-1" aria-label="Eén minder">−</button><input id="${id}" data-k="${f.k}" data-num="1" inputmode="numeric" value="${esc(v==null?'':v)}" placeholder="0"><button data-stp="${f.k}" data-d="1" aria-label="Eén meer">+</button></div>`;
+        if(f.stap)return `<div class="stp"><button data-stp="${f.k}" data-d="-1" aria-label="Eén minder">−</button><input id="${id}" data-k="${f.k}" data-num="1" inputmode="numeric" enterkeyhint="next" value="${esc(v==null?'':v)}" placeholder="0"><button data-stp="${f.k}" data-d="1" aria-label="Eén meer">+</button></div>`;
         const ty={datum:'date',tel:'tel',mail:'email',getal:'number'}[f.t]||'text';
-        return `<input id="${id}" type="${ty}" data-k="${f.k}" value="${esc(v==null?'':v)}" placeholder="${esc(f.vb?'bijv. '+f.vb:'')}"${f.t==='getal'?' inputmode="numeric"':''}${f.t==='mail'?' autocomplete="email"':''}${f.t==='tel'?' autocomplete="tel"':''}>`;}
+        return `<input id="${id}" type="${ty}" data-k="${f.k}" value="${esc(v==null?'':v)}" placeholder="${esc(vbTekst(f,half))}" enterkeyhint="next"${f.t==='getal'?' inputmode="numeric"':''}${f.t==='mail'?' autocomplete="email"':''}${f.t==='tel'?' autocomplete="tel"':''}>`;}
     }
   }
-  function row(f){const id='g_'+f.k;
-    return `<div class="fr" data-r="${f.k}"><label class="fl" for="${id}"><span>${esc(f.kort||f.l)}</span><i class="vink" role="img" aria-label="ingevuld" hidden>✓</i></label>${invoer(f,id)}</div>`;}
-  const ROL={naam:'Naam',bedrijf:'Bedrijf',tel:'Telefoon',mail:'E-mail'};
-  const kanKiezen=()=>'contacts' in navigator&&navigator.contacts&&'select' in navigator.contacts;
-  function contact(i){
-    const ct=i.ct,rol=k=>Object.keys(ROL).find(r=>ct[r]===k);
-    return `<div class="fr ccard" data-c="${ct.id}"><div class="fl"><span>${esc(ct.titel)}</span><i class="vink" role="img" aria-label="ingevuld" hidden>✓</i></div>
-      ${i.leden.map(f=>`<div class="cr"><label for="g_${f.k}">${esc(f.k==='klant_org'?'Organisatie':f.k==='eig_contact'?'Naam (akkoord aanleg)':ROL[rol(f.k)])}</label>${invoer(f,'g_'+f.k)}</div>`).join('')}
-      ${kanKiezen()?`<button class="btn kies" data-kies="${ct.id}">Kies uit contacten</button>`:''}</div>`;}
   function vg(){const v=Velden.waarde(st.s,'vg');return v&&typeof v==='object'?{items:{},...v}:{items:{}};}
   function vgHtml(){
     const v=vg(),it=v.items||{},A=Velden.VG,ok=st.fotos.filter(p=>p.status!=='vervallen');
@@ -215,39 +300,37 @@
       <div id="vgMeerL"${st.vgMeer?'':' hidden'}>${meer}</div>
       <button class="btn vgok${v.nagelopen?' af':' pri'}" id="vgOk" aria-pressed="${!!v.nagelopen}">${v.nagelopen?'✓ V&amp;G nagelopen':'V&amp;G nagelopen'}</button></div>`;}
 
-  /* vinkjes, gele randen en tellers bijwerken zonder opnieuw te tekenen */
-  function upd(){if(!st)return;const R=st.root,s=st.s,c=Velden.cfg(),K=kant();
-    const F=k=>Velden.VELDEN.find(x=>x.k===k);
-    R.querySelectorAll('[data-r]').forEach(el=>{const f=F(el.dataset.r);if(!f)return;const vol=Velden.gevuld(s,f,st.fotos);
-      el.classList.toggle('mist',!vol&&Velden.nodig(c,f,K)&&f.t!=='vg');const v=el.querySelector('.vink');if(v)v.hidden=!vol;});
-    R.querySelectorAll('.ccard').forEach(el=>{const ct=Velden.CONTACTEN.find(y=>y.id===el.dataset.c);let alles=true,iets=false;
-      el.querySelectorAll('[data-k]').forEach(i=>{const f=F(i.dataset.k),vol=Velden.gevuld(s,f,st.fotos),nd=Velden.nodig(c,f,K);if(vol)iets=true;if(nd&&!vol)alles=false;i.classList.toggle('mist',nd&&!vol);});
-      const v=el.querySelector('.vink');if(v)v.hidden=!(alles&&iets);});
-    const L=secties();L.forEach(x=>{const g=R.querySelector(`[data-sh="${x.sc.id}"]`);if(g)g.outerHTML=telHtml(x);});
-    const t=R.querySelector('[data-f="todo"]');if(t)t.textContent=`Nog te doen (${L.reduce((n,x)=>n+x.open.length,0)})`;
-    const d=R.querySelector('.gf');if(d)d.innerHTML=docTxt();
+  /* bolletjes, tellers en voortgang bijwerken zonder opnieuw te tekenen (niets verspringt tijdens het typen) */
+  function upd(){if(!st)return;const R=st.root,s=st.s,c=Velden.cfg(),F=k=>Velden.VELDEN.find(x=>x.k===k);
+    R.querySelectorAll('[data-r]').forEach(el=>{const f=F(el.dataset.r);if(f)el.classList.toggle('open',isOpen(f,c));});
+    const L=secties(),n=L.reduce((t,x)=>t+x.open.length,0);
+    L.forEach(x=>{const g=R.querySelector(`[data-sh="${x.sc.id}"]`);if(g)g.textContent=x.open.length?x.open.length+' open':'';});
+    const t=R.querySelector('[data-f="todo"]');if(t)t.textContent=`Nog te doen (${n})`;
+    const p=R.querySelector('.gpr');if(p)p.outerHTML=voortgang();
+    const f=R.querySelector('.gf');if(f)f.hidden=!n;
   }
   function bind(){
     const R=st.root,s=st.s;
-    R.querySelectorAll('input[data-k],textarea[data-k]').forEach(e=>e.oninput=()=>{let v=e.value;
-      if(e.dataset.num){const n=parseFloat(v.replace(',','.'));v=v.trim()===''?'':isFinite(n)?n:v;}
-      Velden.zet(s,e.dataset.k,v);save();upd();});
+    R.querySelectorAll('[data-r]').forEach(el=>el.addEventListener('focusin',()=>{st.cur=el.dataset.r;}));
+    R.querySelectorAll('input[data-k],textarea[data-k]').forEach(e=>{
+      e.oninput=()=>{let v=e.value;if(e.dataset.num){const n=parseFloat(v.replace(',','.'));v=v.trim()===''?'':isFinite(n)?n:v;}
+        st.vast.add(e.dataset.k);Velden.zet(s,e.dataset.k,v);save();upd();};
+      if(e.tagName==='INPUT')e.onkeydown=ev=>{if(ev.key==='Enter'){ev.preventDefault();st.cur=e.dataset.k;volgende();}};
+      // Alles: bij wegtikken klapt het veld weer in
+      if(st.filter==='alles')e.onblur=()=>{const k=e.dataset.k;setTimeout(()=>{if(!st||st.edit!==k)return;const ed=R.querySelector('.fed');if(ed&&ed.contains(document.activeElement))return;st.edit=null;save(true);lijst();},150);};});
     R.querySelectorAll('[data-stp]').forEach(b=>b.onclick=()=>{const k=b.dataset.stp,n=Math.max(0,(parseFloat(Velden.waarde(s,k))||0)+(+b.dataset.d));
-      Velden.zet(s,k,n);const i=R.querySelector(`input[data-k="${k}"]`);if(i)i.value=n;save();upd();});
-    R.querySelectorAll('.ch button').forEach(b=>b.onclick=()=>{const k=b.dataset.k,on=Velden.waarde(s,k)===b.dataset.v;Velden.zet(s,k,on?'':b.dataset.v);save(true).then(()=>herteken());});
+      st.vast.add(k);Velden.zet(s,k,n);const i=R.querySelector(`input[data-k="${k}"]`);if(i)i.value=n;save();upd();});
+    R.querySelectorAll('.ch button').forEach(b=>b.onclick=()=>{const k=b.dataset.k,on=Velden.waarde(s,k)===b.dataset.v;st.vast.add(k);Velden.zet(s,k,on?'':b.dataset.v);
+      if(st.filter==='alles')st.edit=null;save(true).then(()=>herteken());});
     R.querySelectorAll('[data-sw]').forEach(b=>b.onclick=()=>{const k=b.dataset.sw,f=Velden.VELDEN.find(x=>x.k===k),aan=Velden.zelfdeAan(s,k);
       if(aan)Object.entries(f.bron).forEach(([doel,bron])=>{const vv=(s.velden||{})[doel];if(vv==null||vv==='')Velden.zet(s,doel,Velden.waarde(s,bron)||'');}); // uitzetten: neem de klantgegevens over om aan te passen
       Velden.zet(s,k,aan?'Nee':'Ja');save(true).then(()=>herteken());});
     R.querySelectorAll('[data-foto]').forEach(b=>b.onclick=()=>{const k=b.dataset.foto;
-      Camera.take({galerij:b.dataset.g==='1'}).then(async r=>{if(!r||!r.blob||!st)return;s.bijlagen={...(s.bijlagen||{}),[k]:r.blob};if(Velden.waarde(s,k)==='nvt')Velden.zet(s,k,'');await save(true);herteken();});});
-    R.querySelectorAll('[data-nvt]').forEach(b=>b.onclick=async()=>{const k=b.dataset.nvt;Velden.zet(s,k,Velden.waarde(s,k)==='nvt'?'':'nvt');await save(true);herteken();});
+      Camera.take({galerij:b.dataset.g==='1'}).then(async r=>{if(!r||!r.blob||!st)return;st.vast.add(k);s.bijlagen={...(s.bijlagen||{}),[k]:r.blob};if(Velden.waarde(s,k)==='nvt')Velden.zet(s,k,'');await save(true);herteken();});});
+    R.querySelectorAll('[data-nvt]').forEach(b=>b.onclick=async()=>{const k=b.dataset.nvt;st.vast.add(k);Velden.zet(s,k,Velden.waarde(s,k)==='nvt'?'':'nvt');await save(true);herteken();});
     R.querySelectorAll('[data-weg]').forEach(b=>b.onclick=async()=>{const k=b.dataset.weg;const bl={...(s.bijlagen||{})};delete bl[k];s.bijlagen=bl;await save(true);herteken();});
-    R.querySelectorAll('[data-kies]').forEach(b=>b.onclick=async()=>{const ct=Velden.CONTACTEN.find(y=>y.id===b.dataset.kies);
-      try{const r=await navigator.contacts.select(['name','tel','email'],{multiple:false}),x=r&&r[0];if(!x)return;
-        if(x.name&&x.name[0])Velden.zet(s,ct.naam,x.name[0]);if(x.tel&&x.tel[0]&&ct.tel)Velden.zet(s,ct.tel,x.tel[0]);if(x.email&&x.email[0]&&ct.mail)Velden.zet(s,ct.mail,x.email[0]);
-        await save(true);herteken();}catch(e){}});
     // V&G
-    const zetVg=async(id,aan)=>{const v=vg(),a=Velden.VG.find(x=>x.id===id);v.items={...v.items,[id]:{risico:a.risico,afspraak:a.afspraak,...(v.items[id]||{}),aan}};Velden.zet(s,'vg',v);await save(true);herteken();};
+    const zetVg=async(id,aan)=>{const v=vg(),a=Velden.VG.find(x=>x.id===id);v.items={...v.items,[id]:{risico:a.risico,afspraak:a.afspraak,...(v.items[id]||{}),aan}};st.vast.add('vg');Velden.zet(s,'vg',v);await save(true);herteken();};
     R.querySelectorAll('[data-vgt]').forEach(b=>b.onclick=()=>{const v=vg();zetVg(b.dataset.vgt,!(v.items[b.dataset.vgt]&&v.items[b.dataset.vgt].aan));});
     R.querySelectorAll('[data-vg]').forEach(c=>c.onchange=()=>zetVg(c.dataset.vg,c.checked));
     R.querySelectorAll('[data-vgr]').forEach(e=>e.oninput=()=>{const v=vg(),id=e.dataset.vgr;v.items={...v.items,[id]:{...(v.items[id]||{}),[e.dataset.f]:e.value}};Velden.zet(s,'vg',v);save();});
@@ -255,9 +338,9 @@
     const ok=R.querySelector('#vgOk');if(ok)ok.onclick=async()=>{const v=vg();
       if(!v.nagelopen&&!Object.values(v.items||{}).some(x=>x.aan)){
         const k=await vraag('Geen enkele situatie gekozen. Klopt dat?','',[['klopt','Klopt','pri'],['terug','Terug','']]);if(k!=='klopt')return;}
-      v.nagelopen=!v.nagelopen;Velden.zet(s,'vg',v);await save(true);herteken();};
+      v.nagelopen=!v.nagelopen;st.vast.add('vg');Velden.zet(s,'vg',v);await save(true);herteken();};
   }
-  function herteken(){if(!st)return;const b=st.root.querySelector('.gb'),y=b?b.scrollTop:0;lijst();const n=st.root.querySelector('.gb');if(n)n.scrollTop=y;}
+  function herteken(){if(!st)return;lijst();}
 
   /* ---------- bladen ---------- */
   function vraag(titel,tekst,knoppen){css();return new Promise(res=>{
