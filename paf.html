@@ -39,6 +39,7 @@
 .kl small{display:block;color:var(--mute);font-size:12px;font-weight:400;margin-top:2px;line-height:1.25}
 .kl .vbw{color:var(--ok);overflow-wrap:anywhere}
 .kr select{box-sizing:border-box;width:100%;min-width:0;min-height:44px;border-radius:12px;border:1px solid var(--line2);background:var(--well);color:var(--mute);padding:0 10px;font-size:15px}
+.kl .gebr{margin-top:6px;min-height:40px;font-size:14px;padding:0 14px;width:auto}
 .kr.aan select{color:var(--ink);border-color:var(--ok)}
 .sw2 .nm{align-items:center}
 .sw{flex:none;position:relative;width:56px;height:34px;border-radius:17px;border:1px solid var(--line2);background:var(--well);cursor:pointer;padding:0}
@@ -69,11 +70,20 @@ const SAMEN={'@adres_klant':{naam:'Adres klant',sub:'Straat, postcode en plaats 
 const vbNaam=i=>`${i.groep} › ${i.sectie} › ${i.label}`;
 function itemOpties(L,sel){let g='',h='<option value="">Niet uit PAF</option>';
   L.forEach(i=>{const grp=i.groep+' › '+i.sectie;if(grp!==g){if(g)h+='</optgroup>';g=grp;h+=`<optgroup label="${esc(grp)}">`;}
-    h+=`<option value="${esc(i.key)}"${i.key===sel?' selected':''}>${esc(i.label)}</option>`;});
+    h+=`<option value="${esc(i.key)}"${i.key===sel?' selected':''}>${esc(i.label)} (${esc(i.groep)}, ${esc(i.sectie)})</option>`;});
   return h+(g?'</optgroup>':'');}
 /* één regel: links het veld van de site survey, rechts het PAF-item */
 function rij(doel,naam,sub,L,id){
   const it=L.find(i=>Paf.koppeling(i.key)===doel);
+  if(SAMEN[doel]){const a=it&&it.vb&&Paf.adres(it.vb);
+    if(a)sub=(sub?sub+' · ':'')+`${a.adres}, ${a.postcode} ${a.plaats}`;
+    else if(!it&&doel==='@adres_klant'){const kan=L.find(i=>i.vb&&Paf.adres(i.vb));if(kan){const b=Paf.adres(kan.vb);
+      return `<div class="kr"><label class="kl" for="${id}"><b>${esc(naam)}</b><small>${esc(SAMEN[doel].sub)}</small>
+        <small class="vbw">In de PAF: ${esc(kan.label)} (${esc(kan.groep)}) → ${esc(b.adres)}, ${esc(b.postcode)} ${esc(b.plaats)}</small>
+        <button class="btn gebr" data-gebruik="${esc(kan.key)}" data-doel2="${esc(doel)}">Gebruik dit</button></label>
+        <select id="${id}" data-doel="${esc(doel)}">${itemOpties(L,null)}</select></div>`;}}
+    return `<div class="kr${it?' aan':''}"><label class="kl" for="${id}"><b>${esc(naam)}</b>${sub?`<small${a?' class="vbw"':''}>${esc(sub)}</small>`:''}</label>
+    <select id="${id}" data-doel="${esc(doel)}">${itemOpties(L,it&&it.key)}</select></div>`;}
   return `<div class="kr${it?' aan':''}"><label class="kl" for="${id}"><b>${esc(naam)}</b>${sub?`<small>${esc(sub)}</small>`:''}${it&&it.vb?`<small class="vbw">${esc(it.vb)}</small>`:''}</label>
     <select id="${id}" data-doel="${esc(doel)}">${itemOpties(L,it&&it.key)}</select></div>`;}
 function render(){
@@ -98,6 +108,8 @@ function render(){
   document.querySelectorAll('select[data-doel]').forEach(x=>x.onchange=()=>{const d=x.dataset.doel;
     Paf.bekend().filter(i=>Paf.koppeling(i.key)===d).forEach(i=>Paf.zetKoppeling(i.key,'info')); // het vorige item voor dit veld wordt weer info
     if(x.value)Paf.zetKoppeling(x.value,d);render();});
+  document.querySelectorAll('[data-gebruik]').forEach(b=>b.onclick=e=>{e.preventDefault();const d=b.dataset.doel2;
+    Paf.bekend().filter(i=>Paf.koppeling(i.key)===d).forEach(i=>Paf.zetKoppeling(i.key,'info'));Paf.zetKoppeling(b.dataset.gebruik,d);render();});
   document.querySelectorAll('[data-info]').forEach(b=>b.onclick=()=>{const k=b.dataset.info;Paf.zetKoppeling(k,Paf.koppeling(k)==='nee'?'info':'nee');render();});
 }
 $('restK').onclick=()=>{const o=$('rest').hidden;$('rest').hidden=!o;$('restU').hidden=!o;$('restK').setAttribute('aria-expanded',o);};

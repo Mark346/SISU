@@ -133,7 +133,10 @@
       if(doel==='@adres_klant'||doel==='@adres_loc'){const a=adres(i.waarde);if(!a){info.push({groep:i.groep,sectie:i.sectie,label:i.label,waarde:i.waarde});continue;}
         const p=doel==='@adres_klant'?'klant':'loc';zet(p+'_adres',a.adres);zet(p+'_postcode',a.postcode);zet(p+'_plaats',a.plaats);
         if(p==='loc'&&(a.adres!==Velden.waarde(s,'klant_adres')))s.velden.loc_zelfde='Nee';continue;}
-      const f=Velden.VELDEN.find(x=>x.k===doel);if(!f)continue;zet(doel,omzetten(f,i.waarde));}
+      const f=Velden.VELDEN.find(x=>x.k===doel);if(!f)continue;
+      // een hele adresregel gekoppeld aan één adresveld: alleen het juiste deel nemen
+      const ad=/^(klant|loc)_(adres|postcode|plaats)$/.exec(doel),a=ad&&adres(i.waarde);
+      zet(doel,a?a[ad[2]]:omzetten(f,i.waarde));}
     s.paf={bestand:o.bestand||'',op:new Date().toISOString(),info};res.info=info.length;
     if(!s.adres||o.adres){const a=Velden.waarde(s,'klant_adres'),pl=Velden.waarde(s,'klant_plaats');if(a)s.adres=a+(pl?', '+pl:'');}
     return res;
