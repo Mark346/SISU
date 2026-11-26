@@ -96,7 +96,13 @@
 .sui .spnoot p{margin:0;font-size:15px;line-height:1.4;white-space:pre-line}
 .sstat{display:flex;flex-direction:column;gap:8px;margin-top:6px}
 .sui .stodo{margin-top:4px}
-.sui .spaf{width:100%;margin-top:10px}
+.sui .spaf{width:100%;margin-top:0}
+.sui .shand{margin-top:8px;border-top:1px solid var(--line);padding-top:4px}
+.sui .shand>summary{display:flex;align-items:center;justify-content:space-between;min-height:48px;font-weight:700;cursor:pointer;list-style:none}
+.sui .shand>summary::-webkit-details-marker{display:none}
+.sui .shand>summary::after{content:'›';font-size:22px;line-height:1;color:var(--mute);transition:transform .15s}
+.sui .shand[open]>summary::after{transform:rotate(90deg)}
+.sui .shandb{display:flex;flex-direction:column;gap:inherit;padding-top:4px}
 .sui .stip{margin-top:6px;font-size:14px}
 .sui .stip summary{display:inline-flex;align-items:center;gap:6px;min-height:44px;color:var(--warn);font-weight:700;cursor:pointer;list-style:none}
 .sui .stip summary::-webkit-details-marker{display:none}
@@ -189,19 +195,22 @@
     const docr=x=>{const v=Velden.voortgang(x,fotos[x.id],'uit');return `<span class="sdoc">Document ${v.klaar}/${v.totaal}</span>`;};
     const fold=(id,open,label,lijst,kleur)=>`<button class="sfold" id="${id}" aria-expanded="${open}"><i class="dot" style="background:${kleur}"></i>${label}<span class="n">· ${lijst.length===1?esc(lijst[0].adres||'zonder adres'):lijst.length+' schouwen'}</span>${ICO.pijl}</button>`;
     const kaart=(x,knoppen)=>`<div class="sdone"><div class="sh"><b>${esc(x.adres||'zonder adres')}</b>${sst(x)}</div>${knoppen}</div>`;
+    const pafMenu=!!(window.Paf&&cfg.typeKiezen);
     main.innerHTML=`
      <div class="shead"><h2>Schouwen</h2>${open.length?`<span>${open.length} bezig</span>`:''}</div>
      <button class="btn pri snew" id="new" aria-expanded="${newOpen}" aria-controls="snp"${newOpen?' hidden':''}>${ICO.plus}Nieuwe schouw</button>
      <div class="snp" id="snp"${newOpen?'':' hidden'}>
+       ${pafMenu?`<button class="btn pri spaf" id="gopaf">Start met een PAF (pdf)</button><p class="note">De gegevens uit de PAF worden ingevuld; wat ontbreekt vul je daarna aan.</p><details class="stip"><summary>Doe je dit op je iPhone? Hier een tip</summary><ol>
+         <li>Maak op de iPhone in de app Opdrachten een nieuwe opdracht (bijvoorbeeld "PAF naar Zoofi") en zet aan dat hij in het deelmenu staat, alleen voor pdf's.</li>
+         <li>Voeg de actie Bewaar bestand toe, naar een vaste map in iCloud Drive, bijvoorbeeld "Zoofi PAF", en laat hem bestaande bestanden vervangen.</li>
+         <li>Gebruik: tik in Outlook op de bijlage, kies Deel, kies PAF naar Zoofi. Open daarna Zoofi en tik Start met een PAF. De bestandskiezer toont de laatst bewaarde pdf meestal bovenaan bij Recent.</li></ol></details>
+       <details class="shand"><summary>Handmatig invullen</summary><div class="shandb">`:''}
        ${cfg.typeKiezen?`<span class="styp" id="stypL">Type aansluiting</span><div class="tseg" role="group" aria-labelledby="stypL"><button data-typ="OFFNET" aria-pressed="false">OFFNET<small>buiten en binnen</small></button><button data-typ="ONNET" aria-pressed="false">ONNET<small>alleen binnen</small></button></div>`:''}
        <label for="adr">Adres van de nieuwe schouw</label>
        <input class="f" id="adr" autocomplete="street-address" placeholder="Straat en huisnummer, plaats">
-       ${lastOpen&&lastOpen.adres?`<button class="btn take" id="take"><span>Adres overnemen:</span>${esc(lastOpen.adres)}</button>`:''}
+       ${!pafMenu&&lastOpen&&lastOpen.adres?`<button class="btn take" id="take"><span>Adres overnemen:</span>${esc(lastOpen.adres)}</button>`:''}
        <div class="row">${all.length?'<button class="btn" id="cancel">Annuleren</button>':''}<button class="btn pri" id="go" style="flex:1.4">Start schouw</button></div>
-       ${window.Paf&&cfg.typeKiezen?`<button class="btn spaf" id="gopaf">Start met een PAF (pdf)</button><p class="note">De gegevens uit de PAF worden ingevuld; wat ontbreekt vul je daarna aan.</p><details class="stip"><summary>Doe je dit op je iPhone? Hier een tip</summary><ol>
-         <li>Maak op de iPhone in de app Opdrachten een nieuwe opdracht (bijvoorbeeld "PAF naar Zoofi") en zet aan dat hij in het deelmenu staat, alleen voor pdf's.</li>
-         <li>Voeg de actie Bewaar bestand toe, naar een vaste map in iCloud Drive, bijvoorbeeld "Zoofi PAF", en laat hem bestaande bestanden vervangen.</li>
-         <li>Gebruik: tik in Outlook op de bijlage, kies Deel, kies PAF naar Zoofi. Open daarna Zoofi en tik Start met een PAF. De bestandskiezer toont de laatst bewaarde pdf meestal bovenaan bij Recent.</li></ol></details>`:''}
+       ${pafMenu?'</div></details>':''}
      </div>
      ${open.length?`<div class="surv">${open.map(x=>`<button class="sv" data-id="${esc(x.id)}"><span><span class="svt"><b>${esc(x.adres||'zonder adres')}</b>${typB(x)}</span>${sst(x)}${docr(x)}</span><span class="go">${ICO.pijl}</span></button>`).join('')}</div>`
        :(all.length?'<p class="sleeg">Niets bezig. Tik op Nieuwe schouw om te beginnen.</p>':'')}
@@ -222,7 +231,7 @@
     if($('fold'))$('fold').onclick=()=>{showDone=!showDone;start();};
     if($('foldA'))$('foldA').onclick=()=>{showArch=!showArch;start();};
     // Nieuwe schouw: de knop klapt het adresblok open (geen los blad onderin: op de iPhone schuift het toetsenbord daar overheen)
-    $('new').onclick=()=>{newOpen=true;$('new').hidden=true;$('new').setAttribute('aria-expanded','true');$('snp').hidden=false;(main.querySelector('[data-typ]')||$('adr')).focus();};
+    $('new').onclick=()=>{newOpen=true;$('new').hidden=true;$('new').setAttribute('aria-expanded','true');$('snp').hidden=false;($('gopaf')||main.querySelector('[data-typ]')||$('adr')).focus();};
     if($('cancel'))$('cancel').onclick=()=>{newOpen=false;$('adr').value='';$('snp').hidden=true;$('new').hidden=false;$('new').setAttribute('aria-expanded','false');$('new').focus();};
     $('adr').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();$('go').click();}};
     if($('take'))$('take').onclick=()=>{$('adr').value=lastOpen.adres;};
