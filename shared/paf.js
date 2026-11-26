@@ -113,7 +113,10 @@
   /* "… NL 2665MT Hollandweg 36 BLEISWIJK" of "…-2665MT-Hollandweg-36-BLEISWIJK" -> straat + nummer, postcode, plaats */
   function adres(t){const m=String(t).match(/(\d{4})\s?([A-Z]{2})[\s\-]+(.+?)[\s\-]+(\d+(?:\s?[A-Za-z]{1,2})?(?:[\-\s]\d+)?)[\s\-]+([A-Za-zÀ-ÿ'\- ]+?)\s*$/);
     if(!m)return null;return{adres:`${m[3].replace(/-/g,' ')} ${m[4].replace(/\s+/g,'')}`.trim(),postcode:m[1]+m[2],plaats:hoofdletters(m[5].replace(/-/g,' ').trim())};}
+  /* vaste vertalingen van PAF-waarden (Indicatie On Net: OnNetBuilding = ONNET, NotConnected = OFFNET) */
+  const VERTAAL={type_aansluiting:[[/on\s*net/i,'ONNET'],[/off\s*net|not\s*connected/i,'OFFNET']]};
   function omzetten(f,v){v=String(v).trim();if(!v)return'';
+    for(const [re,w] of VERTAAL[f.k]||[])if(re.test(v))return w;
     if(f.t==='keuze'){const n=v.toLowerCase().replace(/[^a-z]/g,'');return f.opties.find(o=>n.includes(o.toLowerCase()))||f.opties.find(o=>o.toLowerCase().includes(n))||'';}
     if(f.t==='janee'){if(/^(ja|yes|true|waar|aanwezig)/i.test(v))return'Ja';if(/^(nee|no|false|onwaar|niet)/i.test(v))return'Nee';return'';}
     if(f.t==='getal'){const n=parseFloat(v.replace(',','.'));return isFinite(n)?n:'';}
