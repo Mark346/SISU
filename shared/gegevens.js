@@ -159,7 +159,7 @@
   let svT=null,svP=false;
   function save(now){clearTimeout(svT);svP=true;const go=async()=>{svP=false;if(!st)return;const me=st;await Store.surveys.put(me.s);if(me.opts.onChange)me.opts.onChange(me.s);};if(now)return go();svT=setTimeout(go,350);}
   const kant=()=>st.moment==='vooraf'?'in':undefined;
-  const secties=()=>Velden.secties(st.s,st.fotos,{moment:st.moment,kant:kant(),zonder:st.opts.zonder});
+  const secties=()=>Velden.secties(st.s,st.fotos,{moment:st.moment,kant:kant(),zonder:st.opts.zonder,zonderK:st.opts.zonderK});
   const docTxt=()=>{const v=Velden.voortgang(st.s,st.fotos,'uit');return `<div class="gdoc"><span>Document ${v.klaar} van ${v.totaal} compleet</span><i><b style="width:${v.pct}%"></b></i></div>`;};
   function sub(x){const s=st.s;
     if(x.sc.id==='klant'&&Velden.zelfdeAan(s,'klant_zelfde'))return 'Adres zelfde als locatie';
@@ -274,6 +274,7 @@
       case 'keuze':return `<div class="ch" role="group">${f.opties.map(o=>`<button data-k="${f.k}" data-v="${esc(o)}" class="${v===o?'on':''}" aria-pressed="${v===o}">${esc(o)}</button>`).join('')}</div>`;
       case 'janee':return `<div class="ch" role="group">${['Ja','Nee'].map(o=>`<button data-k="${f.k}" data-v="${o}" class="${v===o?'on':''}" aria-pressed="${v===o}">${o}</button>`).join('')}</div>`;
       case 'foto':{const b=(st.s.bijlagen||{})[f.k];let u='';if(b){u=URL.createObjectURL(b);st.urls.push(u);}
+        if(f.k==='trace_geo'&&window.KaartTrace)return `<div class="ft">${b?`<img src="${u}" alt="${esc(f.kort||f.l)}">`:''}<button class="btn" data-kaart="1">${b?'Tracé aanpassen':'Kaart importeren en tracé intekenen'}</button></div>`;
         return `<div class="ft">${b?`<img src="${u}" alt="${esc(f.l)}">`:''}${v==='nvt'?`<b>${esc(f.nvt||'Niet beschikbaar')}</b>`:''}
           <button class="btn" data-foto="${f.k}" data-g="0">Foto maken</button><button class="btn" data-foto="${f.k}" data-g="1">Uit galerij</button>
           ${f.nvt?`<button class="btn" data-nvt="${f.k}">${v==='nvt'?'Toch beschikbaar':'Niet beschikbaar'}</button>`:''}${b?`<button class="btn" data-weg="${f.k}">Weghalen</button>`:''}</div>`;}
@@ -332,6 +333,7 @@
       Velden.zet(s,k,aan?'Nee':'Ja');save(true).then(()=>herteken());});
     R.querySelectorAll('[data-foto]').forEach(b=>b.onclick=()=>{const k=b.dataset.foto;
       Camera.take({galerij:b.dataset.g==='1'}).then(async r=>{if(!r||!r.blob||!st)return;st.vast.add(k);s.bijlagen={...(s.bijlagen||{}),[k]:r.blob};if(Velden.waarde(s,k)==='nvt')Velden.zet(s,k,'');await save(true);herteken();});});
+    R.querySelectorAll('[data-kaart]').forEach(b=>b.onclick=()=>KaartTrace.open(s,()=>{st.vast.add('trace_geo');herteken();}));
     R.querySelectorAll('[data-nvt]').forEach(b=>b.onclick=async()=>{const k=b.dataset.nvt;st.vast.add(k);Velden.zet(s,k,Velden.waarde(s,k)==='nvt'?'':'nvt');await save(true);herteken();});
     R.querySelectorAll('[data-weg]').forEach(b=>b.onclick=async()=>{const k=b.dataset.weg;const bl={...(s.bijlagen||{})};delete bl[k];s.bijlagen=bl;await save(true);herteken();});
     // V&G
@@ -465,7 +467,7 @@
   function vakkenBind(el,s,klaar,o={}){
     el.querySelectorAll('[data-vk]').forEach(b=>b.onclick=async()=>{const x=b.dataset.vk;
       if(x==='info'){const fo=await Store.photos.bySurvey(s.id,true),V=Velden.vakken(s,fo,o.kant);
-        open(s,{filter:V.info.length?'todo':'alles',zonder:['buiten','binnen','afw'],onClose:klaar});}
+        open(s,{filter:V.info.length?'todo':'alles',zonder:['buiten','binnen','afw'],zonderK:window.KaartTrace?['trace_geo']:undefined,onClose:klaar});}
       else if(o.naar)o.naar(x);});
   }
   /* ---------- verplichte foto met een rol kiezen (aansluitpunt, invoer pand, beginpunt) ---------- */

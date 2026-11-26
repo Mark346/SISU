@@ -77,7 +77,7 @@
     {k:'afw_apparatuur',s:'afw',l:'Type apparatuur',t:'text',in:N,uit:V,vb:'WODF + CPE'},
     {k:'afw_foto',s:'afw',l:'Afbeelding kast',kort:'Afwerkpunt klantlocatie (kast)',t:'foto',in:N,uit:V,vb:'foto van de plek waar de kast komt'},
 
-    {k:'trace_geo',s:'trace',l:'Geografische weergave (kaart met tracé)',t:'foto',in:W,uit:V,vb:'luchtfoto of kaart met het tracé ingetekend'},
+    {k:'trace_geo',s:'trace',als:geenOnnet,l:'Geografische weergave (kaart met tracé)',kort:'Kaart met tracé',t:'foto',in:W,uit:V,vb:'luchtfoto of kaart met het tracé ingetekend'},
     {k:'trace_opm',s:'trace',l:'Opmerking bij tracé',t:'lang',in:N,uit:W,vb:'Invoer ongeveer 3 meter uit rechterhoek'},
     {k:'plattegrond',s:'trace',l:'Plattegrond (indien beschikbaar)',t:'foto',in:W,uit:W,nvt:'NIET BESCHIKBAAR',vb:'NIET BESCHIKBAAR'},
 
@@ -254,9 +254,9 @@
       (f.t==='foto'||f.t==='fotos'?ft:info).push(f);});
     return{info,fotos:ft};}
   /* vakken op het schouwscherm: informatie, foto's buiten (tracé buiten) en foto's binnen (binnen tracé + afwerkpunt/kast) */
-  const vak=f=>f.s==='buiten'?'buiten':(f.s==='binnen'||f.s==='afw')?'binnen':'info';
+  const vak=f=>f.k==='trace_geo'?'kaart':f.s==='buiten'?'buiten':(f.s==='binnen'||f.s==='afw')?'binnen':'info';
   const VAK_SECTIES={buiten:['buiten'],binnen:['binnen','afw']};
-  function vakken(s,fotos,kant){const c=cfg(),o={info:[],buiten:[],binnen:[]};
+  function vakken(s,fotos,kant){const c=cfg(),o={info:[],buiten:[],binnen:[],kaart:[]};
     VELDEN.forEach(f=>{if(f.schakel||f.t==='legenda'||!actief(s,f)||verborgen(s,f)||!nodig(c,f,kant)||gevuld(s,f,fotos))return;o[vak(f)].push(f);});
     return o;}
   /* open verplichte velden per sectie van het gegevensscherm: [{sc, velden, open}] */
@@ -266,7 +266,7 @@
     const c=cfg();
     // bij moment 'vooraf' met kant 'in' tellen ook andere secties mee als daar iets verplicht is bij input
     return SECTIES.filter(sc=>sc.lijst!==false).slice().sort((a,b)=>UI_ORDE.indexOf(a.id)-UI_ORDE.indexOf(b.id)).map(sc=>{
-      const fs=VELDEN.filter(f=>groep(f)===sc.id&&inLijst(f)&&zichtbaar(c,f)&&actief(s,f));
+      const fs=VELDEN.filter(f=>groep(f)===sc.id&&inLijst(f)&&zichtbaar(c,f)&&actief(s,f)&&!(o.zonderK||[]).includes(f.k));
       const open=fs.filter(f=>!f.schakel&&!verborgen(s,f)&&nodig(c,f,o.kant)&&!gevuld(s,f,fotos));
       return{sc,velden:fs,open};}).filter(x=>x.velden.length&&!(o.zonder||[]).includes(x.sc.id)&&(!o.moment||x.sc.moment===o.moment||(o.kant==='in'&&x.open.length)));
   }

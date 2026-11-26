@@ -90,6 +90,8 @@
 <script src="velden.js"></script>
 <script src="camera.js"></script>
 <script src="gegevens.js"></script>
+<script src="paf.js"></script>
+<script src="kaarttrace.js"></script>
 <script>
 /* Afronding: de schouw in de vorm van het document, per regel en per foto aan te passen,
    voordat het echte document wordt gemaakt. Ontbrekende verplichte onderdelen krijgen een ! */
@@ -116,7 +118,7 @@ async function load(){
   $('back').href='../'+(PAGE[S.variant]||'index.html')+'?survey='+encodeURIComponent(S.id);
   P=await Store.photos.bySurvey(S.id,true);
   // naar afronding = status Afronding (vanaf Uitwerking, als er foto's zijn)
-  let ch=Velden.migreer(S);if(Velden.adresNaam(S))ch=true;
+  let ch=Velden.migreer(S);if(Velden.adresNaam(S))ch=true;if(window.KaartTrace&&KaartTrace.migreer(S))ch=true;
   for(const p of Velden.onnetFix(S,P)){await Store.photos.put(p);ch=true;} // ONNET: geen buiten tracé
   if(S.status==='archief'&&S.gearchiveerd==null){S.gearchiveerd=true;ch=true;}
   const cur=Velden.statusOf(S);if(S.status!==cur){S.status=cur;ch=true;}
@@ -163,7 +165,7 @@ function render(){
         case 'rolfoto':{const p=P.find(q=>q.status!=='vervallen'&&q.rol===f.rol);
           rij.push(`<button class="dr${mist?' mist':''}" data-rol="${f.k}"><span class="l">${lab}</span><span class="v">${p?`<img class="mini" src="${urls[p.id]}" alt="">${nr[p.id]?'Foto '+nr[p.id]:'Ja'}`:mist?ONT:'<span class="leeg">—</span>'}</span></button>`);break;}
         case 'foto':{flush();const b=(S.bijlagen||{})[f.k];let u='';if(b){u=URL.createObjectURL(b);urls['b_'+f.k]=u;}
-          out+=`<button class="db${mist?' mist':''}" ${f.k==='afw_foto'?'data-kast="1"':`data-sec="${Velden.groep(f)}"`}><div class="bl">${lab}</div>${b?`<img src="${u}" alt="${lab}">`:v==='nvt'?`<p><b>${esc(f.nvt||'Niet beschikbaar')}</b></p>`:`<div class="gat${mist?'':' stil'}">${mist?'<i class="ui">!</i>Foto ontbreekt · tik om toe te voegen':'Geen foto · tik om toe te voegen'}</div>`}</button>`;break;}
+          out+=`<button class="db${mist?' mist':''}" ${f.k==='afw_foto'?'data-kast="1"':f.k==='trace_geo'&&window.KaartTrace?'data-kaart="1"':`data-sec="${Velden.groep(f)}"`}><div class="bl">${lab}</div>${b?`<img src="${u}" alt="${lab}">`:v==='nvt'?`<p><b>${esc(f.nvt||'Niet beschikbaar')}</b></p>`:`<div class="gat${mist?'':' stil'}">${mist?'<i class="ui">!</i>':''}${f.k==='trace_geo'&&window.KaartTrace?(mist?'Kaart ontbreekt':'Geen kaart')+' · tik om te importeren':(mist?'Foto ontbreekt':'Geen foto')+' · tik om toe te voegen'}</div>`}${b&&f.k==='trace_geo'&&window.KaartTrace?'<div style="margin-top:6px;font-size:14px;color:#666;font-weight:600">✎ Tik om het tracé aan te passen</div>':''}</button>`;break;}
         case 'fotos':{flush();const L=P.map((p,i)=>({p,i})).filter(x=>(x.p.sectie||'buiten')===f.sectie);
           out+=L.length?L.map(({p,i})=>kaart(p,i,nr,binnen)).join(''):`<div class="gat${mist?'':' stil'}">${mist?'<i class="ui">!</i>':''}Nog geen foto's ${esc(f.sectie)}</div>`;
           out+=`<button class="mk" data-naar="${f.sectie}">Foto's ${esc(f.sectie)} maken</button>`;break;}
@@ -227,6 +229,7 @@ function bind(){
   document.querySelectorAll('.dr[data-k]').forEach(b=>b.onclick=async()=>{if(bewerk)await opslaanNu();bewerkOpen(b.dataset.k);});
   const opnieuw=async()=>{P=await Store.photos.bySurvey(S.id,true);await recount();render();};
   if($('naar'))$('naar').onclick=()=>{const m=document.querySelector('#doc .mist');if(m&&m.dataset.k){bewerkOpen(m.dataset.k);return;}if(m){m.scrollIntoView({block:'center',behavior:'smooth'});m.classList.remove('flash');void m.offsetWidth;m.classList.add('flash');}};
+  document.querySelectorAll('[data-kaart]').forEach(b=>b.onclick=()=>KaartTrace.open(S,opnieuw));
   document.querySelectorAll('[data-sec]').forEach(b=>b.onclick=()=>Gegevens.open(S,{filter:'alles',sectie:b.dataset.sec,onClose:opnieuw}));
   document.querySelectorAll('[data-rol]').forEach(b=>b.onclick=()=>{const f=Velden.VELDEN.find(v=>v.k===b.dataset.rol);
     Gegevens.rolBlad(S,f,{klaar:opnieuw,maak:g=>Camera.take({galerij:g}).then(async r=>{if(!r||!r.blob)return;
