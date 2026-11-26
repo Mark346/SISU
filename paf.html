@@ -77,7 +77,7 @@ function rij(doel,naam,sub,L,id,via){
   const it=L.find(i=>Paf.koppeling(i.key)===doel);
   if(SAMEN[doel]){const a=it&&it.vb&&Paf.adres(it.vb);
     if(a)sub=(sub?sub+' · ':'')+`${a.adres}, ${a.postcode} ${a.plaats}`;
-    else if(!it&&doel==='@adres_klant'){const kan=L.find(i=>i.vb&&Paf.adres(i.vb));if(kan){const b=Paf.adres(kan.vb);
+    else if(!it&&doel==='@adres_loc'){const kan=L.find(i=>i.vb&&Paf.adres(i.vb));if(kan){const b=Paf.adres(kan.vb);
       return `<div class="kr"><label class="kl" for="${id}"><b>${esc(naam)}</b><small>${esc(SAMEN[doel].sub)}</small>
         <small class="vbw">In de PAF: ${esc(kan.label)} (${esc(kan.groep)}) → ${esc(b.adres)}, ${esc(b.postcode)} ${esc(b.plaats)}</small>
         <button class="btn gebr" data-gebruik="${esc(kan.key)}" data-doel2="${esc(doel)}">Gebruik dit</button></label>

@@ -183,8 +183,11 @@
     if(f&&f.pre){const d=standaard()[k];if(!leeg(d))return d;}
     if(f&&f.schakel)return zelfdeAan(s,k)?'Ja':'Nee';
     const ad=adresDelen(s);
-    if(k==='loc_adres'||k==='klant_adres')return ad.adres||'';
-    if(k==='loc_plaats'||k==='klant_plaats')return ad.plaats||'';
+    // het adres van de schouw is het adres van het pand (de locatie). De klant krijgt dat adres alleen
+    // als de locatie "zelfde als klant" is en de schouw niet uit een PAF komt (daar staat het klantadres niet in).
+    const klantVolgt=!s.paf&&(s.velden||{}).loc_zelfde!=='Nee'&&leeg((s.velden||{}).loc_adres);
+    if(k==='loc_adres'||(k==='klant_adres'&&klantVolgt))return ad.adres||'';
+    if(k==='loc_plaats'||(k==='klant_plaats'&&klantVolgt))return ad.plaats||'';
     if(k==='datum_survey'){const d=s.eersteFoto||s.gelopenOp;if(d)return d.slice(0,10);}
     return v;
   }
@@ -228,9 +231,11 @@
   /* naam van de schouw (s.adres) uit het klantadres als die nog leeg is of de bestandsnaam van een PAF; geeft true als hij veranderd is */
   function adresNaam(s){const vv=s.velden||{},bn=s.paf&&s.paf.bestand?s.paf.bestand.replace(/\.pdf$/i,''):null;
     if(s.adres&&s.adres!==bn)return false;
-    const a=String(vv.klant_adres||'').trim(),pl=String(vv.klant_plaats||'').trim(),n=a?a+(pl?', '+pl:''):'';
+    // naam = adres van het pand: eerst de locatie, dan de klant, dan een adresregel uit de PAF
+    const nm=(x,y)=>{const a=String(vv[x]||'').trim(),pl=String(vv[y]||'').trim();return a?a+(pl?', '+pl:''):'';};
+    const n=(vv.loc_zelfde!=='Nee'&&leeg(vv.loc_adres)?'':nm('loc_adres','loc_plaats'))||nm('klant_adres','klant_plaats');
     if(n){if(s.adres===n)return false;s.adres=n;return true;}
-    // geen klantadres: dan een adres uit de PAF-info (bijv. Itemnaam "… 2665MT Hollandweg 36 BLEISWIJK")
+    // geen adres: dan een adres uit de PAF-info (bijv. Itemnaam "… 2665MT Hollandweg 36 BLEISWIJK")
     if(window.Paf&&s.paf&&s.paf.info){for(const i of s.paf.info){const x=Paf.adres(i.waarde);if(x){const m=x.adres+', '+x.plaats;if(s.adres===m)return false;s.adres=m;return true;}}}
     if(s.adres&&s.adres===bn){s.adres='';return true;}return false;}
   const ROLLEN=s=>VELDEN.filter(f=>f.t==='rolfoto'&&actief(s,f)&&cfg()[f.k].uit!=='nee');

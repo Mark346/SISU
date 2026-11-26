@@ -28,7 +28,7 @@
   /* standaard koppelingen (aan te passen in Instellingen › PAF-import) */
   const STD={
     'order|hoofdgegevens|account':'klant_org',
-    'active network connection|algemeen|itemnaam':'@adres_klant',
+    'active network connection|algemeen|itemnaam':'@adres_loc', // het adres in de PAF is het pand (locatie), niet de klant
     'active network connection|site survey contactpersonen|naam':'klant_contact',
     'active network connection|site survey contactpersonen|telefoonnummer':'klant_tel',
     'active network connection|site survey contactpersonen|email':'klant_mail',
@@ -44,6 +44,8 @@
     'demarc|pre-provisioning|type cpe':'afw_apparatuur'
   };
   const cfg=()=>{try{return JSON.parse(localStorage.getItem(KEY)||'{}')||{};}catch(e){return{};}};
+  /* eenmalig: Itemnaam stond standaard op Adres klant; wie dat had uitgezet ("Niet uit PAF") krijgt nu de nieuwe standaard Adres locatie */
+  try{if(!localStorage.getItem(KEY+'.v2')){const c=cfg(),k='active network connection|algemeen|itemnaam';if(c[k]==='info'||c[k]==='@adres_klant'){delete c[k];localStorage.setItem(KEY,JSON.stringify(c));}localStorage.setItem(KEY+'.v2','1');}}catch(e){}
   const setCfg=c=>localStorage.setItem(KEY,JSON.stringify(c));
   const koppeling=k=>{const c=cfg();return c[k]||STD[k]||'info';};
   function zetKoppeling(k,v){const c=cfg();if(v===(STD[k]||'info'))delete c[k];else c[k]=v;setCfg(c);}
