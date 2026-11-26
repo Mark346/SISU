@@ -230,6 +230,8 @@
     if(s.adres&&s.adres!==bn)return false;
     const a=String(vv.klant_adres||'').trim(),pl=String(vv.klant_plaats||'').trim(),n=a?a+(pl?', '+pl:''):'';
     if(n){if(s.adres===n)return false;s.adres=n;return true;}
+    // geen klantadres: dan een adres uit de PAF-info (bijv. Itemnaam "… 2665MT Hollandweg 36 BLEISWIJK")
+    if(window.Paf&&s.paf&&s.paf.info){for(const i of s.paf.info){const x=Paf.adres(i.waarde);if(x){const m=x.adres+', '+x.plaats;if(s.adres===m)return false;s.adres=m;return true;}}}
     if(s.adres&&s.adres===bn){s.adres='';return true;}return false;}
   const ROLLEN=s=>VELDEN.filter(f=>f.t==='rolfoto'&&actief(s,f)&&cfg()[f.k].uit!=='nee');
   /* verplicht voor het scherm: kant 'in' (vooraf), 'uit' (document) of beide */
