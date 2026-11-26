@@ -88,6 +88,12 @@
 .sui .snext.wrn .t b{color:var(--warn)}
 .sui .snext .t small{display:block;color:var(--mute);font-size:14px;margin-top:3px;line-height:1.3}
 .sui .snext .btn{flex:none;min-height:48px;padding:0 16px;font-size:15px}
+.sui .svt{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.sui .styb{flex:none;font-style:normal;font-size:12px;font-weight:800;letter-spacing:.04em;padding:3px 8px;border-radius:6px;background:rgba(34,197,94,.16);color:#4ade80;margin-top:2px}
+.sui .styb.on{background:rgba(139,92,246,.18);color:#a78bfa}
+.sui .spnoot{border:1px solid var(--line);border-left:3px solid #3b82f6;border-radius:var(--r);background:var(--card);padding:10px 14px}
+.sui .spnoot small{display:block;color:var(--mute);font-size:13px;margin-bottom:3px}
+.sui .spnoot p{margin:0;font-size:15px;line-height:1.4;white-space:pre-line}
 .sstat{display:flex;flex-direction:column;gap:8px;margin-top:6px}
 .sui .stodo{margin-top:4px}
 .sui .spaf{width:100%;margin-top:10px}
@@ -179,6 +185,7 @@
     // klaar met open velden: "Klaar · 3 open" in waarschuwingskleur
     const sst=x=>{const m=Velden.statusMeta(st(x)),vo=Velden.voortgang(x,fotos[x.id],'uit'),onv=m.id==='klaar'&&x.onvolledig&&vo.mist.length;
       return `<span class="sst"><i class="dot" style="background:${m.kleur}"></i><span>${onv?`<span class="wrn">Klaar · ${vo.mist.length} open</span>`:esc(m.naam)} · ${esc(relD(x.datum))}${x.variant&&x.variant!==cfg.variant?' · gemaakt in '+esc(NAMEN[x.variant]||x.variant):''}</span></span>`;};
+    const typB=x=>{const v=cfg.typeKiezen&&x.velden&&x.velden.type_aansluiting;return v==='OFFNET'||v==='ONNET'?`<em class="styb ${v==='ONNET'?'on':''}">${v}</em>`:'';};
     const docr=x=>{const v=Velden.voortgang(x,fotos[x.id],'uit');return `<span class="sdoc">Document ${v.klaar}/${v.totaal}</span>`;};
     const fold=(id,open,label,lijst,kleur)=>`<button class="sfold" id="${id}" aria-expanded="${open}"><i class="dot" style="background:${kleur}"></i>${label}<span class="n">· ${lijst.length===1?esc(lijst[0].adres||'zonder adres'):lijst.length+' schouwen'}</span>${ICO.pijl}</button>`;
     const kaart=(x,knoppen)=>`<div class="sdone"><div class="sh"><b>${esc(x.adres||'zonder adres')}</b>${sst(x)}</div>${knoppen}</div>`;
@@ -196,7 +203,7 @@
          <li>Voeg de actie Bewaar bestand toe, naar een vaste map in iCloud Drive, bijvoorbeeld "Zoofi PAF", en laat hem bestaande bestanden vervangen.</li>
          <li>Gebruik: tik in Outlook op de bijlage, kies Deel, kies PAF naar Zoofi. Open daarna Zoofi en tik Start met een PAF. De bestandskiezer toont de laatst bewaarde pdf meestal bovenaan bij Recent.</li></ol></details>`:''}
      </div>
-     ${open.length?`<div class="surv">${open.map(x=>`<button class="sv" data-id="${esc(x.id)}"><span><b>${esc(x.adres||'zonder adres')}</b>${sst(x)}${docr(x)}</span><span class="go">${ICO.pijl}</span></button>`).join('')}</div>`
+     ${open.length?`<div class="surv">${open.map(x=>`<button class="sv" data-id="${esc(x.id)}"><span><span class="svt"><b>${esc(x.adres||'zonder adres')}</b>${typB(x)}</span>${sst(x)}${docr(x)}</span><span class="go">${ICO.pijl}</span></button>`).join('')}</div>`
        :(all.length?'<p class="sleeg">Niets bezig. Tik op Nieuwe schouw om te beginnen.</p>':'')}
      ${done.length?fold('fold',showDone,'Klaar',done,'var(--st-klaar)')+(showDone?`<div class="surv">${done.map(x=>kaart(x,`
          <div class="sb"><a class="btn pri" href="shared/document.html?survey=${encodeURIComponent(x.id)}">Document</a><button class="btn" data-share="${esc(x.id)}">Delen (PDF)</button></div>
@@ -272,6 +279,9 @@
     el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();fn();}});}
 
   /* ---------- status en "volgende stap" van één schouw ---------- */
+  /* "PAF overige informatie" altijd zichtbaar boven de vakken */
+  function pafNoot(s){const it=s.paf&&(s.paf.info||[]).find(x=>/overige informatie/i.test(x.label||'')&&String(x.waarde||'').trim());
+    return it?`<div class="spnoot"><small>PAF overige informatie</small><p>${esc(it.waarde)}</p></div>`:'';}
   async function statusBlock(el,s,na){
     let ch=Velden.migreer(s);
     const ph=await Store.photos.bySurvey(s.id,true),ok=ph.filter(p=>p.status!=='vervallen');
@@ -289,7 +299,7 @@
       if(cur==='afronding'){const vo=Velden.voortgang(s,ph,'uit');kaart+=`<div class="snext"><div class="t"><b>Document ${vo.klaar} van ${vo.totaal} compleet</b></div><a class="btn pri" href="shared/storyline.html?survey=${encodeURIComponent(s.id)}">Naar afronding</a></div>`;}}
     el.innerHTML=`<div class="sstat"><div class="shd" id="sbH" tabindex="0" role="group" aria-label="Status ${esc(Velden.statusMeta(cur).naam)}, stap ${idx+1} van ${Velden.STATUS.length}. Lang drukken om de status terug te zetten.">
       <div class="sht"><b>${esc(s.adres||'Schouw')}</b><span>stap ${idx+1} van ${Velden.STATUS.length}</span></div>
-      <ol class="sstep" aria-hidden="true">${Velden.STATUS.map((x,i)=>`<li class="${i===idx?'nu':''}"><i style="${i<=idx?'background:'+x.kleur:''}"></i><span>${esc(x.naam)}</span></li>`).join('')}</ol></div>${kaart}</div>`;
+      <ol class="sstep" aria-hidden="true">${Velden.STATUS.map((x,i)=>`<li class="${i===idx?'nu':''}"><i style="${i<=idx?'background:'+x.kleur:''}"></i><span>${esc(x.naam)}</span></li>`).join('')}</ol></div>${pafNoot(s)}${kaart}</div>`;
     if(!el.isConnected)return;langDruk(el.querySelector('#sbH'),()=>terugBlad(s,reopen));
     const td=el.querySelector('.stodo');if(td&&cfg.fotoVakken)Gegevens.vakkenBind(td,s,reopen,{kant:cur==='afronding'?'uit':undefined,naar:naarFotos});
     else if(td)Gegevens.todoBind(td,s,reopen,{kant:cur==='afronding'?'uit':undefined,camera:()=>{const a=(cfg.acties(s,0)||[]).find(x=>x.pri);if(a)a.fn(s);else document.querySelector('.sacts .btn.pri')?.click();}});
@@ -364,7 +374,6 @@
   const voet=s=>`<div class="sfoot">
        <a class="btn pri" href="shared/storyline.html?survey=${encodeURIComponent(s.id)}">Naar afronding</a>
        ${window.Paf?'<button class="slink" id="spaf">PAF inlezen</button>':''}
-       <button class="slink" id="other">Andere schouw</button>
        <button class="btn sdelx" id="sdel">Schouw verwijderen</button>
      </div>`;
   function bindVoet(s){bindDel($('sdel'),s);
@@ -372,7 +381,7 @@
     if($('spaf'))$('spaf').onclick=()=>Paf.kies().then(async f=>{toast('PAF lezen…');let r;
       try{r=await Paf.lees(f);}catch(e){toast('Deze pdf kon niet gelezen worden');return;}
       const res=Paf.toepassen(s,r.items,{bestand:f.name});if(Velden.onnet(s))Velden.onnetFix(s,[]);await Store.surveys.put(s);
-      toast(`${res.gevuld.length} ingevuld${res.bestond.length?` · ${res.bestond.length} al ingevuld, niet vervangen`:''}`);show(s);}).catch(()=>{});$('other').onclick=()=>{history.replaceState(null,'',location.pathname);start();};}
+      toast(`${res.gevuld.length} ingevuld${res.bestond.length?` · ${res.bestond.length} al ingevuld, niet vervangen`:''}`);show(s);}).catch(()=>{});}
 
   /* ---------- fotoscherm buiten / binnen (hoofdapp) ---------- */
   function naarFotos(x){if(!survey)return;view=x;history.pushState({zf:x,via:1},'','?survey='+encodeURIComponent(survey.id));show(survey);}
