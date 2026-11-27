@@ -408,7 +408,10 @@
     const v=st.zf||null;if(v!==view){view=v;show(survey);}});
   async function fotoScherm(s,x,ph){
     const ok=ph.filter(p=>p.status!=='vervallen'),L=ph.filter(p=>(p.sectie||'buiten')===x),T=await recount();
-    const acts=cfg.acties(s,ok.length),pri=acts.find(a=>a.pri),gal=acts.find(a=>/galerij/i.test(a.label)&&!a.pri);
+    // de witte knop telt alleen de foto's van deze kant, zonder plattegrond of kaart
+    const bb=s.bijlageBron||{},geenFoto=new Set([bb.plattegrond,bb.trace_geo].filter(Boolean));
+    const nHier=L.filter(p=>p.status!=='vervallen'&&!geenFoto.has(p.id)).length;
+    const acts=cfg.acties(s,nHier),pri=acts.find(a=>a.pri),gal=acts.find(a=>/galerij/i.test(a.label)&&!a.pri);
     const V=Velden.vakken(s,ph,Velden.statusOf(s)==='afronding'?'uit':undefined)[x];
     const kast=x==='binnen'; // afwerkpunt (kast) hoort bij binnen
     const kb=(s.bijlagen||{}).afw_foto,ku=kb?URL.createObjectURL(kb):'';if(ku)urls._kast=ku;
