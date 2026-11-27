@@ -51,7 +51,7 @@
   ];
   const LINES=['arrow','buis','mantel'];
   /* binnen (ook de kastfoto): alleen CPE + WODF, FDB lasbox en serverkast; buiten alle andere */
-  const BINNEN=new Set(['cpe','fdb','sk']);
+  const BINNEN=new Set(['cpe','fdb','sk']),BEIDE=new Set(['dv','bw']); // invoer (IN) en doorvoer brandwerend: binnen én buiten
   const GKEY='sisu.gebruik';
   const gebruik=()=>{try{return JSON.parse(localStorage.getItem(GKEY)||'{}');}catch(e){return{};}};
   function telGebruik(id){const g=gebruik();g[id]=(g[id]||0)+1;try{localStorage.setItem(GKEY,JSON.stringify(g));}catch(e){}}
@@ -217,7 +217,7 @@
     gum:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.5 20H20"/><path d="M14.5 4.5l5 5-9.5 9.5H6l-2.5-2.5a1.4 1.4 0 010-2z"/><path d="M9.5 9.5l5 5"/></svg>'
   };
   function build(){
-    const ph=st.ph,n=st.siblings.findIndex(p=>p.id===ph.id)+1,vv=ph.status==='vervallen',sec=ph.sectie,tools=toolsOpVolgorde().filter(t=>!sec||(sec==='binnen')===BINNEN.has(t.id));
+    const ph=st.ph,n=st.siblings.findIndex(p=>p.id===ph.id)+1,vv=ph.status==='vervallen',sec=ph.sectie,tools=toolsOpVolgorde().filter(t=>!sec||BEIDE.has(t.id)||(sec==='binnen')===BINNEN.has(t.id));
     if(tools.length&&!tools.some(t=>t.id===st.tool))st.tool=tools[0].id;
     const on=t=>t.id===st.tool;
     const foot=(st.opts.onDoc?'<button class="btn" id="vDoc">Naar afronding</button>':'')+(st.opts.onNext?`<button class="btn pri" id="vNext">${esc(st.opts.nextLabel||'Volgende foto')}</button>`:'');
@@ -382,7 +382,7 @@
     const prev=me>0?idx[me-1]:null,same=prev&&cur.text&&cur.text===(prev.bijschrift||'');
     const chip=x=>`<button class="chip${x.k==='lo'?' lo':''}${cur.sel.includes(x.k)?' on':''}" data-k="${x.k}" aria-pressed="${cur.sel.includes(x.k)}">${esc(x.short)}</button>`;
     // binnen: alleen de blokjes van de binnen-items (en Let op), buiten de rest; zonder kant alles
-    const kantOk=x=>!ph.sectie||cur.sel.includes(x.k)||x.k==='lo'||(ph.sectie==='binnen')===BINNEN.has(x.bij||x.k);
+    const kantOk=x=>!ph.sectie||cur.sel.includes(x.k)||x.k==='lo'||BEIDE.has(x.bij||x.k)||(ph.sectie==='binnen')===BINNEN.has(x.bij||x.k);
     const an=ph.ann||{},heeft=t=>t==='mantel'?!!(an.mantel&&an.mantel.length>1):((an.syms||[]).some(x=>x.t===t));
     // de zin staat bovenaan in de kaart, de blokjes eronder
     box.innerHTML=`<div class="cap${cur.text?'':' empty'}" id="vCapTxt">${esc(cur.text)||'Nog geen bijschrift. Veeg een pijl of tik een blokje.'}</div>
