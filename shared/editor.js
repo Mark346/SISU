@@ -176,6 +176,9 @@
   async function openEditor(photoId,opts={}){
     injectCss();
     if(st)close(true);
+    // eigen stap in de geschiedenis: terug-gebaar sluit de editor (niet de app)
+    // (alleen in de app-schermen; op de afronding blijft alles zoals het was)
+    edHist=!!window.SurveyUI;if(edHist&&!(history.state&&history.state.ed))history.pushState({...(history.state||{}),ed:1},'');
     const ph=await Store.photos.get(photoId);if(!ph)throw new Error('Foto niet gevonden');
     if(!ph.ann){const im=await loadDims(ph.blob);ph.ann={orient:im.w>=im.h?'liggend':'staand'};}
     const root=document.createElement('div');root.className='ved';root.setAttribute('role','dialog');root.setAttribute('aria-label','Foto bewerken');
@@ -193,11 +196,13 @@
     all.forEach(p=>{if(!st.thumbs[p.id])st.thumbs[p.id]=URL.createObjectURL(p.blob);});
   }
   const heeftSk=p=>!!(p&&p.ann&&(p.ann.syms||[]).some(x=>x.t==='sk'));
+  let viaTerug=false,edHist=false;
+  addEventListener('popstate',e=>{if(st&&edHist&&!(e.state&&e.state.ed)){viaTerug=true;try{close();}finally{viaTerug=false;}}});
   function close(silent){
     if(!st)return;const o=st.opts;if(st.skVoor&&heeftSk(st.ph)&&!st.skVoor.has(st.ph.id))st.skNieuw=st.ph.id;const sk=st.skNieuw;
     if(saveT){clearTimeout(saveT);saveT=null;const p=st.ph;p.bijschrift=capOf(p).text;Store.photos.put(p).catch(()=>{});} /* nog niet opgeslagen wijziging bewaren */
     URL.revokeObjectURL(st.url);Object.values(st.thumbs).forEach(u=>URL.revokeObjectURL(u));
-    st.root.remove();hidePop();st=null;if(!silent&&o.onClose)o.onClose();
+    st.root.remove();hidePop();st=null;if(!silent&&!viaTerug&&edHist&&history.state&&history.state.ed)history.back();if(!silent&&o.onClose)o.onClose();
     if(!silent&&sk&&window.Gegevens&&Gegevens.naKast)Gegevens.naKast(sk,o.onClose).catch(()=>{});
   }
   const size=()=>Legend.size(st.ph.ann);

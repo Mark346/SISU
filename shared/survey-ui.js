@@ -190,7 +190,10 @@
     view=null;
     const want=new URLSearchParams(location.search).get('survey');
     if(want){const s=await Store.surveys.get(want);if(s){const zf=new URLSearchParams(location.search).get('fotos')||(history.state&&history.state.zf);
-      if(cfg.fotoVakken&&(zf==='buiten'||zf==='binnen'))view=zf;return show(s);}}
+      if(cfg.fotoVakken&&(zf==='buiten'||zf==='binnen'))view=zf;
+      if(cfg.fotoVakken&&!(history.state&&history.state.s)){const u='?survey='+encodeURIComponent(s.id);history.replaceState(null,'',location.pathname);
+        history.pushState({s:1},'',u);if(view)history.pushState({s:1,zf:view,via:1},'',u);}
+      return show(s);}}
     const all=await Store.surveys.list(),st=x=>Velden.statusOf(x);
     for(const x of all)if(Velden.adresNaam(x))await Store.surveys.put(x); // naam = adres en plaats van de klant
     const arch=all.filter(x=>Velden.gearchiveerd(x)),rest=all.filter(x=>!Velden.gearchiveerd(x));
@@ -232,7 +235,7 @@
          <div class="sb"><a class="btn" href="shared/document.html?survey=${encodeURIComponent(x.id)}">Document</a><button class="btn" data-share="${esc(x.id)}">Delen (PDF)</button></div>
          <div class="sb"><button class="btn" data-unarch="${esc(x.id)}">Terugzetten</button><button class="btn sdel2" data-del="${esc(x.id)}" data-naam="${esc(x.adres||'')}">Verwijderen</button></div>`)).join('')}</div>`:''):''}
      ${cfg.startExtra||''}`;
-    main.querySelectorAll('.sv,[data-open]').forEach(b=>b.onclick=async()=>show(await Store.surveys.get(b.dataset.id||b.dataset.open)));
+    main.querySelectorAll('.sv,[data-open]').forEach(b=>b.onclick=async()=>openSchouw(await Store.surveys.get(b.dataset.id||b.dataset.open)));
     main.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>verwijderSchouw(b.dataset.del,b.dataset.naam,()=>start()));
     main.querySelectorAll('[data-arch]').forEach(b=>b.onclick=async()=>{const x=await Store.surveys.get(b.dataset.arch);x.gearchiveerd=true;x.status=Velden.statusOf(x);await Store.surveys.put(x);toast('Gearchiveerd');start();});
     main.querySelectorAll('[data-unarch]').forEach(b=>b.onclick=async()=>{const x=await Store.surveys.get(b.dataset.unarch);x.gearchiveerd=false;x.status=Velden.statusOf(x);await Store.surveys.put(x);toast('Terug bij Klaar');start();});
@@ -248,7 +251,7 @@
     $('go').onclick=async()=>{const a=$('adr').value.trim();if(!a){toast('Vul eerst het adres in');$('adr').focus();return;}
       if(cfg.typeKiezen&&!typ){toast('Kies eerst OFFNET of ONNET');main.querySelector('[data-typ]').focus();return;}
       newOpen=false;
-      const x=await Store.surveys.put({adres:a,variant:cfg.variant,status:'uitwerking',...(typ?{velden:{type_aansluiting:typ},sectie:typ==='ONNET'?'binnen':'buiten'}:{})});await show(x);
+      const x=await Store.surveys.put({adres:a,variant:cfg.variant,status:'uitwerking',...(typ?{velden:{type_aansluiting:typ},sectie:typ==='ONNET'?'binnen':'buiten'}:{})});await openSchouw(x);
       // eerst wat je vooraf moet weten (alleen als daar iets verplicht is)
       const i=Velden.voortgang(x,[],'in');if(i.mist.length)Gegevens.open(x,{filter:'todo',moment:'vooraf',onClose:()=>show(x)});};
     // nieuwe schouw vanuit een PAF: adres, klant, type aansluiting enz. komen uit de pdf
@@ -258,7 +261,7 @@
       if(!x.velden.type_aansluiting&&typ)x.velden.type_aansluiting=typ;
       const a=$('adr').value.trim();if(a&&!x.adres)x.adres=a;if(!x.adres)x.adres=''; // geen adres in de PAF: leeg laten (niet de bestandsnaam), het klantadres blijft open
       x.sectie=Velden.onnet(x)?'binnen':'buiten';newOpen=false;
-      const y=await Store.surveys.put(x);await show(y);toast(`${res.gevuld.length} gegevens uit de PAF ingevuld`);
+      const y=await Store.surveys.put(x);await openSchouw(y);toast(`${res.gevuld.length} gegevens uit de PAF ingevuld`);
       const i=Velden.voortgang(y,[],'in');if(i.mist.length)Gegevens.open(y,{filter:'todo',moment:'vooraf',onClose:()=>show(y)});}).catch(()=>{});
   }
 
@@ -360,7 +363,10 @@
   async function show(s){
     { // eerder als adres gebruikte bestandsnaam van een PAF weghalen; adres van de schouw volgt het klantadres als dat er (later) is
       if(Velden.adresNaam(s))await Store.surveys.put(s);}
-    survey=s;history.replaceState(view?{zf:view,via:!!(history.state&&history.state.via)}:null,'','?survey='+encodeURIComponent(s.id));title(s.adres||cfg.naam);
+    survey=s;{const cur=history.state||{},hou={};['geg','ed','pg'].forEach(k=>{if(cur[k])hou[k]=cur[k];});
+      const st=view?{zf:view,via:!!cur.via}:{};if(cfg.fotoVakken)st.s=1;
+      history.replaceState(Object.keys(st).length||Object.keys(hou).length?{...st,...hou}:null,'','?survey='+encodeURIComponent(s.id));}
+    title(s.adres||cfg.naam);
     // een schouw uit een andere variant gaat vanaf nu verder in deze variant (terugknoppen en 'Doorgaan met' volgen dat)
     if(s.variant!==cfg.variant){const was=NAMEN[s.variant]||s.variant;s.variant=cfg.variant;await Store.surveys.put(s);if(was)toast(`Deze schouw gaat nu verder in ${cfg.naam} (was ${was})`);}
     // in de hoofdapp (Veeg & Klik) alleen het adres; in de andere varianten met de naam erachter
@@ -426,15 +432,20 @@
       toast(`${res.gevuld.length} ingevuld${res.bestond.length?` · ${res.bestond.length} al ingevuld, niet vervangen`:''}`);show(s);}).catch(()=>{});}
 
   /* ---------- fotoscherm buiten / binnen (hoofdapp) ---------- */
-  function naarFotos(x){if(!survey)return;view=x;history.pushState({zf:x,via:1},'','?survey='+encodeURIComponent(survey.id));show(survey);}
-  /* terugknop bovenin: van fotoscherm naar de schouw, van de schouw naar de lijst */
+  /* schouw openen als eigen stap in de geschiedenis: de terug-veeg (Safari) of terugknop (Android) gaat dan terug naar de lijst */
+  function openSchouw(s){if(!s)return;view=null;if(cfg.fotoVakken&&!(history.state&&history.state.s))history.pushState({s:1},'','?survey='+encodeURIComponent(s.id));return show(s);}
+  function naarFotos(x){if(!survey)return;view=x;history.pushState({s:1,zf:x,via:1},'','?survey='+encodeURIComponent(survey.id));show(survey);}
+  /* terugknop bovenin: van fotoscherm naar de schouw, van de schouw naar de lijst (gelijk aan het terug-gebaar) */
   function terug(){if(view){if(history.state&&history.state.zf&&history.length>1&&history.state.via)history.back();else{view=null;show(survey);}return;}
+    if(cfg.fotoVakken&&history.state&&history.state.s&&history.length>1){history.back();return;}
     history.replaceState(null,'',location.pathname);start();}
   /* foto verwijderd: meteen overal uit beeld halen en daarna het scherm opnieuw opbouwen vanuit de opslag */
   addEventListener('foto-weg',e=>{const id=e.detail&&e.detail.id;if(!id)return;
     document.querySelectorAll(`[data-id="${id}"],[data-pid="${id}"]`).forEach(el=>{const k=el.closest('.rolk');if(k&&el.classList.contains('rt')){el.innerHTML='<i class="uitr" aria-hidden="true">!</i>';const sm=k.querySelector('small');if(sm)sm.textContent='Ontbreekt · tik om te maken';k.classList.add('wrn');}else el.remove();});
     if(survey&&e.detail.surveyId===survey.id)setTimeout(async()=>{const s=await Store.surveys.get(survey.id);if(s&&!document.querySelector('.ved'))show(s);},350);});
-  addEventListener('popstate',e=>{if(!cfg||!cfg.fotoVakken||!survey)return;const st=e.state||{};if(st.geg)return;
+  addEventListener('popstate',e=>{if(!cfg||!cfg.fotoVakken)return;const st=e.state||{};if(st.geg||st.ed||st.pg)return;
+    if(!st.s){if(survey){survey=null;view=null;start();}return;}   // terug naar de lijst
+    if(!survey){start();return;}                                     // vooruit naar een schouw
     const v=st.zf||null;if(v!==view){view=v;show(survey);}});
   /* pijlen en legenda-items ook op de kleine tegels */
   function tegels(root,ph){root.querySelectorAll('.th img,.rt img,.tdti img').forEach(i=>i.onerror=()=>{const t=i.parentElement;if(t)t.classList.add('kapot');});
