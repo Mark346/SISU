@@ -452,7 +452,7 @@
        <div class="r"><div class="l">Invoeringen<small>${esc(cfg.invoerUitleg||'Telt de app.')}</small></div><span class="v" id="ti">${T.invoeringen||0}</span></div>
        <div class="r"><div class="l">Boringen/persingen</div><button class="step" id="bm" aria-label="Eén minder">−</button><span class="v" id="tb">${T.boringen||0}</span><button class="step" id="bp" aria-label="Eén meer">+</button></div></div>`
       :`<div id="bVeld"></div>`}
-     <div class="sfoot"><button class="btn pri" id="fTerug">Afgerond</button></div>`;
+     <div class="sfoot"><button class="btn pri" id="fTerug">${x==='binnen'?'Binnen':'Buiten'} klaar</button></div>`;
     window.scrollTo(0,0);
     // camera direct in de tik openen (iOS opent hem niet meer na een await), daarna pas opslaan
     const neem=a=>{s.sectie=x;a.fn(s);Store.surveys.put(s);};

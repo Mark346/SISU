@@ -199,7 +199,7 @@
       ${st.moment?`<div class="gmom"><span>Alleen wat je ${esc(Velden.MOMENT[st.moment])} invult</span><button id="gAlle">Alle secties</button></div>`:''}
       ${blokken.length?blokken.join('')+pafHtml()
         :`<div class="gleeg"><p>${st.moment==='vooraf'?'Alles wat je vooraf nodig hebt, is ingevuld.':'Alles wat verplicht is, is ingevuld.'}</p><button class="btn" id="gToon">Bekijk alles</button></div>`}
-    </div><div class="gf"${n||st.opts.afrond?'':' hidden'}><div class="gfr"><button class="btn${st.opts.afrond?'':' pri'}" id="gNx"${n?'':' hidden'}>Volgende open veld</button>${st.opts.afrond?`<button class="btn pri" id="gAf">Afgerond</button>`:''}</div></div>`;
+    </div><div class="gf"${n||st.opts.afrond?'':' hidden'}><div class="gfr"><button class="btn${st.opts.afrond?'':' pri'}" id="gNx"${n?'':' hidden'}>Volgende open veld</button>${st.opts.afrond?`<button class="btn pri" id="gAf">Informatie klaar</button>`:''}</div></div>`;
     R.querySelector('#gX').onclick=sluit;
     R.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{if(st.filter===b.dataset.f)return;save(true);st.filter=b.dataset.f;st.vast.clear();st.edit=null;lijst();R.querySelector('.gb').scrollTop=0;});
     const al=R.querySelector('#gAlle');if(al)al.onclick=()=>{st.moment=null;lijst();};
