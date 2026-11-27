@@ -89,6 +89,8 @@
 .ved .sm{min-height:44px;padding:0 14px;border-radius:22px;border:1px solid var(--line2,#3A3E46);background:transparent;color:inherit;font-weight:600;font-size:15px;cursor:pointer}
 .ved .vtools{display:flex;gap:8px;padding:2px 16px 12px;overflow-x:auto;scrollbar-width:none}
 .ved .vtools::-webkit-scrollbar{display:none}
+/* weinig items (binnen): alles in beeld, op twee regels, niets verstopt buiten het scherm */
+.ved .vtools.wrap{flex-wrap:wrap;overflow-x:visible}
 .ved .vtools .tl{flex:none;display:flex;align-items:center;gap:8px;min-height:46px;padding:0 14px 0 10px;border-radius:23px;border:1px solid var(--line,#2E323A);background:var(--card,#1C1F25);color:inherit;font-size:15px;font-weight:600;white-space:nowrap;cursor:pointer}
 .ved .vtools .tl svg{flex:none;width:40px;height:16px}
 .ved .vtools .tl.on{background:var(--acc,#F3F4F6);border-color:var(--acc,#F3F4F6);color:var(--on-acc,#121418)}
@@ -235,7 +237,7 @@
         </div>
       </div>
       <div class="vhint"><p></p>${vv?'<button class="sm" id="vRest">Terugzetten</button>':''}</div>
-      <div class="vtools" role="toolbar" aria-label="Legenda">${tools.map(t=>`<button class="tl${on(t)?' on':''}" data-t="${t.id}" aria-pressed="${on(t)}">${miniOf(t,1.3)}<span>${t.name}</span></button>`).join('')}</div>
+      <div class="vtools${tools.length<=6?' wrap':''}" role="toolbar" aria-label="Legenda">${tools.map(t=>`<button class="tl${on(t)?' on':''}" data-t="${t.id}" aria-pressed="${on(t)}">${miniOf(t,1.3)}<span>${t.name}</span></button>`).join('')}</div>
       <div class="vcard"><div class="vlab">Bijschrift</div><div id="vCap"></div></div>
       <div class="vlab o">Foto's van deze schouw</div>
       <div class="strip" id="vStrip"></div>
