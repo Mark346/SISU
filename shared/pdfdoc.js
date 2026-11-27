@@ -3,74 +3,153 @@
    PdfDoc.make(surveyId) -> Blob,  PdfDoc.share(surveyId) -> deelt of downloadt.
    Vereist store.js, legend.js, velden.js en docmodel.js. */
 (function(){
+  const BASE=(document.currentScript&&document.currentScript.src)||location.href; // map van dit script (shared/), voor het logo
   const PW=1240,PH=1754,M=80,CW=PW-2*M,ORANGE='#FF7A1A',FONT='-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif';
   const loadImg=src=>new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=()=>rej(new Error('Afbeelding laden mislukt'));i.src=src;});
   const nl=v=>(Math.round((+v||0)*10)/10).toLocaleString('nl-NL',{maximumFractionDigits:1});
   function wrap(g,text,w){const out=[];for(const para of String(text||'').split('\n')){let line='';for(const word of para.split(/\s+/).filter(Boolean)){const t=line?line+' '+word:word;if(g.measureText(t).width>w&&line){out.push(line);line=word;}else line=t;}out.push(line);}return out.filter((l,i,a)=>l||i<a.length-1);}
   function newPage(){const c=document.createElement('canvas');c.width=PW;c.height=PH;const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,PW,PH);g.fillStyle='#111';g.textBaseline='alphabetic';return{c,g};}
 
+  /* ---------- PDF in de opmaak van het origineel (IO-2-T03 Site survey, Word) ----------
+     A4 op 150 dpi: 1 pt = 150/72 px. Kop met logo, rode balken (#963821), tekst Arial grijsgroen (#51534A),
+     voettekst met bedrijfsgegevens en paginanummer, zoals in het Word-sjabloon. */
+  const PT=150/72,A='Arial,Helvetica,"Liberation Sans",sans-serif',INK='#51534A',ROOD='#963821',TEAL='#007886',LIJN='#000';
+  const L=100,R=PW-100,W=R-L,TOP=150,BOT=PH-150;
+  const fz=pt=>Math.round(pt*PT);
   async function make(surveyId){
-    const m=await DocModel.bouw(surveyId),S=m.S,pages=[];let pg=newPage(),g=pg.g,y=M;
-    const nieuw=()=>{pages.push(pg);pg=newPage();g=pg.g;y=M;};
-    const ruimte=h=>{if(y+h>PH-M-40)nieuw();};
-    const tekst=(t,x,yy,font,kleur)=>{g.font=font;g.fillStyle=kleur||'#111';g.fillText(t,x,yy);};
-    // titel
-    tekst('SITE SURVEY DOCUMENT',M,y+20,`700 22px ${FONT}`,'#777');y+=34;
-    g.font=`800 44px ${FONT}`;wrap(g,S.adres||'Schouw',CW).forEach(l=>{tekst(l,M,y+42,`800 44px ${FONT}`);y+=54;});
-    tekst(new Date(S.datum).toLocaleDateString('nl-NL',{day:'numeric',month:'long',year:'numeric'}),M,y+20,`400 26px ${FONT}`,'#555');y+=46;
-    const GAP=36,COLW=(CW-GAP)/2,BOXH=400,CAPF=24,CAPL=31;let nr=0;
-    for(const b of m.blokken){
-      if(b.t==='kop'){ruimte(230);y+=18;tekst(b.tekst,M,y+34,`800 34px ${FONT}`);y+=46;g.fillStyle=ORANGE;g.fillRect(M,y,CW,4);y+=20;continue;}
-      if(b.t==='rijen'){
-        const LW=Math.round(CW*.45),VW=CW-LW-36;
-        for(const r of b.rijen){g.font=`400 24px ${FONT}`;const ll=wrap(g,r.l,LW-10),vl=wrap(g,r.v||'—',VW);const h=Math.max(ll.length,vl.length)*30+20;
-          ruimte(h);g.strokeStyle='#bbb';g.lineWidth=1.5;g.strokeRect(M,y,CW,h);g.fillStyle='#bbb';g.fillRect(M+LW,y,1.5,h);
-          ll.forEach((l,i)=>tekst(l,M+14,y+34+i*30,`400 24px ${FONT}`,'#333'));vl.forEach((l,i)=>tekst(l,M+LW+16,y+34+i*30,`600 24px ${FONT}`,r.v?'#111':'#999'));y+=h;}
-        y+=16;continue;}
-      if(b.t==='beeld'){
-        if(b.blob){const u=URL.createObjectURL(b.blob);try{const im=await loadImg(u),sc=Math.min(CW/im.naturalWidth,700/im.naturalHeight,1.6),w=im.naturalWidth*sc,h=im.naturalHeight*sc;
-          ruimte(h+50);tekst(b.l,M,y+26,`700 24px ${FONT}`);y+=38;g.drawImage(im,M,y,w,h);g.strokeStyle='#bbb';g.strokeRect(M,y,w,h);y+=h+20;}finally{URL.revokeObjectURL(u);}}
-        else{ruimte(80);tekst(b.l,M,y+26,`700 24px ${FONT}`);y+=38;tekst(b.tekst||'—',M,y+28,`800 26px ${FONT}`,b.tekst?'#111':'#999');y+=50;}
-        continue;}
-      if(b.t==='fotos'){
-        const ph=b.fotos;if(!ph.length){ruimte(50);tekst('—',M,y+28,`400 24px ${FONT}`,'#999');y+=50;continue;}
-        const capLines=p=>{g.font=`400 ${CAPF}px ${FONT}`;return wrap(g,p.bijschrift||'',COLW-20).slice(0,6);};
-        const vakH=p=>BOXH+14+34+capLines(p).length*CAPL+10;
-        for(let i=0;i<ph.length;i+=2){
-          const pair=ph.slice(i,i+2),h=Math.max(...pair.map(vakH));ruimte(h);
-          for(let k=0;k<pair.length;k++){
-            const p=pair[k],x=M+k*(COLW+GAP);nr++;
-            g.strokeStyle='#bbb';g.lineWidth=2;g.strokeRect(x,y,COLW,h);
-            const blob=p.ann?await Legend.burnIn(p.blob,p.ann):p.blob,u=URL.createObjectURL(blob);
-            try{const im=await loadImg(u),sc=Math.min((COLW-16)/im.naturalWidth,(BOXH-16)/im.naturalHeight),w=im.naturalWidth*sc,hh=im.naturalHeight*sc;
-              g.drawImage(im,x+(COLW-w)/2,y+8+(BOXH-16-hh)/2,w,hh);}finally{URL.revokeObjectURL(u);}
-            tekst(`Foto ${nr}`,x+10,y+BOXH+14+24,`700 ${CAPF}px ${FONT}`);
-            capLines(p).forEach((l,j)=>tekst(l,x+10,y+BOXH+14+34+24+j*CAPL,`400 ${CAPF}px ${FONT}`));
-          }
-          y+=h+GAP;
-        }
-        continue;}
-      if(b.t==='vg'){
-        if(!b.items.length){ruimte(50);tekst('Geen aspecten aangekruist.',M,y+28,`400 24px ${FONT}`,'#555');y+=50;continue;}
-        const W1=Math.round(CW*.36),W2=Math.round(CW*.30),W3=CW-W1-W2,cols=[[M,W1],[M+W1,W2],[M+W1+W2,W3]];
-        const kopR=()=>{ruimte(48);g.fillStyle='#f2f2f2';g.fillRect(M,y,CW,44);['Aspect',"Risico's",'Afspraken / randvoorwaarden'].forEach((t,i)=>tekst(t,cols[i][0]+10,y+30,`700 21px ${FONT}`));g.strokeStyle='#bbb';g.strokeRect(M,y,CW,44);y+=44;};
-        kopR();
-        for(const a of b.items){g.font=`400 21px ${FONT}`;const L=[wrap(g,a.groep+': '+a.aspect,W1-20),wrap(g,a.risico||'',W2-20),wrap(g,a.afspraak||'',W3-20)],h=Math.max(1,...L.map(x=>x.length))*27+16;
-          if(y+h>PH-M-40){nieuw();kopR();}
-          g.strokeStyle='#bbb';g.lineWidth=1.5;cols.forEach(([x,w])=>g.strokeRect(x,y,w,h));
-          L.forEach((ls,i)=>ls.forEach((l,j)=>tekst(l,cols[i][0]+10,y+28+j*27,`400 21px ${FONT}`)));y+=h;}
-        y+=16;continue;}
-      if(b.t==='legenda'){
-        const it=Legend.legendaItems();
-        for(let i=0;i<it.length;i+=2){ruimte(70);
-          for(let k=0;k<2&&i+k<it.length;k++){const x=M+k*(CW/2),im=await loadImg('data:image/svg+xml;charset=utf-8,'+encodeURIComponent(it[i+k].svg.replace('width="90" height="36"','width="180" height="72"')));
-            g.drawImage(im,x,y,135,54);tekst(it[i+k].naam,x+150,y+36,`400 23px ${FONT}`);}
-          y+=66;}
-        continue;}
-    }
-    pages.push(pg);
-    pages.forEach((p,i)=>{p.g.font=`400 20px ${FONT}`;p.g.fillStyle='#777';p.g.textAlign='right';p.g.fillText(`${i+1} / ${pages.length}`,PW-M,PH-40);p.g.textAlign='left';});
-    const jpgs=[];for(const p of pages){const b=await new Promise(r=>p.c.toBlob(r,'image/jpeg',.85));jpgs.push(new Uint8Array(await b.arrayBuffer()));}
+    const S=await Store.surveys.get(surveyId);if(!S)throw new Error('Schouw niet gevonden');
+    const alle=await Store.photos.bySurvey(surveyId),fotos=alle.filter(p=>p.status!=='vervallen'),c=Velden.cfg();
+    const V=k=>{const v=Velden.waarde(S,k);if(v==='nvt')return 'N.v.t';if(v==null)return '';const f=Velden.VELDEN.find(x=>x.k===k);
+      if(f&&f.t==='datum'&&v){const d=new Date(v);if(!isNaN(d))return d.toLocaleDateString('nl-NL',{day:'2-digit',month:'2-digit',year:'numeric'});}
+      if(f&&f.t==='teller'&&f.teller&&/meters/i.test(f.teller))return +v>0?nl(v)+' m':'';
+      return String(v);};
+    const uit=k=>!c[k]||c[k].uit!=='nee';
+    let logo=null;try{logo=await loadImg(new URL('eurofiber-logo.jpg',BASE).href);}catch(e){}
+    const pages=[];let pg,g,y;
+    const nieuw=()=>{pg=newPage();g=pg.g;pages.push(pg);y=TOP;
+      if(logo){const h=64,w=logo.naturalWidth*h/logo.naturalHeight;g.drawImage(logo,L-4,60,w,h);}};
+    const tx=(t,x,yy,pt,o={})=>{g.font=`${o.it?'italic ':''}${o.b?'700':'400'} ${fz(pt)}px ${o.serif?'Cambria,Georgia,serif':A}`;g.fillStyle=o.kleur||INK;g.textAlign=o.al||'left';
+      let s=String(t==null?'':t);if(o.max){while(s.length>1&&g.measureText(s).width>o.max)s=s.slice(0,-2)+'…';}g.fillText(s,x,yy);g.textAlign='left';};
+    const lijn=(x1,y1,x2,y2,d=1.4,k=LIJN)=>{g.strokeStyle=k;g.lineWidth=d;g.beginPath();g.moveTo(x1,y1);g.lineTo(x2,y2);g.stroke();};
+    const kader=(x,yy,w,h,d=1.6)=>{g.strokeStyle=LIJN;g.lineWidth=d;g.strokeRect(x,yy,w,h);};
+    const balk=(t,x,yy,w,h=26,pt=10)=>{g.fillStyle=ROOD;g.fillRect(x,yy,w,h);tx(t,x+9,yy+h-7,pt,{kleur:'#fff',b:pt>9.5});};
+    const RH=24,LW=Math.round(W*.27);
+    /* tabel met rode kop en rijen "label: waarde" met een lijn onder de waarde */
+    function tabel(kop,rijen){const y0=y;balk(kop,L,y,W);y+=26;
+      for(const [l,v] of rijen){y+=RH;tx(l+(l.endsWith('?')||l.endsWith(':')?'':':'),L+9,y-6,9.5,{max:LW-12});tx(v,L+LW+6,y-6,9.5,{max:W-LW-12,kleur:'#111'});lijn(L+LW,y,R,y,1.2);}
+      y+=6;kader(L,y0,W,y-y0);y+=22;}
+    const cb=(x,yy,aan)=>{g.strokeStyle=LIJN;g.lineWidth=1.4;g.strokeRect(x,yy-15,16,16);if(aan){g.strokeStyle='#111';g.lineWidth=2.4;g.beginPath();g.moveTo(x+3,yy-7);g.lineTo(x+7,yy-3);g.lineTo(x+14,yy-12);g.stroke();}};
+    async function plaatje(blob,x,yy,w,h,ann){if(!blob)return false;const b=ann?await Legend.burnIn(blob,ann):blob,u=URL.createObjectURL(b);
+      try{const im=await loadImg(u),sc=Math.min(w/im.naturalWidth,h/im.naturalHeight),iw=im.naturalWidth*sc,ih=im.naturalHeight*sc;g.drawImage(im,x+(w-iw)/2,yy+(h-ih)/2,iw,ih);return true;}
+      catch(e){return false;}finally{URL.revokeObjectURL(u);}}
+    const bijlage=k=>{const bp=fotos.find(p=>p.id===(S.bijlageBron||{})[k]);return bp?{blob:bp.blob,ann:bp.ann}:(S.bijlagen||{})[k]?{blob:S.bijlagen[k]}:null;};
+
+    /* ---- pagina 1: algemeen, klant, locatie, eigenaar, aanmelden ---- */
+    nieuw();
+    tx('Site survey document',L+6,y+22,14,{b:true,kleur:'#595959'});y+=38;
+    { const y0=y;balk('Algemene gegevens',L,y,W);y+=26;
+      for(const [l,k] of [['Projectnummer','projectnummer'],['Type aansluiting','type_aansluiting'],['Datum site survey','datum_survey']]){y+=RH;tx(l+':',L+9,y-6,9.5);tx(V(k),L+LW+6,y-6,9.5,{kleur:'#111',max:W-LW-12});lijn(L+LW,y,R,y,1.2);}
+      // aanwezig: Naam / Bedrijf / Telefoonnummer
+      const cw=(W-LW)/3,cx=i=>L+LW+i*cw;y+=RH;tx('Aanwezig:',L+9,y-6,9.5);['Naam:','Bedrijf:','Telefoonnummer:'].forEach((h,i)=>tx(h,cx(i)+5,y-6,9,{kleur:'#595959'}));
+      const ya=y-RH;for(const [l,p] of [['Organisatie','aanw_org'],['Aannemer','aanw_aan']]){y+=RH;tx(l+':',L+9,y-6,9.5);
+        tx(V(p+'_naam'),cx(0)+5,y-6,9.5,{kleur:'#111',max:cw-10});tx(V(p+'_bedrijf'),cx(1)+5,y-6,9.5,{kleur:'#111',max:cw-10});tx(V(p+'_tel'),cx(2)+5,y-6,9.5,{kleur:'#111',max:cw-10});}
+      for(let r=0;r<3;r++)lijn(L+LW,ya+(r+1)*RH,R,ya+(r+1)*RH,1.2);for(let i=0;i<=3;i++)lijn(cx(i),ya,cx(i),y,1.2);
+      y+=6;kader(L,y0,W,y-y0);y+=22; }
+    { // afhankelijkheden voor haalbaarheid leverdatum
+      const y0=y,DW=Math.round(W*.2),ox=L+LW,dx=R-DW;balk('Afhankelijkheden voor haalbaarheid leverdatum:',L,y,W,26,9.5);y+=26;
+      y+=RH;tx('Onderwerp',ox+5,y-6,9,{kleur:'#595959'});tx('Datum gereed',dx+5,y-6,9,{kleur:'#595959'});lijn(ox,y,R,y,1.2);
+      const ya=y-RH;
+      for(const [l,k] of [['Organisatie','afh_org'],['Aannemer','afh_aan']]){const regels=String(Velden.waarde(S,k)||'').split('\n').map(x=>x.trim()).filter(Boolean);
+        const yb=y;for(let r=0;r<3;r++){y+=RH;const t=regels[r]||'';const m=t.match(/^(.*?)[,;\s–-]+(\d{1,2}[-/.]\d{1,2}[-/.]\d{2,4})\s*$/);
+          tx(m?m[1]:t,ox+5,y-6,9.5,{kleur:'#111',max:dx-ox-10});if(m)tx(m[2],dx+5,y-6,9.5,{kleur:'#111'});lijn(ox,y,R,y,1.2);}
+        tx(l+':',L+9,yb+RH*1.6,9.5);}
+      lijn(ox,ya,ox,y,1.2);lijn(dx,ya,dx,y,1.2);y+=6;kader(L,y0,W,y-y0);y+=22; }
+    tabel('Gegevens klant',[['Organisatie',V('klant_org')],['Adres',V('klant_adres')],['Postcode',V('klant_postcode')],['Plaats',V('klant_plaats')],['Contactpersoon',V('klant_contact')],['Telefoonnummer',V('klant_tel')],['E-mail',V('klant_mail')]]);
+    { // gegevens locatie, eigenaar en aanmelden in één kader, zoals het origineel
+      y-=22;const y0=y;balk('Gegevens locatie',L,y,W);y+=26;
+      for(const [l,k] of [['Gebouwnaam','loc_gebouw'],['Soort gebouw','loc_soort'],['Adres','loc_adres'],['Postcode','loc_postcode'],['Plaats','loc_plaats']]){y+=RH;tx(l+':',L+9,y-6,9.5);tx(V(k),L+LW+6,y-6,9.5,{kleur:'#111',max:W-LW-12});lijn(L+LW,y,R,y,1.2);}
+      y+=10;const eig=Velden.waarde(S,'eig_klant_is_eigenaar'),ja=eig==='Ja',nee=eig==='Nee';
+      const ex=L+LW,lx=ex+Math.round((R-ex)*.30),vx=lx+Math.round((R-ex)*.17),ye=y;
+      tx('Is de klant eigenaar van',L+9,y+RH-6,9.5);tx('het gebouw:',L+9,y+2*RH-6,9.5);
+      tx('Ja',ex+5,y+RH-6,9.5);cb(ex+32,y+RH-4,ja);tx('Nee',ex+56,y+RH-6,9.5);cb(ex+92,y+RH-4,nee);tx('Indien nee*:',ex+116,y+RH-6,9,{max:lx-ex-120});
+      const E=[['Naam','eig_naam'],['Adres','eig_adres'],['Postcode','eig_postcode'],['Plaats','eig_plaats'],['Contactpersoon','eig_contact'],['Telefoon','eig_tel'],['Mail','eig_mail']];
+      for(const [l,k] of E){y+=RH;tx(l+':',vx-6,y-6,9.5,{al:'right'});tx(ja?'N.v.t':V(k),vx+5,y-6,9.5,{kleur:'#111',max:R-vx-10});lijn(ex,y,R,y,1.2);}
+      lijn(ex,ye,R,ye,1.2);lijn(ex,ye,ex,y,1.2);lijn(lx,ye,lx,y,1.2);lijn(vx,ye,vx,y,1.2);
+      y+=10;tx('De werkzaamheden moeten',L+9,y+RH-6,9.5);tx('worden aangemeld bij:',L+9,y+2*RH-6,9.5);y+=2*RH;lijn(L+LW,y,R,y,1.2);
+      for(const [l,k] of [['Naam','aanm_naam'],['Telefoon','aanm_tel'],['E-mail','aanm_mail'],['Aantal dagen vooraf','aanm_dagen']]){y+=RH;tx(l+':',L+9,y-6,9.5);tx(V(k),L+LW+6,y-6,9.5,{kleur:'#111',max:W-LW-12});lijn(L+LW,y,R,y,1.2);}
+      y+=6;kader(L,y0,W,y-y0);y+=24;tx('*Contactpersoon noteren die akkoord kan geven op de aanleg',L+40,y,9);}
+
+    /* ---- pagina 2: afwerkpunt klantlocatie ---- */
+    nieuw();
+    { const y0=y;balk('Afwerkpunt klantlocatie',L,y,W);y+=26;
+      for(const [l,k] of [['Plaatsbepaling 19” kast','afw_plaats'],['Ruimtebenaming','afw_ruimte'],['Kastbenaming','afw_kast'],['Type apparatuur','afw_apparatuur']]){y+=RH;tx(l+':',L+9,y-6,9.5);tx(V(k),L+LW+6,y-6,9.5,{kleur:'#111',max:W-LW-12});lijn(L+LW,y,R,y,1.2);}
+      y+=RH;tx('Afbeelding kast:',L+9,y-6,9.5);const bk=bijlage('afw_foto');
+      const hb=820;if(!(await plaatje(bk&&bk.blob,L+20,y+12,W-40,hb-24,bk&&bk.ann)))y+=0;y+=hb;kader(L,y0,W,y-y0); }
+
+    /* ---- pagina 3: tracé, geografische weergave ---- */
+    nieuw();
+    tx('Tracé',L+6,y+18,12,{b:true,kleur:TEAL});y+=40;
+    { const y0=y,h=BOT-y-10;balk('Geografische weergave',L,y,W,38,8);const opm=String(Velden.waarde(S,'trace_opm')||'').trim();
+      const kg=bijlage('trace_geo'),oh=opm?80:0;await plaatje(kg&&kg.blob,L+16,y+52,W-32,h-66-oh,kg&&kg.ann);
+      if(opm){g.font=`400 ${fz(9.5)}px ${A}`;wrap(g,opm,W-40).slice(0,3).forEach((l,i)=>tx(l,L+18,y0+h-oh+24+i*24,9.5,{kleur:'#111'}));}
+      kader(L,y0,W,h); }
+
+    /* ---- pagina 4: plattegrond ---- */
+    if(uit('plattegrond')){nieuw();y+=10;const y0=y,h=BOT-y-120;balk('Plattegrond (indien beschikbaar)',L,y,W,38,8);
+      const pl=bijlage('plattegrond');if(!(await plaatje(pl&&pl.blob,L+16,y+52,W-32,h-66,pl&&pl.ann))&&Velden.waarde(S,'plattegrond')==='nvt')tx('NIET BESCHIKBAAR',L+W/2,y0+h/2,12,{b:true,al:'center'});
+      kader(L,y0,W,h);}
+
+    /* ---- buitentracé en binnentracé: raster van 2 x 2, eerste vak met de tellers ---- */
+    const bron=new Set(Object.values(S.bijlageBron||{}));
+    const ROLNAAM={aansluit:'Aansluitpunt netwerk',invoer:'Invoer pand',begin:'Beginpunt / invoer'};
+    let fnr=0;
+    async function raster(titel,tstijl,sectie,tel){
+      const L2=fotos.filter(p=>(p.sectie||'buiten')===sectie&&!bron.has(p.id)).sort((a,b)=>(b.rol?1:0)-(a.rol?1:0));
+      const vakken=[{tel}].concat(L2.map(p=>({p})));
+      for(let i=0;i<vakken.length;i+=4){nieuw();
+        if(i===0){tstijl();}
+        const y0=y,h=BOT-y0-(i===0?20:0),cw=W/2,ch=h/2;kader(L,y0,W,h);lijn(L+cw,y0,L+cw,y0+h,1.6);lijn(L,y0+ch,R,y0+ch,1.6);
+        for(let k=0;k<4&&i+k<vakken.length;k++){const v=vakken[i+k],x=L+(k%2)*cw,yy=y0+Math.floor(k/2)*ch;
+          if(v.tel){v.tel.forEach((r,j)=>{tx(r,x+10,yy+34+j*22,8.5,{kleur:'#111',max:cw-20});});continue;}
+          fnr++;const p=v.p,cap=[`Foto ${fnr}${p.rol&&ROLNAAM[p.rol]?' – '+ROLNAAM[p.rol]:''}`].concat(p.bijschrift?[p.bijschrift]:[]);
+          g.font=`400 ${fz(8)}px ${A}`;const cl=[cap[0]].concat(cap[1]?wrap(g,cap[1],cw-24).slice(0,2):[]),capH=cl.length*20+10;
+          await plaatje(p.blob,x+10,yy+10,cw-20,ch-20-capH,p.ann);
+          cl.forEach((l,j)=>tx(l,x+12,yy+ch-capH+14+j*20,8,{b:j===0,kleur:'#111',max:cw-24}));}
+      }}
+    if(!Velden.onnet(S)&&uit('buiten_fotos'))await raster('Buitentracé',()=>{tx('Buitentracé',L+6,y+22,12,{b:true,it:true,serif:true,kleur:'#111'});y+=40;},'buiten',
+      [`Aantal meters buitentracé: ${V('buiten_meters')}`,`Aantal invoeringen: ${V('buiten_invoeringen')}`,`Aantal boringen/persingen: ${V('buiten_boringen')}`]);
+    if(uit('binnen_fotos')){const st=String(Velden.waarde(S,'binnen_stroom')||'').trim();
+      await raster('Binnentracé',()=>{tx('Binnentracé',L+6,y+14,10,{b:true,kleur:TEAL});y+=26;},'binnen',
+      [`Aantal meters binnentracé: ${V('binnen_meters')}`,`Nieuw aan te leggen kabelgoot: ${V('binnen_kabelgoot')}`,`Brandwerende doorvoeren: ${V('binnen_brandwerend')}`].concat(st?['',`Stroomvoorziening: ${st}`]:[]));}
+
+    /* ---- V&G ontwerpnota: alle aspecten, aangekruist wat van toepassing is ---- */
+    if(uit('vg')){nieuw();const it=((Velden.waarde(S,'vg')||{}).items)||{};
+      const AW=Math.round(W*.37),RW=Math.round(W*.30),x1=L+AW,x2=x1+RW,y0=y;
+      balk('V&G ontwerpnota',L,y,W,30,9.5);y+=30;
+      tx('Aspect',L+6,y+16,7.5,{b:true});tx('In ontwerp rekening mee houden',x1+(R-x1)/2,y+16,7.5,{b:true,al:'center'});lijn(L,y+20,R,y+20,1);
+      tx('(aangekruiste aspecten zijn van toepassing)',L+6,y+36,7);tx("Risico's",x1+6,y+36,7.5,{b:true});tx('Afspraken / randvoorwaarden',x2+6,y+36,7.5,{b:true});y+=42;lijn(L,y,R,y,1.2);
+      const yk=y;
+      for(const grp of [...new Set(Velden.VG.map(a=>a.groep))]){y+=6;tx(grp,L+6,y+14,7.5,{b:true});y+=18;
+        for(const a of Velden.VG.filter(x=>x.groep===grp)){const o=it[a.id]||{},aan=!!o.aan,ri=o.risico!=null?o.risico:a.risico,af=o.afspraak!=null?o.afspraak:a.afspraak;
+          tx(a.aspect,x1-34,y+15,7.5,{al:'right',max:AW-44,kleur:aan?'#111':INK,b:aan});cb(x1-26,y+17,aan);
+          tx(ri||'',x1+6,y+15,7.5,{max:RW-12,kleur:'#111'});tx(af||'',x2+6,y+15,7.5,{max:R-x2-12,kleur:'#111'});y+=19;}
+        y+=8;lijn(L,y,R,y,1.2);}
+      lijn(x1,yk-42,x1,y,1.2);lijn(x2,yk-22,x2,y,1.2);kader(L,y0,W,y-y0);}
+
+    /* ---- legenda ---- */
+    if(uit('legenda')){nieuw();tx('Legenda',L+6,y+18,12,{b:true,it:true,serif:true,kleur:'#111'});y+=34;
+      const its=Legend.legendaItems(),rh=58,sw=Math.round(W*.26);const y0=y;
+      for(const l of its){const im=await loadImg('data:image/svg+xml;charset=utf-8,'+encodeURIComponent(l.svg.replace('width="90" height="36"','width="270" height="108"'))).catch(()=>null);
+        if(im)g.drawImage(im,L+(sw-120)/2,y+5,120,48);tx(l.naam,L+sw+12,y+rh/2+7,9.5);y+=rh;lijn(L,y,L+W*.72,y,1.2);}
+      lijn(L+sw,y0,L+sw,y,1.2);kader(L,y0,W*.72,y-y0);}
+
+    /* voettekst op elke pagina, zoals het sjabloon */
+    pages.forEach((p,i)=>{const gg=p.g,yv=PH-120;gg.strokeStyle='#BFBFBF';gg.lineWidth=1.5;gg.beginPath();gg.moveTo(L,yv);gg.lineTo(R-60,yv);gg.stroke();
+      gg.font=`400 ${fz(7.5)}px ${A}`;gg.fillStyle=INK;
+      ['Safariweg 25-31','3605 MA, Maarssen','www.eurofiber.nl'].forEach((t,j)=>gg.fillText(t,L,yv+26+j*20));
+      ['Kvk: 34134377','BTWnr: NL.8088.51.524 B 01','IBAN: NL90 ABNA 0569 2038 64'].forEach((t,j)=>gg.fillText(t,L+240,yv+26+j*20));
+      gg.font=`400 ${fz(9)}px ${A}`;gg.textAlign='right';gg.fillText(String(i+1),R-120,yv+26);gg.textAlign='left';});
+    const jpgs=[];for(const p of pages){const b=await new Promise(r=>p.c.toBlob(r,'image/jpeg',.88));jpgs.push(new Uint8Array(await b.arrayBuffer()));}
     return pdfFromJpegs(jpgs,PW,PH);
   }
 
@@ -92,7 +171,12 @@
     add(`trailer\n<< /Size ${size} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`);
     return new Blob(parts,{type:'application/pdf'});
   }
-  function fileName(S){return 'Schouw '+((S&&S.adres)||'zonder adres').replace(/[\\/:*?"<>|]+/g,'').trim().slice(0,60)+'.pdf';}
+  /* bestandsnaam: projectnummer - straat en huisnummer - plaats.pdf */
+  function fileName(S){const w=k=>{const v=S&&window.Velden?Velden.waarde(S,k):'';return v&&v!=='nvt'?String(v).trim():'';};
+    let straat=w('loc_adres'),plaats=w('loc_plaats');
+    if((!straat||!plaats)&&S&&S.adres){const d=String(S.adres).split(',');if(!straat)straat=(d[0]||'').trim();if(!plaats)plaats=(d.slice(1).join(',')||'').trim();}
+    const naam=[w('projectnummer'),straat,plaats].filter(Boolean).join(' - ')||'Site survey';
+    return naam.replace(/[\\/:*?"<>|]+/g,'').replace(/\s+/g,' ').trim().slice(0,120)+'.pdf';}
   async function prepare(surveyId){const S=await Store.surveys.get(surveyId),blob=await make(surveyId);return new File([blob],fileName(S),{type:'application/pdf'});}
   /* deelt via het deelmenu van de telefoon, of downloadt als dat niet kan.
      'opnieuw' = de telefoon wil een nieuwe tik (het maken duurde te lang): roep dan shareFile opnieuw aan vanuit een tik. */
