@@ -424,6 +424,8 @@
     const V=Velden.vakken(s,ph,Velden.statusOf(s)==='afronding'?'uit':undefined)[x];
     const kast=x==='binnen'; // afwerkpunt (kast) hoort bij binnen
     const kp=ph.find(p=>p.id===(s.bijlageBron||{}).afw_foto&&p.status!=='vervallen'); // kastfoto uit de foto's: dezelfde tegel als in de strook
+    // overige foto's: zonder de foto's die bovenaan al als verplichte foto staan
+    const Lov=L.filter(p=>!(p.status!=='vervallen'&&(p.rol||(kast&&kp&&p.id===kp.id))));
     const kb=(s.bijlagen||{}).afw_foto,ku=kp?uf(kp):kb?URL.createObjectURL(kb):'';if(ku&&!kp)urls._kast=ku;
     const kOpen=['afw_plaats','afw_ruimte','afw_kast','afw_apparatuur'].filter(k=>!Velden.gevuld(s,Velden.VELDEN.find(f=>f.k===k),ph)).length;
     main.innerHTML=`
@@ -435,9 +437,9 @@
      ${kast?`<div class="kgrp${kb&&!kOpen?'':' wrn'}"><button class="rolk" id="kSlot"><span class="rt"${kb&&(s.bijlageBron||{}).afw_foto?` data-pid="${s.bijlageBron.afw_foto}"`:''}>${kb?`<img src="${ku}" alt="">`:'<i class="uitr" aria-hidden="true">!</i>'}</span><span class="rn"><b>Afwerkpunt klantlocatie (kast)</b><small>${kp?'✓ Foto '+nr(kp):kb?'✓ Foto van de kast':'Ontbreekt · tik om te maken'}</small></span>${ICO.pijl}</button>
      <div class="gin"><button class="gopt" id="kMeer" aria-expanded="false"><span>Gegevens kast${kOpen?` · ${kOpen} open`:' · ✓'}</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button></div>
      <div id="kVeld" class="kveld" hidden></div></div>`:''}
-     <div class="fhead"><h2>Foto's ${x}</h2>${L.length?`<span>${L.filter(p=>p.status!=='vervallen').length} in document</span>`:''}</div>
-     ${L.length?`<div class="strip">${L.map(p=>{const i=nr(p)-1;return `<button class="th${p.status==='vervallen'?' vv':''}" data-id="${p.id}" aria-label="Foto ${i+1}${p.status==='vervallen'?', vervalt':''}"><img src="${uf(p)}" alt=""><span>${i+1}${p.status==='vervallen'?' · vervalt':''}</span></button>`;}).join('')}</div>
-     <p class="note">Tik om te bewerken. Lang drukken om te verwijderen.</p>`:`<p class="note">Nog geen foto's ${x}.</p>`}
+     <div class="fhead"><h2>Overige foto's ${x}</h2>${Lov.length?`<span>${Lov.filter(p=>p.status!=='vervallen').length} in document</span>`:''}</div>
+     ${Lov.length?`<div class="strip">${Lov.map(p=>{const i=nr(p)-1;return `<button class="th${p.status==='vervallen'?' vv':''}" data-id="${p.id}" aria-label="Foto ${i+1}${p.status==='vervallen'?', vervalt':''}"><img src="${uf(p)}" alt=""><span>${i+1}${p.status==='vervallen'?' · vervalt':''}</span></button>`;}).join('')}</div>
+     <p class="note">Tik om te bewerken. Lang drukken om te verwijderen.</p>`:`<p class="note">Nog geen overige foto's ${x}.</p>`}
      <h2>Tellers ${x}</h2>
      ${x==='buiten'?`<div class="tel">
        ${cfg.metersZelf
