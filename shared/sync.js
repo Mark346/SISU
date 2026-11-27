@@ -142,5 +142,9 @@
   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')plan(800);});
   setInterval(()=>{if(document.visibilityState==='visible')nu();},90000);
   setTimeout(()=>nu(),1500);
-  window.Sync={aan:true,nu,teken,info:()=>({...info}),staat:id=>!info.aan?null:(st.fp[id]?'ok':'wacht')};
+  /* bij uitloggen: alles wat online staat van dit toestel halen (niet online verwijderen) */
+  async function wisLokaal(){clearTimeout(timer);
+    for(const s of await raw.uList())if(s.bedrijf)await raw.uDel(s.id);
+    st={fp:{},weg:[],tijd:{}};bewaarSt();try{localStorage.removeItem('sisu.bedrijf.naam');}catch(e){}actief=null;info.aan=false;}
+  window.Sync={aan:true,nu,teken,wisLokaal,info:()=>({...info}),staat:id=>!info.aan?null:(st.fp[id]?'ok':'wacht')};
 })();
