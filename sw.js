@@ -1,6 +1,6 @@
 // Bewaart de app zelf, zodat hij ook werkt met slecht bereik. Projecten en foto's staan los hiervan in de opslag van de browser.
 // Bekeken stukken luchtfoto en kaart (PDOK) worden ook bewaard, zodat ze later zonder internet te zien zijn.
-const C='schouw-v69',TILES='schouw-tiles-v1',FILES=['./','index.html','origineel.html','veeg.html','opties.html','richt.html','loop.html','manifest.webmanifest','voorbeeld-tekening.jpg','icon-192.png',
+const C='schouw-v70',TILES='schouw-tiles-v1',FILES=['./','index.html','origineel.html','veeg.html','opties.html','richt.html','loop.html','manifest.webmanifest','voorbeeld-tekening.jpg','icon-192.png',
   'shared/base.css','shared/legend.js','shared/store.js','shared/camera.js','shared/sensors.js','shared/document.html','shared/editor.js','shared/survey-ui.js','shared/storyline.html','shared/pdfdoc.js','shared/velden.js','shared/gegevens.js','shared/paf.js','shared/kaarttrace.js','paf.html','shared/docmodel.js','instellingen.html','shared/versie.js','apple-touch-icon.png','favicon-32.png','icon-512.png','shared/icon-klein.svg','fonts/archivo-400.woff2','fonts/archivo-600.woff2','fonts/archivo-800.woff2'];
 self.addEventListener('install',e=>e.waitUntil(caches.open(C).then(c=>c.addAll(FILES)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==C&&x!==TILES).map(x=>caches.delete(x)))).then(()=>self.clients.claim())));

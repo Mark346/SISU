@@ -50,6 +50,8 @@
     {id:'sk',name:'Serverkast'}
   ];
   const LINES=['arrow','buis','mantel'];
+  /* binnen (ook de kastfoto): alleen CPE + WODF, FDB lasbox en serverkast; buiten alle andere */
+  const BINNEN=new Set(['cpe','fdb','sk']);
   const GKEY='sisu.gebruik';
   const gebruik=()=>{try{return JSON.parse(localStorage.getItem(GKEY)||'{}');}catch(e){return{};}};
   function telGebruik(id){const g=gebruik();g[id]=(g[id]||0)+1;try{localStorage.setItem(GKEY,JSON.stringify(g));}catch(e){}}
@@ -213,7 +215,8 @@
     gum:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.5 20H20"/><path d="M14.5 4.5l5 5-9.5 9.5H6l-2.5-2.5a1.4 1.4 0 010-2z"/><path d="M9.5 9.5l5 5"/></svg>'
   };
   function build(){
-    const ph=st.ph,n=st.siblings.findIndex(p=>p.id===ph.id)+1,tools=toolsOpVolgorde(),vv=ph.status==='vervallen',sec=ph.sectie;
+    const ph=st.ph,n=st.siblings.findIndex(p=>p.id===ph.id)+1,vv=ph.status==='vervallen',sec=ph.sectie,tools=toolsOpVolgorde().filter(t=>!sec||(sec==='binnen')===BINNEN.has(t.id));
+    if(tools.length&&!tools.some(t=>t.id===st.tool))st.tool=tools[0].id;
     const on=t=>t.id===st.tool;
     const foot=(st.opts.onDoc?'<button class="btn" id="vDoc">Naar afronding</button>':'')+(st.opts.onNext?`<button class="btn pri" id="vNext">${esc(st.opts.nextLabel||'Volgende foto')}</button>`:'');
     st.root.innerHTML=`
