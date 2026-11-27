@@ -65,12 +65,12 @@
 .sui button.slink{border:0;background:none;cursor:pointer;margin:0 auto}
 .sui .sdel2{border-color:var(--red)}
 .sui .sgev{margin-top:56px;padding-top:18px;border-top:1px solid var(--line);text-align:center}
-.sui .sdelx{min-height:44px;padding:0 16px;border:0;background:none;color:#ff9b95;font:inherit;font-weight:600;text-decoration:underline;text-underline-offset:3px}
+.sui .sdelx{min-height:44px;padding:0 16px;border:0;background:none;color:var(--danger-tekst);font:inherit;font-weight:600;text-decoration:underline;text-underline-offset:3px}
 .sdlg{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:20px}
 .sdlgb{width:100%;max-width:400px;background:var(--card,#1b1e23);border:1px solid var(--line,#2E323A);border-radius:18px;padding:20px;color:var(--ink,#fff)}
 .sdlgb h3{margin:0 0 8px;font-size:20px}.sdlgb p{margin:0 0 18px;color:var(--mute,#9aa1ab)}
 .sdlgk{display:flex;gap:10px}.sdlgk .btn{flex:1}.sdlgb .sdlgrood{background:var(--red,#dc2626);border-color:var(--red,#dc2626);color:#fff}
-.stoast:not([hidden]){display:flex;align-items:center;gap:4px}.stoast .stk{white-space:nowrap;margin-left:8px;border:0;background:none;color:#1d4ed8;font:inherit;font-weight:800;text-decoration:underline;min-height:32px}
+.stoast:not([hidden]){display:flex;align-items:center;gap:4px}.stoast .stk{white-space:nowrap;margin-left:8px;border:0;background:none;color:var(--toast-link);font:inherit;font-weight:800;text-decoration:underline;min-height:32px}
 .sui .sfold{display:flex;align-items:center;gap:10px;width:100%;min-height:56px;margin-top:14px;border:1px solid var(--line);border-radius:var(--r-pill);background:transparent;color:var(--ink);font-size:16px;font-weight:600;padding:0 18px;cursor:pointer;text-align:left}
 .sui .sfold .n{flex:1;min-width:0;color:var(--mute);font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sui .sfold svg{flex:none;transition:transform .15s}.sui .sfold[aria-expanded="true"] svg{transform:rotate(90deg)}
@@ -95,14 +95,14 @@
 .sui .snext .t small{display:block;color:var(--mute);font-size:14px;margin-top:3px;line-height:1.3}
 .sui .snext .btn{flex:none;min-height:48px;padding:0 16px;font-size:15px}
 .sui .svt{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
-.sui .styb{flex:none;font-style:normal;font-size:12px;font-weight:800;letter-spacing:.04em;padding:3px 8px;border-radius:6px;background:rgba(34,197,94,.16);color:#4ade80;margin-top:2px}
-.sui .styb.on{background:rgba(139,92,246,.18);color:#a78bfa}
-.sui .spnoot{border:1px solid var(--line);border-left:3px solid #3b82f6;border-radius:var(--r);background:var(--card);padding:10px 14px}
+.sui .styb{flex:none;font-style:normal;font-size:12px;font-weight:800;letter-spacing:.04em;padding:3px 8px;border-radius:6px;background:rgba(34,197,94,.16);color:var(--ok-tekst);margin-top:2px}
+.sui .styb.on{background:rgba(139,92,246,.18);color:var(--binnen-tekst)}
+.sui .spnoot{border:1px solid var(--line);border-left:3px solid var(--info);border-radius:var(--r);background:var(--card);padding:10px 14px}
 .sui .spnoot small{display:block;color:var(--mute);font-size:13px;margin-bottom:3px}
 .sui .spnoot p{margin:0;font-size:15px;line-height:1.4;white-space:pre-line}
 .sstat{display:flex;flex-direction:column;gap:8px;margin-top:6px}
 .sui .stodo{margin-top:4px}
-.sui .kapot{position:relative;background:#2a1d1d!important}.sui .kapot img{opacity:0}.sui .kapot::after{content:'Beschadigd';position:absolute;inset:0;display:grid;place-items:center;font-size:11px;font-weight:700;color:#ff9b95}
+.sui .kapot{position:relative;background:var(--danger-vlak)!important}.sui .kapot img{opacity:0}.sui .kapot::after{content:'Beschadigd';position:absolute;inset:0;display:grid;place-items:center;font-size:11px;font-weight:700;color:var(--danger-tekst)}
 .sui .opth{font-size:15px;color:var(--mute);margin:14px 0 6px}
 .sui .uitr.opt{background:transparent;border:2px dashed var(--mute);color:var(--mute)}
 .sui .spaf{width:100%;margin-top:0}
@@ -157,7 +157,7 @@
 .sconfb ul{margin:0 0 6px;padding-left:20px;color:var(--warn);font-size:16px;line-height:1.5}
 .sconfb .btn{width:100%}
 .sconfb .sdanger{border-color:var(--warn);color:var(--warn)}.sconfb .sdanger.sure{background:var(--warn);color:var(--on-acc)}
-.stoast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:90;background:var(--ink);color:#111;font-weight:700;padding:12px 18px;border-radius:14px;max-width:92vw;box-shadow:0 8px 24px #000a}`;
+.stoast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:90;background:var(--ink);color:var(--bg);font-weight:700;padding:12px 18px;border-radius:14px;max-width:92vw;box-shadow:0 8px 24px #000a}`;
   let wachtRol=null;const neemRol=()=>{const r=wachtRol;wachtRol=null;return r;}; // verplichte foto die met de camera gemaakt wordt
   const uf=p=>urls[p.id]||(urls[p.id]=URL.createObjectURL(p.blob)); // foto-adres, zo nodig alsnog maken
   let cfg=null,survey=null,urls={},main=null,showDone=false,showArch=false,newOpen=false,view=null; // view: null = schouw, 'buiten'/'binnen' = fotoscherm

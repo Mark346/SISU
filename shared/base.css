@@ -57,6 +57,10 @@
   --f11:#FF8FB8; /* roze */
   --f12:#2EC5D3; /* aqua */
 
+  /* tekstkleuren op donker (Buitenmodus zet ze in thema.css om) */
+  --danger-tekst:#ff9b95; --ok-tekst:#4ade80; --binnen-tekst:#a78bfa; --warn-tekst:#fdba74;
+  --info:#3b82f6; --info-tekst:#60a5fa; --danger-vlak:#2a1d1d; --toast-link:#1d4ed8;
+
   /* vormen */
   --r:20px;            /* kaarten */
   --r-pill:999px;      /* knoppen, chips, schakelaars */

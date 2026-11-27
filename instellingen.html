@@ -11,6 +11,8 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
 <link rel="stylesheet" href="shared/base.css">
+<link rel="stylesheet" href="shared/thema.css">
+<script>try{if(localStorage.getItem('sisu.thema')==='licht'){document.documentElement.dataset.thema='licht';document.querySelector('meta[name=theme-color]').content='#EEF0F3';}}catch(e){}</script>
 <style>
 .versie{flex:none;display:flex;flex-direction:column;align-items:flex-end;font-size:13px;font-weight:600;line-height:1.25;color:var(--mute);white-space:nowrap;padding-right:2px}
 .uitleg{color:var(--mute);margin:4px 0 12px}
@@ -36,11 +38,16 @@
 .foot{margin:24px 0 10px;display:flex;gap:10px}.foot .btn{flex:1}
 .sub{display:flex;align-items:center;gap:12px;min-height:64px;margin:4px 0 16px;padding:10px 14px;background:var(--card);border:1px solid var(--line);border-radius:16px;color:var(--ink);text-decoration:none}
 .sub span{flex:1;min-width:0}.sub b{display:block;font-size:17px}.sub small{display:block;color:var(--mute);font-size:14px;margin-top:2px}.sub svg{flex:none;color:var(--mute)}
+.tgl{width:100%;font:inherit;color:inherit;text-align:left;cursor:pointer}
+.tsw{flex:none;position:relative;width:56px;height:34px;border-radius:17px;border:1.5px solid var(--line2);background:var(--well)}
+.tsw::after{content:'';position:absolute;top:3px;left:3px;width:26px;height:26px;border-radius:50%;background:var(--mute);transition:left .15s}
+.tgl[aria-checked="true"] .tsw{background:var(--ok);border-color:var(--ok)}.tgl[aria-checked="true"] .tsw::after{left:25px;background:#fff}
 </style>
 </head>
 <body>
 <header class="bar"><a class="back bpill" href="index.html"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>Terug</a><h1>Instellingen</h1><span class="versie" id="versie"></span></header>
 <main class="page">
+  <button class="sub tgl" id="buiten" role="switch" aria-checked="false"><span><b>Buitenmodus</b><small>Licht thema met donkere tekst en dikke randen, beter leesbaar in fel zonlicht</small></span><i class="tsw" aria-hidden="true"></i></button>
   <a class="sub" href="paf.html"><span><b>PAF-import</b><small>Items uit een PAF (pdf) koppelen aan velden, of niet importeren</small></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></a>
   <p class="uitleg">Alle onderdelen van het site survey document. Kies per onderdeel wat er nodig is bij de <b>input</b> (vóór het schouwen) en bij de <b>output</b> (het document). Tik op een knop om te wisselen: Verplicht → Wenselijk → Nee. Onder elke sectie staat wanneer je die meestal invult: vooraf, ter plekke of achteraf.</p>
   <p class="uitleg">Een schouw gaat vanzelf door de stappen <b>Uitwerking</b> → <b>Afronding</b> (bij Naar afronding) → <b>Klaar</b> (bij Document maken).</p>
@@ -55,6 +62,11 @@
 <script src="shared/velden.js"></script>
 <script>
 const $=id=>document.getElementById(id);
+/* Buitenmodus aan/uit; wordt onthouden in 'sisu.thema' en geldt voor de app-schermen (niet de afronding) */
+(function(){const b=$('buiten'),zet=aan=>{b.setAttribute('aria-checked',aan);if(aan)document.documentElement.dataset.thema='licht';else delete document.documentElement.dataset.thema;
+  const m=document.querySelector('meta[name=theme-color]');if(m)m.content=aan?'#EEF0F3':'#121418';};
+  let aan=false;try{aan=localStorage.getItem('sisu.thema')==='licht';}catch(e){}zet(aan);
+  b.onclick=()=>{aan=!aan;try{aan?localStorage.setItem('sisu.thema','licht'):localStorage.removeItem('sisu.thema');}catch(e){}zet(aan);};})();
 const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const OPT=[['verplicht','Verplicht'],['wenselijk','Wenselijk'],['nee','Nee']];
 const VOLG=['verplicht','wenselijk','nee'],NAAM={verplicht:'Verplicht',wenselijk:'Wenselijk',nee:'Nee'};

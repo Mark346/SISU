@@ -84,9 +84,9 @@
 .gblb label{display:block;font-weight:700;margin:4px 0 4px}
 .gblb input{display:block;box-sizing:border-box;width:100%;min-width:0;min-height:48px;border-radius:14px;border:1px solid var(--line2);background:var(--well);color:inherit;padding:0 12px;font-size:16px;-webkit-appearance:none;appearance:none}
 .gblb img{width:100%;max-height:160px;object-fit:cover;border-radius:var(--r-thumb,14px)}
-.gblb .grnu{display:flex;align-items:center;gap:12px;padding:10px;border:2px solid #4ade80;border-radius:14px;margin:4px 0 10px}
+.gblb .grnu{display:flex;align-items:center;gap:12px;padding:10px;border:2px solid var(--ok-tekst,#4ade80);border-radius:14px;margin:4px 0 10px}
 .grnf{position:relative;flex:none;width:96px;height:72px;border-radius:10px;overflow:hidden}.grnf img{width:100%;height:100%;object-fit:cover;display:block}
-.grnu b{font-size:16px;color:#4ade80}.grleeg{color:#fdba74!important;font-weight:600}
+.grnu b{font-size:16px;color:var(--ok-tekst,#4ade80)}.grleeg{color:var(--warn-tekst,#fdba74)!important;font-weight:600}
 .grk{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .gblb .grk button{position:relative;padding:0;border:2px solid transparent;border-radius:12px;background:none;cursor:pointer;overflow:hidden;aspect-ratio:4/3}
 .gblb .grk button.on{border-color:var(--ok,#22C55E)}

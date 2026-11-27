@@ -1,0 +1,28 @@
+/* Invoervelden zichtbaar in de zon + Buitenmodus (licht thema).
+   Alleen geladen op de app-schermen (schouwen, instellingen, PAF-import), NIET op de afronding en het
+   document: die blijven zoals ze zijn. Standaard blijft het donkere uiterlijk. */
+
+/* randen van invoervelden en schakelknoppen minstens 3:1 tegen de achtergrond (was 1,5–1,7:1) */
+:root{--line2:#6B7280}
+::placeholder{color:#9CA3AF;opacity:1}
+input:not([type=checkbox]):not([type=radio]):not([type=range]),select,textarea{border-width:1.5px}
+
+/* ---------- Buitenmodus: lichte achtergrond, donkere tekst, dikke veldranden ---------- */
+html[data-thema="licht"]{
+  --bg:#EEF0F3; --card:#FFFFFF; --card2:#E2E5EA; --well:#FFFFFF;
+  --line:#C4C9D1; --line2:#374151;
+  --ink:#111418; --mute:#4B5563;
+  --acc:#111418; --on-acc:#FFFFFF;
+  --track:#D1D5DB;
+  --ok:#15803D; --warn:#B7791F; --red:#C81E1E;
+  --sec-buiten:#15803D; --sec-binnen:#6D28D9;
+  --f6:#D1D5DB; --f9:#E0B000;
+  --overlay:rgba(18,20,24,.72);
+  --danger-tekst:#B91C1C; --ok-tekst:#15803D; --binnen-tekst:#6D28D9; --warn-tekst:#B45309;
+  --info:#1D4ED8; --info-tekst:#1D4ED8; --danger-vlak:#FDECEC; --toast-link:#93C5FD;
+  color-scheme:light;
+}
+html[data-thema="licht"] ::placeholder{color:#6B7280}
+html[data-thema="licht"] input:not([type=checkbox]):not([type=radio]):not([type=range]),
+html[data-thema="licht"] select,html[data-thema="licht"] textarea{border-width:2px}
+html[data-thema="licht"] .btn{border-width:1.5px}
