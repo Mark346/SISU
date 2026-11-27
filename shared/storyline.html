@@ -233,10 +233,10 @@ function bind(){
   document.querySelectorAll('[data-kaart]').forEach(b=>b.onclick=()=>KaartTrace.open(S,opnieuw));
   document.querySelectorAll('[data-sec]').forEach(b=>b.onclick=()=>Gegevens.open(S,{filter:'alles',sectie:b.dataset.sec,onClose:opnieuw}));
   document.querySelectorAll('[data-rol]').forEach(b=>b.onclick=()=>{const f=Velden.VELDEN.find(v=>v.k===b.dataset.rol);
-    Gegevens.rolBlad(S,f,{klaar:opnieuw,maak:g=>Camera.take({galerij:g}).then(async r=>{if(!r||!r.blob)return;
+    Gegevens.rolBlad(S,f,{open:p=>edit(P.findIndex(x=>x.id===p.id)),klaar:opnieuw,maak:g=>Camera.take({galerij:g}).then(async r=>{if(!r||!r.blob)return;
       const p=await Store.photos.put({surveyId:S.id,blob:r.blob,ann:{orient:r.orient||'liggend'},bron:S.variant||'veeg',status:'ok',sectie:f.sectie});
       await Gegevens.zetRol(p,f.rol,await Store.photos.bySurvey(S.id,true));P=await Store.photos.bySurvey(S.id,true);await recount();render();edit(P.findIndex(x=>x.id===p.id));}).catch(()=>msg('Foto maken lukte niet'))});});
-  document.querySelectorAll('[data-kast]').forEach(b=>b.onclick=()=>Gegevens.rolBlad(S,Velden.VELDEN.find(v=>v.k==='afw_foto'),{klaar:opnieuw,
+  document.querySelectorAll('[data-kast]').forEach(b=>b.onclick=()=>Gegevens.rolBlad(S,Velden.VELDEN.find(v=>v.k==='afw_foto'),{open:p=>edit(P.findIndex(x=>x.id===p.id)),klaar:opnieuw,
     maak:g=>Camera.take({galerij:g}).then(async r=>{if(!r||!r.blob)return;const p=await Store.photos.put({surveyId:S.id,blob:r.blob,ann:{orient:r.orient||'liggend'},bron:S.variant||'veeg',status:'ok',sectie:'binnen'});S.bijlagen={...(S.bijlagen||{}),afw_foto:r.blob};S.kastGevraagd=true;S.bijlageBron={...(S.bijlageBron||{}),afw_foto:p.id};await Store.surveys.put(S);await opnieuw();edit(P.findIndex(x=>x.id===p.id));}).catch(()=>msg('Foto maken lukte niet'))}));
   document.querySelectorAll('[data-naar]').forEach(b=>b.onclick=()=>{location.href=pagina(b.dataset.naar);});
   document.querySelectorAll('[data-ed]').forEach(el=>{el.onclick=()=>edit(+el.dataset.ed);el.onkeydown=e=>{if(e.key==='Enter')edit(+el.dataset.ed);};});

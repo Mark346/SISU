@@ -150,6 +150,7 @@
 .sconfb .sdanger{border-color:var(--warn);color:var(--warn)}.sconfb .sdanger.sure{background:var(--warn);color:var(--on-acc)}
 .stoast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:90;background:var(--ink);color:#111;font-weight:700;padding:12px 18px;border-radius:14px;max-width:92vw;box-shadow:0 8px 24px #000a}`;
   let wachtRol=null;const neemRol=()=>{const r=wachtRol;wachtRol=null;return r;}; // verplichte foto die met de camera gemaakt wordt
+  const uf=p=>urls[p.id]||(urls[p.id]=URL.createObjectURL(p.blob)); // foto-adres, zo nodig alsnog maken
   let cfg=null,survey=null,urls={},main=null,showDone=false,showArch=false,newOpen=false,view=null; // view: null = schouw, 'buiten'/'binnen' = fotoscherm
   /* "vandaag", "gisteren", "24 nov" of "24 nov 2025" */
   function relD(d){if(!d)return'';const t=new Date(d),n=new Date();if(isNaN(t))return'';
@@ -346,7 +347,8 @@
     title(view?(view==='buiten'?"Foto's buiten":"Foto's binnen"):cfg.variant==='veeg'?(s.adres||cfg.naam):(s.adres||cfg.naam)+' · '+cfg.naam);if(cfg.onScreen)cfg.onScreen(view?'fotos':'survey');
     if(cfg.eigenScherm)return cfg.eigenScherm(s); // variant met een eigen schouwscherm (Loop-spoor)
     const ph=await Store.photos.bySurvey(s.id,true),ok=ph.filter(p=>p.status!=='vervallen');
-    Object.values(urls).forEach(u=>URL.revokeObjectURL(u));urls={};ph.forEach(p=>urls[p.id]=URL.createObjectURL(p.blob));
+    // oude adressen pas later vrijgeven: een render die nog loopt mag ze nog gebruiken (anders een kapotte tegel)
+    {const oud=urls;setTimeout(()=>Object.values(oud).forEach(u=>URL.revokeObjectURL(u)),4000);}urls={};ph.forEach(p=>urls[p.id]=URL.createObjectURL(p.blob));
     let wijz=Velden.migreer(s);const naarBinnen=Velden.onnetFix(s,ph);if(naarBinnen.length||(Velden.onnet(s)&&s.sectie==='binnen'))wijz=true;
     for(const p of naarBinnen)await Store.photos.put(p);
     if(wijz)await Store.surveys.put(s);
@@ -364,7 +366,7 @@
           +onder.map(({a,i})=>`<div class="row"><button class="btn" data-a="${i}">${esc(a.label)}</button></div>`).join('');})()}
      ${seg}
      <div class="fhead"><h2>Foto's</h2>${ph.length?`<span>${ok.length} van ${ph.length} in document</span>`:''}</div>
-     ${ph.length?`<div class="strip">${ph.map((p,i)=>`<button class="th${p.status==='vervallen'?' vv':''}" data-id="${p.id}" aria-label="Foto ${i+1}${p.sectie==='binnen'?', binnen':''}${p.status==='vervallen'?', vervalt':''}"><img src="${urls[p.id]}" alt=""><span>${i+1}${p.sectie==='binnen'?' · binnen':''}${p.status==='vervallen'?' · vervalt':''}</span></button>`).join('')}</div>
+     ${ph.length?`<div class="strip">${ph.map((p,i)=>`<button class="th${p.status==='vervallen'?' vv':''}" data-id="${p.id}" aria-label="Foto ${i+1}${p.sectie==='binnen'?', binnen':''}${p.status==='vervallen'?', vervalt':''}"><img src="${uf(p)}" alt=""><span>${i+1}${p.sectie==='binnen'?' · binnen':''}${p.status==='vervallen'?' · vervalt':''}</span></button>`).join('')}</div>
      <p class="note">Tik om te bewerken. Lang drukken: vervalt (ander tracé) of terugzetten.</p>`:'<p class="note">Nog geen foto\'s. Begin bij de aansluiting op het netwerk.</p>'}
      <h2>Tellers</h2>
      <div class="tel">
@@ -421,19 +423,20 @@
     const acts=cfg.acties(s,nHier),pri=acts.find(a=>a.pri),gal=acts.find(a=>/galerij/i.test(a.label)&&!a.pri);
     const V=Velden.vakken(s,ph,Velden.statusOf(s)==='afronding'?'uit':undefined)[x];
     const kast=x==='binnen'; // afwerkpunt (kast) hoort bij binnen
-    const kb=(s.bijlagen||{}).afw_foto,ku=kb?URL.createObjectURL(kb):'';if(ku)urls._kast=ku;
+    const kp=ph.find(p=>p.id===(s.bijlageBron||{}).afw_foto&&p.status!=='vervallen'); // kastfoto uit de foto's: dezelfde tegel als in de strook
+    const kb=(s.bijlagen||{}).afw_foto,ku=kp?uf(kp):kb?URL.createObjectURL(kb):'';if(ku&&!kp)urls._kast=ku;
     const kOpen=['afw_plaats','afw_ruimte','afw_kast','afw_apparatuur'].filter(k=>!Velden.gevuld(s,Velden.VELDEN.find(f=>f.k===k),ph)).length;
     main.innerHTML=`
      ${V.length?`<div class="snext wrn"><div class="t"><b>${V.length} nog te doen</b><small>${esc([...new Set(V.map(f=>f.kort||f.l))].join(' · '))}</small></div></div>`:'<div class="snext"><div class="t"><b style="color:var(--ok)">✓ Compleet</b><small>Alles wat verplicht is, is er.</small></div></div>'}
      <div class="sacts">${pri?`<button class="btn pri" id="fCam" style="flex:1;width:100%">${ICO.camera}${esc(pri.label)}</button>`:''}</div>
      ${(()=>{const R=Velden.ROLLEN(s).filter(f=>f.sectie===x);if(!R.length&&!kast)return'';
        return `<h2>Verplichte foto's</h2><div class="rolg">${R.map(f=>{const p=ph.find(q=>q.status!=='vervallen'&&q.rol===f.rol);
-         return `<button class="rolk${p?'':' wrn'}" data-rol="${f.k}"><span class="rt"${p?` data-pid="${p.id}"`:''}>${p?`<img src="${urls[p.id]}" alt="">`:'<i class="uitr" aria-hidden="true">!</i>'}</span><span class="rn"><b>${esc(f.kort||f.l)}</b><small>${p?'✓ Foto '+nr(p):'Ontbreekt · tik om te maken of te kiezen'}</small></span>${ICO.pijl}</button>`;}).join('')}</div>`;})()}
-     ${kast?`<div class="kgrp${kb&&!kOpen?'':' wrn'}"><button class="rolk" id="kSlot"><span class="rt"${kb&&(s.bijlageBron||{}).afw_foto?` data-pid="${s.bijlageBron.afw_foto}"`:''}>${kb?`<img src="${ku}" alt="">`:'<i class="uitr" aria-hidden="true">!</i>'}</span><span class="rn"><b>Afwerkpunt klantlocatie (kast)</b><small>${kb?'✓ Foto van de kast':'Ontbreekt · tik om te maken of te kiezen'}</small></span>${ICO.pijl}</button>
+         return `<button class="rolk${p?'':' wrn'}" data-rol="${f.k}"><span class="rt"${p?` data-pid="${p.id}"`:''}>${p?`<img src="${uf(p)}" alt="">`:'<i class="uitr" aria-hidden="true">!</i>'}</span><span class="rn"><b>${esc(f.kort||f.l)}</b><small>${p?'✓ Foto '+nr(p):'Ontbreekt · tik om te maken'}</small></span>${ICO.pijl}</button>`;}).join('')}</div>`;})()}
+     ${kast?`<div class="kgrp${kb&&!kOpen?'':' wrn'}"><button class="rolk" id="kSlot"><span class="rt"${kb&&(s.bijlageBron||{}).afw_foto?` data-pid="${s.bijlageBron.afw_foto}"`:''}>${kb?`<img src="${ku}" alt="">`:'<i class="uitr" aria-hidden="true">!</i>'}</span><span class="rn"><b>Afwerkpunt klantlocatie (kast)</b><small>${kp?'✓ Foto '+nr(kp):kb?'✓ Foto van de kast':'Ontbreekt · tik om te maken'}</small></span>${ICO.pijl}</button>
      <div class="gin"><button class="gopt" id="kMeer" aria-expanded="false"><span>Gegevens kast${kOpen?` · ${kOpen} open`:' · ✓'}</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button></div>
      <div id="kVeld" class="kveld" hidden></div></div>`:''}
      <div class="fhead"><h2>Foto's ${x}</h2>${L.length?`<span>${L.filter(p=>p.status!=='vervallen').length} in document</span>`:''}</div>
-     ${L.length?`<div class="strip">${L.map(p=>{const i=nr(p)-1;return `<button class="th${p.status==='vervallen'?' vv':''}" data-id="${p.id}" aria-label="Foto ${i+1}${p.status==='vervallen'?', vervalt':''}"><img src="${urls[p.id]}" alt=""><span>${i+1}${p.status==='vervallen'?' · vervalt':''}</span></button>`;}).join('')}</div>
+     ${L.length?`<div class="strip">${L.map(p=>{const i=nr(p)-1;return `<button class="th${p.status==='vervallen'?' vv':''}" data-id="${p.id}" aria-label="Foto ${i+1}${p.status==='vervallen'?', vervalt':''}"><img src="${uf(p)}" alt=""><span>${i+1}${p.status==='vervallen'?' · vervalt':''}</span></button>`;}).join('')}</div>
      <p class="note">Tik om te bewerken. Lang drukken om te verwijderen.</p>`:`<p class="note">Nog geen foto's ${x}.</p>`}
      <h2>Tellers ${x}</h2>
      ${x==='buiten'?`<div class="tel">
@@ -454,11 +457,11 @@
       async(p,s)=>{toast('Foto verwijderd');show(s);}));
     $('fTerug').onclick=terug;
     main.querySelectorAll('[data-rol]').forEach(b=>b.onclick=()=>{const f=Velden.VELDEN.find(v=>v.k===b.dataset.rol);
-      Gegevens.rolBlad(s,f,{klaar:async()=>show(await Store.surveys.get(s.id)||s),maak:g=>{const a=g?(gal||pri):pri;if(!a)return;wachtRol=f.rol;s.sectie=x;a.fn(s);Store.surveys.put(s);}});});
+      Gegevens.rolBlad(s,f,{open:p=>cfg.openFoto(s,p.id),klaar:async()=>show(await Store.surveys.get(s.id)||s),maak:g=>{const a=g?(gal||pri):pri;if(!a)return;wachtRol=f.rol;s.sectie=x;a.fn(s);Store.surveys.put(s);}});});
     if(kast){
       const kf=g=>Camera.take({galerij:g}).then(async r=>{if(!r||!r.blob)return;const p=await Store.photos.put({surveyId:s.id,blob:r.blob,ann:{orient:r.orient||'liggend'},bron:'veeg',status:'ok',sectie:'binnen'});s.bijlagen={...(s.bijlagen||{}),afw_foto:r.blob};s.kastGevraagd=true;s.bijlageBron={...(s.bijlageBron||{}),afw_foto:p.id};await Store.surveys.put(s);await show(s);cfg.openFoto(s,p.id);});
       // zelfde werking als de andere verplichte foto's: maken, uit galerij of kiezen uit de foto's binnen
-      $('kSlot').onclick=()=>Gegevens.rolBlad(s,Velden.VELDEN.find(v=>v.k==='afw_foto'),{klaar:async()=>show(await Store.surveys.get(s.id)||s),maak:g=>kf(g)});
+      $('kSlot').onclick=()=>Gegevens.rolBlad(s,Velden.VELDEN.find(v=>v.k==='afw_foto'),{open:p=>cfg.openFoto(s,p.id),klaar:async()=>show(await Store.surveys.get(s.id)||s),maak:g=>kf(g)});
       const km=$('kMeer'),kv=$('kVeld');
       const KK=['afw_plaats','afw_ruimte','afw_kast','afw_apparatuur'];
       Gegevens.inline(kv,s,KK,{kant:'uit',onChange:()=>{const n=KK.filter(k=>!Velden.gevuld(s,Velden.VELDEN.find(f=>f.k===k),ph)).length;km.querySelector('span').textContent='Gegevens kast'+(n?` · ${n} open`:' · ✓');}});

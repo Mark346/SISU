@@ -482,6 +482,7 @@
     const bijl=f.t==='foto',sx=f.sectie||'binnen';
     const alle=await Store.photos.bySurvey(s.id,true),hier=alle.filter(p=>p.status!=='vervallen'&&(p.sectie||'buiten')===sx);
     const nu=bijl?hier.find(p=>p.id===(s.bijlageBron||{})[f.k]):hier.find(p=>p.rol===f.rol),heeft=bijl?!!(s.bijlagen||{})[f.k]:!!nu;
+    if(nu&&(o.open||window.Editor)){if(o.open)o.open(nu);else Editor.openEditor(nu.id,{onClose:()=>{if(o.klaar)o.klaar();}});return;} // er is al een foto: meteen bewerken (legenda erop, of verwijderen)
     const us=[];const u=b=>{const x=URL.createObjectURL(b);us.push(x);return x;};
     const d=document.createElement('div');d.className='gbl';d.setAttribute('role','dialog');d.setAttribute('aria-modal','true');d.setAttribute('aria-labelledby','grT');
     d.innerHTML=`<div class="gblb"><h3 id="grT">${esc(f.kort||f.l)}</h3><p>${esc(f.vb?hoofd(f.vb)+'.':'')}</p>
@@ -489,7 +490,6 @@
         :bijl&&heeft?`<div class="grnu"><span class="grnf"><img src="${u(s.bijlagen[f.k])}" alt="Gekozen foto"></span><b>✓ Foto gekozen</b></div>`:`<p class="grleeg">Nog geen foto gekozen.</p>`}
       ${nu&&window.Editor?`<button class="btn pri" data-r="leg">Legenda toevoegen op deze foto</button>`:''}
       ${o.maak?`<button class="btn${nu?'':' pri'}" data-r="cam">${heeft?'Andere foto maken':'Foto maken'}</button><button class="btn" data-r="gal">Uit galerij</button>`:''}
-      ${hier.length?`<p>${o.maak?'Of kies':'Kies'} een foto die er al is:</p><div class="grk">${hier.map(p=>`<button data-p="${p.id}" class="${p===nu?'on':''}" aria-pressed="${p===nu}" aria-label="Foto ${hier.indexOf(p)+1}${p.rol&&p!==nu?' (al gebruikt als andere verplichte foto)':''}"><img src="${u(p.blob)}" alt=""><span>${hier.indexOf(p)+1}${p===nu?' ✓':''}</span></button>`).join('')}</div>`:`<p>Er zijn nog geen foto's ${esc(sx)}.</p>`}
       ${heeft?`<button class="btn" data-r="weg">${bijl?'Foto weghalen':'Niet meer als verplichte foto'}</button>`:''}
       <button class="btn" data-r="x">Annuleren</button></div>`;
     document.body.appendChild(d);d.querySelector('button').focus();
