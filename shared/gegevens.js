@@ -496,7 +496,7 @@
     if(nu&&(o.open||window.Editor)){if(o.open)o.open(nu);else Editor.openEditor(nu.id,{onClose:()=>{if(o.klaar)o.klaar();}});return;} // er is al een foto: meteen bewerken (legenda erop, of verwijderen)
     const us=[];const u=b=>{const x=URL.createObjectURL(b);us.push(x);return x;};
     const d=document.createElement('div');d.className='gbl';d.setAttribute('role','dialog');d.setAttribute('aria-modal','true');d.setAttribute('aria-labelledby','grT');
-    d.innerHTML=`<div class="gblb"><h3 id="grT">${esc(f.kort||f.l)}</h3><p>${esc(f.vb?hoofd(f.vb)+'.':'')}</p>
+    d.innerHTML=`<div class="gblb"><h3 id="grT">${esc(f.kort||f.l)}</h3><p>${esc(o.uitleg||(f.vb?hoofd(f.vb)+'.':''))}</p>
       ${nu?`<div class="grnu"><span class="grnf"><img src="${u(nu.blob)}" alt="Gekozen foto"></span><b>✓ Gekozen: foto ${hier.indexOf(nu)+1}</b></div>`
         :bijl&&heeft?`<div class="grnu"><span class="grnf"><img src="${u(s.bijlagen[f.k])}" alt="Gekozen foto"></span><b>✓ Foto gekozen</b></div>`:`<p class="grleeg">Nog geen foto gekozen.</p>`}
       ${nu&&window.Editor?`<button class="btn pri" data-r="leg">Legenda toevoegen op deze foto</button>`:''}

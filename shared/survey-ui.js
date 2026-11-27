@@ -96,6 +96,8 @@
 .sui .spnoot p{margin:0;font-size:15px;line-height:1.4;white-space:pre-line}
 .sstat{display:flex;flex-direction:column;gap:8px;margin-top:6px}
 .sui .stodo{margin-top:4px}
+.sui .opth{font-size:15px;color:var(--mute);margin:14px 0 6px}
+.sui .uitr.opt{background:transparent;border:2px dashed var(--mute);color:var(--mute)}
 .sui .spaf{width:100%;margin-top:0}
 .sui .shand{margin-top:8px;border-top:1px solid var(--line);padding-top:4px}
 .sui .shand>summary{display:flex;align-items:center;justify-content:space-between;min-height:48px;font-weight:700;cursor:pointer;list-style:none}
@@ -429,19 +431,21 @@
     const kast=x==='binnen'; // afwerkpunt (kast) hoort bij binnen
     const kp=ph.find(p=>p.id===(s.bijlageBron||{}).afw_foto&&p.status!=='vervallen'); // kastfoto uit de foto's: dezelfde tegel als in de strook
     // overige foto's: zonder de foto's die bovenaan al als verplichte foto staan
-    const Lov=L.filter(p=>!(p.status!=='vervallen'&&(p.rol||(kast&&kp&&p.id===kp.id))));
+    const pp=kast&&ph.find(p=>p.id===bb.plattegrond&&p.status!=='vervallen'),pb=(s.bijlagen||{}).plattegrond,pu=pp?uf(pp):pb?URL.createObjectURL(pb):'';if(pu&&!pp)urls._pl=pu;
+    const Lov=L.filter(p=>!(p.status!=='vervallen'&&(p.rol||(kast&&kp&&p.id===kp.id)||(pp&&p.id===pp.id))));
     const kb=(s.bijlagen||{}).afw_foto,ku=kp?uf(kp):kb?URL.createObjectURL(kb):'';if(ku&&!kp)urls._kast=ku;
     const kOpen=['afw_plaats','afw_ruimte','afw_kast','afw_apparatuur'].filter(k=>!Velden.gevuld(s,Velden.VELDEN.find(f=>f.k===k),ph)).length;
     main.innerHTML=`
-     ${V.length?`<div class="snext wrn"><div class="t"><b>${V.length} nog te doen</b><small>${esc([...new Set(V.map(f=>f.kort||f.l))].join(' · '))}</small></div></div>`:'<div class="snext"><div class="t"><b style="color:var(--ok)">✓ Compleet</b><small>Alles wat verplicht is, is er.</small></div></div>'}
-     <div class="sacts">${pri?`<button class="btn pri" id="fCam" style="flex:1;width:100%">${ICO.camera}${esc(pri.label)}</button>`:''}</div>
+     ${V.length?`<div class="snext wrn"><div class="t"><b>${V.length} nog te doen</b></div></div>`:'<div class="snext"><div class="t"><b style="color:var(--ok)">✓ Compleet</b><small>Alles wat verplicht is, is er.</small></div></div>'}
      ${(()=>{const R=Velden.ROLLEN(s).filter(f=>f.sectie===x);if(!R.length&&!kast)return'';
        return `<h2>Verplichte foto's</h2><div class="rolg">${R.map(f=>{const p=ph.find(q=>q.status!=='vervallen'&&q.rol===f.rol);
          return `<button class="rolk${p?'':' wrn'}" data-rol="${f.k}"><span class="rt"${p?` data-pid="${p.id}"`:''}>${p?`<img src="${uf(p)}" alt="">`:'<i class="uitr" aria-hidden="true">!</i>'}</span><span class="rn"><b>${esc(f.kort||f.l)}</b><small>${p?'✓ Foto '+nr(p):'Ontbreekt · tik om te maken'}</small></span>${ICO.pijl}</button>`;}).join('')}</div>`;})()}
      ${kast?`<div class="kgrp${kb&&!kOpen?'':' wrn'}"><button class="rolk" id="kSlot"><span class="rt"${kb&&(s.bijlageBron||{}).afw_foto?` data-pid="${s.bijlageBron.afw_foto}"`:''}>${kb?`<img src="${ku}" alt="">`:'<i class="uitr" aria-hidden="true">!</i>'}</span><span class="rn"><b>Afwerkpunt klantlocatie (kast)</b><small>${kp?'✓ Foto '+nr(kp):kb?'✓ Foto van de kast':'Ontbreekt · tik om te maken'}</small></span>${ICO.pijl}</button>
      <div class="gin"><button class="gopt" id="kMeer" aria-expanded="false"><span>Gegevens kast${kOpen?` · ${kOpen} open`:' · ✓'}</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button></div>
      <div id="kVeld" class="kveld" hidden></div></div>`:''}
+     ${kast?`<h2 class="opth">Optioneel</h2><button class="rolk" id="pSlot"><span class="rt"${pp?` data-pid="${pp.id}"`:''}>${pb?`<img src="${pu}" alt="">`:`<i class="uitr opt" aria-hidden="true">+</i>`}</span><span class="rn"><b>Plattegrond</b><small>${pp?'✓ Foto '+nr(pp):pb?'✓ Foto van de plattegrond':'Bijv. de plattegrond met vluchtroutes'}</small></span>${ICO.pijl}</button>`:''}
      <div class="fhead"><h2>Overige foto's ${x}</h2>${Lov.length?`<span>${Lov.filter(p=>p.status!=='vervallen').length} in document</span>`:''}</div>
+     <div class="sacts" style="margin-bottom:12px">${pri?`<button class="btn pri" id="fCam" style="flex:1;width:100%">${ICO.camera}${esc(pri.label)}</button>`:''}</div>
      ${Lov.length?`<div class="strip">${Lov.map(p=>{const i=nr(p)-1;return `<button class="th${p.status==='vervallen'?' vv':''}" data-id="${p.id}" aria-label="Foto ${i+1}${p.status==='vervallen'?', vervalt':''}"><img src="${uf(p)}" alt=""><span>${i+1}${p.status==='vervallen'?' · vervalt':''}</span></button>`;}).join('')}</div>
      <p class="note">Tik om te bewerken. Lang drukken om te verwijderen.</p>`:`<p class="note">Nog geen overige foto's ${x}.</p>`}
      <h2>Tellers ${x}</h2>
@@ -467,7 +471,9 @@
     main.querySelectorAll('[data-rol]').forEach(b=>b.onclick=()=>{const f=Velden.VELDEN.find(v=>v.k===b.dataset.rol);
       Gegevens.rolBlad(s,f,{open:p=>cfg.openFoto(s,p.id),klaar:async()=>show(await Store.surveys.get(s.id)||s),maak:g=>{const a=g?(gal||pri):pri;if(!a)return;wachtRol=f.rol;s.sectie=x;a.fn(s);Store.surveys.put(s);}});});
     if(kast){
-      const kf=g=>Camera.take({galerij:g}).then(async r=>{if(!r||!r.blob)return;const p=await Store.photos.put({surveyId:s.id,blob:r.blob,ann:{orient:r.orient||'liggend'},bron:'veeg',status:'ok',sectie:'binnen'});s.bijlagen={...(s.bijlagen||{}),afw_foto:await Velden.kopie(r.blob)};s.kastGevraagd=true;s.bijlageBron={...(s.bijlageBron||{}),afw_foto:p.id};await Store.surveys.put(s);await show(s);cfg.openFoto(s,p.id);});
+      const kf=(g,k='afw_foto')=>Camera.take({galerij:g}).then(async r=>{if(!r||!r.blob)return;const p=await Store.photos.put({surveyId:s.id,blob:r.blob,ann:{orient:r.orient||'liggend'},bron:'veeg',status:'ok',sectie:'binnen'});s.bijlagen={...(s.bijlagen||{}),[k]:await Velden.kopie(r.blob)};if(k==='afw_foto')s.kastGevraagd=true;s.bijlageBron={...(s.bijlageBron||{}),[k]:p.id};if(Velden.waarde(s,k)==='nvt')Velden.zet(s,k,'');await Store.surveys.put(s);await show(s);cfg.openFoto(s,p.id);});
+      // optioneel: plattegrond (bijv. vluchtroutes), werkt als de kastfoto
+      if($('pSlot'))$('pSlot').onclick=()=>Gegevens.rolBlad(s,Velden.VELDEN.find(v=>v.k==='plattegrond'),{uitleg:'Optioneel: een foto van de plattegrond, bijvoorbeeld met de vluchtroutes.',open:p=>cfg.openFoto(s,p.id),klaar:async()=>show(await Store.surveys.get(s.id)||s),maak:g=>kf(g,'plattegrond')});
       // zelfde werking als de andere verplichte foto's: maken, uit galerij of kiezen uit de foto's binnen
       $('kSlot').onclick=()=>Gegevens.rolBlad(s,Velden.VELDEN.find(v=>v.k==='afw_foto'),{open:p=>cfg.openFoto(s,p.id),klaar:async()=>show(await Store.surveys.get(s.id)||s),maak:g=>kf(g)});
       const km=$('kMeer'),kv=$('kVeld');
