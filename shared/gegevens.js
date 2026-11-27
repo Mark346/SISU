@@ -490,6 +490,7 @@
         :bijl&&heeft?`<div class="grnu"><span class="grnf"><img src="${u(s.bijlagen[f.k])}" alt="Gekozen foto"></span><b>✓ Foto gekozen</b></div>`:`<p class="grleeg">Nog geen foto gekozen.</p>`}
       ${nu&&window.Editor?`<button class="btn pri" data-r="leg">Legenda toevoegen op deze foto</button>`:''}
       ${o.maak?`<button class="btn${nu?'':' pri'}" data-r="cam">${heeft?'Andere foto maken':'Foto maken'}</button><button class="btn" data-r="gal">Uit galerij</button>`:''}
+      ${!nu&&hier.length?`<p>Of kopieer een foto ${sx} die er al is, met de items erop:</p><div class="grk">${hier.map((p,i)=>`<button data-p="${p.id}" aria-label="Foto ${i+1} kopiëren"><img src="${u(p.blob)}" alt=""><span>${i+1}</span></button>`).join('')}</div>`:''}
       ${heeft?`<button class="btn" data-r="weg">${bijl?'Foto weghalen':'Niet meer als verplichte foto'}</button>`:''}
       <button class="btn" data-r="x">Annuleren</button></div>`;
     document.body.appendChild(d);d.querySelector('button').focus();
@@ -502,10 +503,12 @@
       if(r==='weg'){if(bijl){const bl={...(s.bijlagen||{})};delete bl[f.k];s.bijlagen=bl;if(s.bijlageBron)delete s.bijlageBron[f.k];await Store.surveys.put(s);}
         else{delete nu.rol;await Store.photos.put(nu);}return dicht(true);}
       dicht(false);if(o.maak)o.maak(r==='gal');}); // camera direct in de tik openen
-    d.querySelectorAll('[data-p]').forEach(b=>b.onclick=async()=>{const p=hier.find(x=>x.id===b.dataset.p);
-      if(bijl){s.bijlagen={...(s.bijlagen||{}),[f.k]:await Velden.kopie(p.blob)};s.bijlageBron={...(s.bijlageBron||{}),[f.k]:p.id};if(f.k==='afw_foto')s.kastGevraagd=true;
+    /* kopiëren: een nieuwe, losse foto met dezelfde pijlen en items; het origineel blijft gewoon staan */
+    d.querySelectorAll('[data-p]').forEach(b=>b.onclick=async()=>{const p=hier.find(x=>x.id===b.dataset.p);if(!p)return;b.disabled=true;
+      const c=await Store.photos.put({surveyId:s.id,blob:await Velden.kopie(p.blob),ann:JSON.parse(JSON.stringify(p.ann||{})),bron:p.bron,status:'ok',sectie:sx,kopieVan:p.id});
+      if(bijl){s.bijlagen={...(s.bijlagen||{}),[f.k]:await Velden.kopie(c.blob)};s.bijlageBron={...(s.bijlageBron||{}),[f.k]:c.id};if(f.k==='afw_foto')s.kastGevraagd=true;
         if(Velden.waarde(s,f.k)==='nvt')Velden.zet(s,f.k,'');await Store.surveys.put(s);}
-      else await zetRol(p,f.rol,alle);
+      else await zetRol(c,f.rol,alle.concat([c]));
       dicht(true);});
   }
   window.Gegevens={open,close:()=>close(),naKast,vraag,todoHtml,todoBind,inline,vakkenHtml,vakkenBind,rolBlad,zetRol,bron:null};
