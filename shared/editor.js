@@ -70,6 +70,7 @@
 .ved .vph.grey img{filter:grayscale(1) brightness(.6)}
 .ved .vov{position:absolute;left:10px;right:10px;top:10px;display:flex;align-items:center;gap:8px;pointer-events:none}
 .ved .vov button{pointer-events:auto}
+.ved .vweg{display:block;width:calc(100% - 32px);margin:16px auto 4px;border-color:#7a2e2b;color:#ff9b95;background:transparent}
 .ved .ovb{flex:none;width:44px;height:44px;border-radius:22px;border:0;background:var(--overlay,rgba(18,20,24,.72));color:#fff;display:flex;align-items:center;justify-content:center;padding:0;cursor:pointer}
 .ved .ovp{height:34px;border-radius:17px;background:var(--overlay,rgba(18,20,24,.72));color:#fff;display:flex;align-items:center;gap:7px;padding:0 12px;font-weight:600;font-size:15px;white-space:nowrap}
 .ved .ovp.r{margin-left:auto}
@@ -242,12 +243,14 @@
       <div class="vcard"><div class="vlab">Bijschrift</div><div id="vCap"></div></div>
       <div class="vlab o">Foto's van deze schouw</div>
       <div class="strip" id="vStrip"></div>
+      <button class="btn vweg" id="vWeg">Foto verwijderen</button>
     </div>
     ${foot?`<div class="vfoot">${foot}</div>`:''}`;
     const R=st.root,q=s=>R.querySelector(s);
     fitPhoto();
     q('#vBack').onclick=()=>{save(true);close();};
     if(q('#vRest'))q('#vRest').onclick=()=>setStatus(st.ph,'ok');
+    q('#vWeg').onclick=async()=>{const p=st.ph;if(saveT){clearTimeout(saveT);saveT=null;}const s=await verwijder(p);if(!s)return;st.skNieuw=null;st.skVoor=null;close();if(window.SurveyUI&&SurveyUI.toast)SurveyUI.toast('Foto verwijderd');};
     q('#vUndo').onclick=undo;
     q('#vWipe').onclick=()=>{const a=st.ph.ann;if(!(a.arrow||a.buis||(a.syms&&a.syms.length))){toast('Er staat nog niets op deze foto.');return;}remember();st.ph.ann={orient:a.orient};st.sel=null;save(true);redraw();renderCaption();toast('Tekening gewist. Ongedaan zet hem terug.');};
     // hetzelfde gereedschap staat in de rail én in de rij eronder: beide tegelijk aan/uit
@@ -407,14 +410,27 @@
   function renderStrip(){
     if(!st)return;const box=st.root.querySelector('#vStrip');if(!box)return;
     box.innerHTML=st.siblings.map((p,i)=>`<button class="th${p.id===st.ph.id?' on':''}${p.status==='vervallen'?' vv':''}" data-id="${p.id}" aria-label="Foto ${i+1}${p.status==='vervallen'?', vervalt':''}"><img src="${st.thumbs[p.id]}" alt=""><span>${i+1}${p.status==='vervallen'?' · vervalt':''}</span></button>`).join('')||'<p class="note">Nog geen foto\'s.</p>';
-    box.querySelectorAll('.th').forEach(b=>stripBind(b,b.dataset.id,id=>{if(id!==st.ph.id){save(true);openEditor(id,st.opts);}},()=>st.siblings.find(p=>p.id===b.dataset.id),async p=>{if(p.id===st.ph.id){st.ph.status=p.status;await save(true);build();}else{await Store.photos.put(p);await loadSiblings();renderStrip();renderCaption();if(st.opts.onChange)st.opts.onChange(p);}}));
+    box.querySelectorAll('.th').forEach(b=>stripBind(b,b.dataset.id,id=>{if(id!==st.ph.id){save(true);openEditor(id,st.opts);}},()=>st.siblings.find(p=>p.id===b.dataset.id),async p=>{if(p.id===st.ph.id){st.ph.status=p.status;await save(true);build();}else{await Store.photos.put(p);await loadSiblings();renderStrip();renderCaption();if(st.opts.onChange)st.opts.onChange(p);}},
+      async p=>{if(p.id===st.ph.id){st.skNieuw=null;st.skVoor=null;close();return;}await loadSiblings();renderStrip();renderCaption();}));
   }
   /* tik = openen, lang drukken = vervalt / terugzetten. Ook bruikbaar buiten de editor. */
-  function stripBind(el,id,onOpen,getPhoto,onStatus){
+  /* foto echt verwijderen (na bevestigen); ook als bron van een bijlage (kastfoto) opruimen. Geeft de bijgewerkte schouw terug, of null. */
+  async function verwijder(p,vraag){
+    if(vraag!==false&&!confirm('Deze foto verwijderen? Dit kan niet ongedaan worden gemaakt.'))return null;
+    await Store.photos.del(p.id);
+    const s=await Store.surveys.get(p.surveyId);if(!s)return null;
+    const bb={...(s.bijlageBron||{})},bl={...(s.bijlagen||{})};let ch=false;
+    for(const k of Object.keys(bb))if(bb[k]===p.id){delete bb[k];delete bl[k];ch=true;}
+    const rest=await Store.photos.bySurvey(s.id);
+    if(ch){s.bijlageBron=bb;s.bijlagen=bl;}s.nFoto=rest.length;await Store.surveys.put(s);
+    return s;}
+  /* tik = openen, lang drukken = verwijderen (onWeg) of, zonder onWeg, vervalt / terugzetten */
+  function stripBind(el,id,onOpen,getPhoto,onStatus,onWeg){
     let t=null,long=false,x0=0,y0=0;
     el.addEventListener('pointerdown',e=>{long=false;x0=e.clientX;y0=e.clientY;t=setTimeout(()=>{long=true;if(navigator.vibrate)navigator.vibrate(15);
       const p=getPhoto();if(!p)return;const vv=p.status==='vervallen';
-      popMenu(e.clientX,e.clientY,[vv?{label:'Terugzetten',fn:()=>{p.status='ok';onStatus(p);}}:{label:'Vervalt (ander tracé)',cls:'del',fn:()=>{p.status='vervallen';onStatus(p);}},{label:'Annuleren'}]);},550);});
+      popMenu(e.clientX,e.clientY,onWeg?[...(vv?[{label:'Terugzetten',fn:()=>{p.status='ok';onStatus(p);}}]:[]),{label:'Foto verwijderen',cls:'del',fn:async()=>{const s=await verwijder(p);if(s)onWeg(p,s);}},{label:'Annuleren'}]
+        :[vv?{label:'Terugzetten',fn:()=>{p.status='ok';onStatus(p);}}:{label:'Vervalt (ander tracé)',cls:'del',fn:()=>{p.status='vervallen';onStatus(p);}},{label:'Annuleren'}]);},550);});
     el.addEventListener('pointermove',e=>{if(Math.hypot(e.clientX-x0,e.clientY-y0)>10)clearTimeout(t);});
     el.addEventListener('pointerup',()=>clearTimeout(t));el.addEventListener('pointercancel',()=>clearTimeout(t));
     el.addEventListener('contextmenu',e=>e.preventDefault());
@@ -422,5 +438,5 @@
   }
   async function setStatus(p,s){p.status=s;await save(true);await loadSiblings();build();}
 
-  window.Editor={openEditor,close:()=>close(),tidy,suggest,capOf,stripBind,CHIPS:CH};
+  window.Editor={verwijder,openEditor,close:()=>close(),tidy,suggest,capOf,stripBind,CHIPS:CH};
 })();

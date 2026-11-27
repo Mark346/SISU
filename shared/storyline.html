@@ -196,7 +196,7 @@ function kaart(p,i,nr,binnen){
     <textarea id="tx${i}" data-tx="${i}" ${vv?'disabled':''} aria-label="Bijschrift foto ${nr[p.id]||''}" placeholder="Schrijf wat hier gebeurt">${esc(p.bijschrift||'')}</textarea>
     <div class="saved" id="sv${i}"></div>
     <div class="pa"><button data-ed="${i}">Bewerken</button><button class="mv" data-mv="${i}" data-d="-1" aria-label="Foto omhoog" ${up<0?'disabled':''}>↑</button><button class="mv" data-mv="${i}" data-d="1" aria-label="Foto omlaag" ${dn>=P.length?'disabled':''}>↓</button>
-      ${binnen?`<button class="sct${sx==='binnen'?' binnen':''}" data-sct="${i}" aria-label="Naar ${sx==='binnen'?'buiten':'binnen'}">${sx==='binnen'?'Binnen':'Buiten'}</button>`:''}<button data-vv="${i}">${vv?'Terugzetten':'Vervalt'}</button><button class="del" data-del="${i}">Verwijderen</button></div>
+      ${binnen?`<button class="sct${sx==='binnen'?' binnen':''}" data-sct="${i}" aria-label="Naar ${sx==='binnen'?'buiten':'binnen'}">${sx==='binnen'?'Binnen':'Buiten'}</button>`:''}${vv?`<button data-vv="${i}">Terugzetten</button>`:''}<button class="del" data-del="${i}">Verwijderen</button></div>
   </article>`;
 }
 /* direct in de afronding invullen: één regel tegelijk, met "Volgende" naar het volgende lege verplichte veld */
@@ -265,14 +265,14 @@ async function move(i,d){
   render();const el=document.querySelector(`.pc[data-i="${j}"]`);if(el)el.scrollIntoView({block:'nearest'});
 }
 async function del(i){
-  const p=P[i];await Store.photos.del(p.id);P.splice(i,1);
+  const p=P[i];const s=await Editor.verwijder(p,false);if(s)S=s;P.splice(i,1);
   for(let k=0;k<P.length;k++)if(P[k].volgorde!==k+1){P[k].volgorde=k+1;await Store.photos.put(P[k]);}
   await recount();render();msg('Foto verwijderd.');
 }
 async function toggleVv(i){const p=P[i];p.status=p.status==='vervallen'?'ok':'vervallen';await Store.photos.put(p);await recount();render();msg(p.status==='vervallen'?'Foto vervalt: niet in het document.':'Foto teruggezet.');}
 function edit(i){
   const p=P[i];if(p.status==='vervallen'){msg('Zet de foto eerst terug om hem te bewerken.');return;}
-  Editor.openEditor(p.id,{onClose:async()=>{P=await Store.photos.bySurvey(S.id,true);await recount();render();},
+  Editor.openEditor(p.id,{onClose:async()=>{S=await Store.surveys.get(S.id)||S;P=await Store.photos.bySurvey(S.id,true);await recount();render();},
     onChange:async q=>{if(S.variant==='loop'){q.bron='loop';q.bijgeveegd=true;await Store.photos.put(q);}}}).catch(e=>msg('Kon de foto niet openen: '+(e.message||e)));
 }
 Gegevens.bron=k=>S&&S.id===k?S:null;

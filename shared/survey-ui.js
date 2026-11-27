@@ -380,7 +380,8 @@
     main.querySelectorAll('[data-sect]').forEach(b=>b.onclick=async()=>{s.sectie=b.dataset.sect;await Store.surveys.put(s);main.querySelectorAll('[data-sect]').forEach(x=>{x.classList.toggle('on',x===b);x.setAttribute('aria-pressed',x===b);});toast("Nieuwe foto's: "+(s.sectie==='binnen'?'binnen':'buiten'));});
     main.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>acts[+b.dataset.a].fn(survey));
     main.querySelectorAll('.th').forEach(b=>Editor.stripBind(b,b.dataset.id,id=>cfg.openFoto(survey,id),()=>ph.find(p=>p.id===b.dataset.id),async p=>{
-      await Store.photos.put(p);toast(p.status==='vervallen'?'Foto vervalt: telt niet mee en komt niet in het document':'Foto teruggezet');show(survey);}));
+      await Store.photos.put(p);toast(p.status==='vervallen'?'Foto vervalt: telt niet mee en komt niet in het document':'Foto teruggezet');show(survey);},
+      async(p,s)=>{toast('Foto verwijderd');show(s);}));
     if($('tmb'))$('tmb').onchange=async()=>{const v=parseFloat($('tmb').value.replace(',','.'));survey.tellers={...survey.tellers,metersBinnen:isFinite(v)?v:0};await Store.surveys.put(survey);toast('Opgeslagen');statusBlock($('stblk'),survey);};
     if($('tm'))$('tm').onchange=async()=>{const v=parseFloat($('tm').value.replace(',','.'));survey.tellers={...survey.tellers,meters:isFinite(v)?v:0};await Store.surveys.put(survey);toast('Opgeslagen');};
     const step=async d=>{const n=Math.max(0,(survey.tellers.boringen||0)+d);survey.tellers={...survey.tellers,boringen:n};$('tb').textContent=n;await Store.surveys.put(survey);};
@@ -442,14 +443,15 @@
     const neem=a=>{s.sectie=x;a.fn(s);Store.surveys.put(s);};
     if($('fCam'))$('fCam').onclick=()=>neem(pri);if($('fGal'))$('fGal').onclick=()=>neem(gal);
     main.querySelectorAll('.th').forEach(b=>Editor.stripBind(b,b.dataset.id,id=>cfg.openFoto(survey,id),()=>ph.find(p=>p.id===b.dataset.id),async p=>{
-      await Store.photos.put(p);toast(p.status==='vervallen'?'Foto vervalt: telt niet mee en komt niet in het document':'Foto teruggezet');show(survey);}));
+      await Store.photos.put(p);toast(p.status==='vervallen'?'Foto vervalt: telt niet mee en komt niet in het document':'Foto teruggezet');show(survey);},
+      async(p,s)=>{toast('Foto verwijderd');show(s);}));
     $('fTerug').onclick=terug;
     main.querySelectorAll('[data-rol]').forEach(b=>b.onclick=()=>{const f=Velden.VELDEN.find(v=>v.k===b.dataset.rol);
-      Gegevens.rolBlad(s,f,{klaar:()=>show(s),maak:g=>{const a=g?(gal||pri):pri;if(!a)return;wachtRol=f.rol;s.sectie=x;a.fn(s);Store.surveys.put(s);}});});
+      Gegevens.rolBlad(s,f,{klaar:async()=>show(await Store.surveys.get(s.id)||s),maak:g=>{const a=g?(gal||pri):pri;if(!a)return;wachtRol=f.rol;s.sectie=x;a.fn(s);Store.surveys.put(s);}});});
     if(kast){
       const kf=g=>Camera.take({galerij:g}).then(async r=>{if(!r||!r.blob)return;const p=await Store.photos.put({surveyId:s.id,blob:r.blob,ann:{orient:r.orient||'liggend'},bron:'veeg',status:'ok',sectie:'binnen'});s.bijlagen={...(s.bijlagen||{}),afw_foto:r.blob};s.kastGevraagd=true;s.bijlageBron={...(s.bijlageBron||{}),afw_foto:p.id};await Store.surveys.put(s);toast('Foto van de kast opgeslagen');show(s);});
       // zelfde werking als de andere verplichte foto's: maken, uit galerij of kiezen uit de foto's binnen
-      $('kSlot').onclick=()=>Gegevens.rolBlad(s,Velden.VELDEN.find(v=>v.k==='afw_foto'),{klaar:()=>show(s),maak:g=>kf(g)});
+      $('kSlot').onclick=()=>Gegevens.rolBlad(s,Velden.VELDEN.find(v=>v.k==='afw_foto'),{klaar:async()=>show(await Store.surveys.get(s.id)||s),maak:g=>kf(g)});
       const km=$('kMeer'),kv=$('kVeld');
       const KK=['afw_plaats','afw_ruimte','afw_kast','afw_apparatuur'];
       Gegevens.inline(kv,s,KK,{kant:'uit',onChange:()=>{const n=KK.filter(k=>!Velden.gevuld(s,Velden.VELDEN.find(f=>f.k===k),ph)).length;km.querySelector('span').textContent='Gegevens kast'+(n?` · ${n} open`:' · ✓');}});

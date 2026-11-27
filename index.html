@@ -41,7 +41,7 @@ function newPhoto(survey,galerij){
 }
 function edit(survey,id){
   Editor.openEditor(id,{
-    onClose:()=>SurveyUI.show(survey),
+    onClose:async()=>SurveyUI.show(await Store.surveys.get(survey.id)||survey), // vers lezen: de foto kan verwijderd zijn
     onChange:()=>SurveyUI.recount(),
     onNext:()=>{Editor.close();newPhoto(survey,false);},
     onDoc:()=>{location.href='shared/storyline.html?survey='+encodeURIComponent(survey.id);}
