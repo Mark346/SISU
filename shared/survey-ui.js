@@ -63,8 +63,14 @@
 .sui .sacts .rnd{flex:none;width:60px;min-height:60px;padding:0;border-radius:30px;background:var(--card);border-color:var(--line)}
 .sui .sfoot{display:flex;flex-direction:column;gap:8px;margin-top:22px}.sui .sfoot .btn{width:100%}
 .sui button.slink{border:0;background:none;cursor:pointer;margin:0 auto}
-.sui .sdel2,.sui .sdelx{border-color:var(--red)}
-.sui .sdel2.sure,.sui .sdelx.sure{background:var(--red);border-color:var(--red);color:#fff}
+.sui .sdel2{border-color:var(--red)}
+.sui .sgev{margin-top:56px;padding-top:18px;border-top:1px solid var(--line);text-align:center}
+.sui .sdelx{min-height:44px;padding:0 16px;border:0;background:none;color:#ff9b95;font:inherit;font-weight:600;text-decoration:underline;text-underline-offset:3px}
+.sdlg{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:20px}
+.sdlgb{width:100%;max-width:400px;background:var(--card,#1b1e23);border:1px solid var(--line,#2E323A);border-radius:18px;padding:20px;color:var(--ink,#fff)}
+.sdlgb h3{margin:0 0 8px;font-size:20px}.sdlgb p{margin:0 0 18px;color:var(--mute,#9aa1ab)}
+.sdlgk{display:flex;gap:10px}.sdlgk .btn{flex:1}.sdlgb .sdlgrood{background:var(--red,#dc2626);border-color:var(--red,#dc2626);color:#fff}
+.stoast:not([hidden]){display:flex;align-items:center;gap:4px}.stoast .stk{white-space:nowrap;margin-left:8px;border:0;background:none;color:#1d4ed8;font:inherit;font-weight:800;text-decoration:underline;min-height:32px}
 .sui .sfold{display:flex;align-items:center;gap:10px;width:100%;min-height:56px;margin-top:14px;border:1px solid var(--line);border-radius:var(--r-pill);background:transparent;color:var(--ink);font-size:16px;font-weight:600;padding:0 18px;cursor:pointer;text-align:left}
 .sui .sfold .n{flex:1;min-width:0;color:var(--mute);font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sui .sfold svg{flex:none;transition:transform .15s}.sui .sfold[aria-expanded="true"] svg{transform:rotate(90deg)}
@@ -168,8 +174,9 @@
   };
   function css(){if($('suicss'))return;const s=document.createElement('style');s.id='suicss';s.textContent=CSS;document.head.appendChild(s);}
   let tT=null;
-  function toast(t){let e=$('stoast');if(!e){e=document.createElement('div');e.id='stoast';e.className='stoast';e.setAttribute('role','status');document.body.appendChild(e);}
-    e.textContent=t;e.hidden=false;clearTimeout(tT);tT=setTimeout(()=>e.hidden=true,2600);}
+  function toast(t,o={}){let e=$('stoast');if(!e){e=document.createElement('div');e.id='stoast';e.className='stoast';e.setAttribute('role','status');document.body.appendChild(e);}
+    e.textContent=t;if(o.knop){const k=document.createElement('button');k.className='stk';k.textContent=o.knop;k.onclick=()=>{clearTimeout(tT);e.hidden=true;o.actie&&o.actie();};e.appendChild(k);}
+    e.hidden=false;clearTimeout(tT);tT=setTimeout(()=>e.hidden=true,o.duur||2600);}
   const NAMEN={origineel:'Origineel',veeg:'Veeg & Klik',richt:'Richt & Zet',loop:'Loop-spoor'};
   function binnenAan(){const c=Velden.cfg().binnen_fotos;return c.in!=='nee'||c.uit!=='nee';}
   function title(t){const h=$('ttl');if(h)h.textContent=t;}
@@ -223,12 +230,10 @@
          <div class="sb"><button class="btn" data-open="${esc(x.id)}">Openen</button><button class="btn" data-arch="${esc(x.id)}">Archiveren</button></div>`)).join('')}</div>`:''):''}
      ${arch.length?fold('foldA',showArch,`Gearchiveerd (${arch.length})`,arch,'var(--st-archief)')+(showArch?`<div class="surv">${arch.map(x=>kaart(x,`
          <div class="sb"><a class="btn" href="shared/document.html?survey=${encodeURIComponent(x.id)}">Document</a><button class="btn" data-share="${esc(x.id)}">Delen (PDF)</button></div>
-         <div class="sb"><button class="btn" data-unarch="${esc(x.id)}">Terugzetten</button><button class="btn sdel2" data-del="${esc(x.id)}">Verwijderen</button></div>`)).join('')}</div>`:''):''}
+         <div class="sb"><button class="btn" data-unarch="${esc(x.id)}">Terugzetten</button><button class="btn sdel2" data-del="${esc(x.id)}" data-naam="${esc(x.adres||'')}">Verwijderen</button></div>`)).join('')}</div>`:''):''}
      ${cfg.startExtra||''}`;
     main.querySelectorAll('.sv,[data-open]').forEach(b=>b.onclick=async()=>show(await Store.surveys.get(b.dataset.id||b.dataset.open)));
-    main.querySelectorAll('[data-del]').forEach(b=>{let t=null;const lab=b.textContent;b.onclick=async()=>{
-      if(!b.classList.contains('sure')){b.classList.add('sure');b.textContent='Zeker? Tik nog eens';t=setTimeout(()=>{b.classList.remove('sure');b.textContent=lab;},3000);return;}
-      clearTimeout(t);await Store.surveys.del(b.dataset.del);toast('Schouw verwijderd');start();};});
+    main.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>verwijderSchouw(b.dataset.del,b.dataset.naam,()=>start()));
     main.querySelectorAll('[data-arch]').forEach(b=>b.onclick=async()=>{const x=await Store.surveys.get(b.dataset.arch);x.gearchiveerd=true;x.status=Velden.statusOf(x);await Store.surveys.put(x);toast('Gearchiveerd');start();});
     main.querySelectorAll('[data-unarch]').forEach(b=>b.onclick=async()=>{const x=await Store.surveys.get(b.dataset.unarch);x.gearchiveerd=false;x.status=Velden.statusOf(x);await Store.surveys.put(x);toast('Terug bij Klaar');start();});
     main.querySelectorAll('[data-share]').forEach(b=>{if(window.PdfDoc)PdfDoc.bindShare(b,b.dataset.share,toast);else b.hidden=true;});
@@ -325,10 +330,23 @@
     const td=el.querySelector('.stodo');if(td&&cfg.fotoVakken)Gegevens.vakkenBind(td,s,reopen,{kant:cur==='afronding'?'uit':undefined,naar:naarFotos});
     else if(td)Gegevens.todoBind(td,s,reopen,{kant:cur==='afronding'?'uit':undefined,camera:()=>{const a=(cfg.acties(s,0)||[]).find(x=>x.pri);if(a)a.fn(s);else document.querySelector('.sacts .btn.pri')?.click();}});
   }
-  /* knop "Schouw verwijderen" (verhuisd van het startscherm naar de schouw): twee keer tikken */
-  function bindDel(btn,s,voor){if(!btn)return;let t=null;const lab=btn.textContent;btn.onclick=async()=>{
-    if(!btn.classList.contains('sure')){btn.classList.add('sure');btn.textContent='Zeker? Tik nog eens';t=setTimeout(()=>{btn.classList.remove('sure');btn.textContent=lab;},3000);return;}
-    clearTimeout(t);if(voor)voor();await Store.surveys.del(s.id);toast('Schouw verwijderd');survey=null;history.replaceState(null,'',location.pathname);start();};}
+  /* Schouw verwijderen: eerst een apart venster (midden in beeld, zonder tijdslimiet), daarna 10 s "Ongedaan maken" */
+  function bevestigVerwijder(naam){return new Promise(res=>{const d=document.createElement('div');d.className='sdlg';d.setAttribute('role','alertdialog');d.setAttribute('aria-modal','true');d.setAttribute('aria-labelledby','sdlgT');d.setAttribute('aria-describedby','sdlgP');
+    d.innerHTML=`<div class="sdlgb"><h3 id="sdlgT">Schouw verwijderen?</h3><p id="sdlgP">${esc(naam||'Deze schouw')} en alle foto's worden verwijderd.</p>
+      <div class="sdlgk"><button class="btn" data-k="nee">Annuleren</button><button class="btn sdlgrood" data-k="ja">Verwijderen</button></div></div>`;
+    document.body.appendChild(d);const dicht=v=>{removeEventListener('keydown',esc_);d.remove();res(v);};const esc_=e=>{if(e.key==='Escape')dicht(false);};addEventListener('keydown',esc_);
+    d.onclick=e=>{if(e.target===d)dicht(false);};d.querySelector('[data-k="nee"]').onclick=()=>dicht(false);d.querySelector('[data-k="ja"]').onclick=()=>dicht(true);
+    d.querySelector('[data-k="nee"]').focus();});}
+  let bezigDel=false;
+  async function verwijderSchouw(id,naam,na){
+    if(bezigDel||document.querySelector('.sdlg'))return false;bezigDel=true; // een tweede tik doet niets
+    try{const ok=await bevestigVerwijder(naam||'Deze schouw');if(!ok)return false;
+    const s=await Store.surveys.get(id);if(!s)return false;
+    const ph=await Store.photos.bySurvey(id,true); // bewaren voor "Ongedaan maken"
+    await Store.surveys.del(id);if(na)na();
+    toast('Schouw verwijderd',{knop:'Ongedaan maken',duur:10000,actie:async()=>{await Store.surveys.put(s);for(const p of ph)await Store.photos.put(p);toast('Schouw teruggezet');if(!survey)start();}});
+    return true;}finally{bezigDel=false;}}
+  function bindDel(btn,s,voor){if(!btn)return;btn.onclick=()=>verwijderSchouw(s.id,s.adres,()=>{if(voor)voor();survey=null;history.replaceState(null,'',location.pathname);start();});}
   async function recount(){
     if(!survey)return;const ph=await Store.photos.bySurvey(survey.id),t=cfg.tellen(survey,ph)||{};
     const T={meters:0,invoeringen:0,boringen:0,...survey.tellers,...t};let ch=false;
@@ -398,8 +416,8 @@
   const voet=s=>`<div class="sfoot">
        <a class="btn pri" href="shared/storyline.html?survey=${encodeURIComponent(s.id)}">Naar afronding</a>
        ${window.Paf?'<button class="slink" id="spaf">PAF inlezen</button>':''}
-       <button class="btn sdelx" id="sdel">Schouw verwijderen</button>
-     </div>`;
+     </div>
+     <div class="sgev"><button class="sdelx" id="sdel">Schouw verwijderen</button></div>`;
   function bindVoet(s){bindDel($('sdel'),s);
     // PAF in een bestaande schouw: alleen lege velden worden ingevuld
     if($('spaf'))$('spaf').onclick=()=>Paf.kies().then(async f=>{toast('PAF lezen…');let r;
