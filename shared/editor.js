@@ -51,7 +51,7 @@
   ];
   const LINES=['arrow','buis','mantel'];
   /* binnen (ook de kastfoto): alleen CPE + WODF, FDB lasbox en serverkast; buiten alle andere */
-  const BINNEN=new Set(['cpe','fdb','sk']),BEIDE=new Set(['dv','bw']); // invoer (IN) en doorvoer brandwerend: binnen én buiten
+  const BINNEN=new Set(['cpe','fdb','sk']),BEIDE=new Set(['nieuw','dv','bw']); // nieuw tracé, invoer (IN) en doorvoer brandwerend: binnen én buiten
   const GKEY='sisu.gebruik';
   const gebruik=()=>{try{return JSON.parse(localStorage.getItem(GKEY)||'{}');}catch(e){return{};}};
   function telGebruik(id){const g=gebruik();g[id]=(g[id]||0)+1;try{localStorage.setItem(GKEY,JSON.stringify(g));}catch(e){}}
@@ -237,7 +237,7 @@
         </div>
       </div>
       <div class="vhint"><p></p>${vv?'<button class="sm" id="vRest">Terugzetten</button>':''}</div>
-      <div class="vtools${tools.length<=6?' wrap':''}" role="toolbar" aria-label="Legenda">${tools.map(t=>`<button class="tl${on(t)?' on':''}" data-t="${t.id}" aria-pressed="${on(t)}">${miniOf(t,1.3)}<span>${t.name}</span></button>`).join('')}</div>
+      <div class="vtools" role="toolbar" aria-label="Legenda">${tools.map(t=>`<button class="tl${on(t)?' on':''}" data-t="${t.id}" aria-pressed="${on(t)}">${miniOf(t,1.3)}<span>${t.name}</span></button>`).join('')}</div>
       <div class="vcard"><div class="vlab">Bijschrift</div><div id="vCap"></div></div>
       <div class="vlab o">Foto's van deze schouw</div>
       <div class="strip" id="vStrip"></div>

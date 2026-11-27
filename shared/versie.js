@@ -1,2 +1,2 @@
 /* Versie van de app. Bij elke nieuwe versie ophogen, samen met de cachenaam in sw.js ('schouw-v' + nummer). */
-window.SISU_VERSIE={nummer:81,datum:'26-11-2026'};
+window.SISU_VERSIE={nummer:82,datum:'26-11-2026'};
