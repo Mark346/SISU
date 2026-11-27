@@ -452,7 +452,7 @@
        <div class="r"><div class="l">Invoeringen<small>${esc(cfg.invoerUitleg||'Telt de app.')}</small></div><span class="v" id="ti">${T.invoeringen||0}</span></div>
        <div class="r"><div class="l">Boringen/persingen</div><button class="step" id="bm" aria-label="Eén minder">−</button><span class="v" id="tb">${T.boringen||0}</span><button class="step" id="bp" aria-label="Eén meer">+</button></div></div>`
       :`<div id="bVeld"></div>`}
-     <div class="sfoot"><button class="btn" id="fTerug">Terug naar de schouw</button></div>`;
+     <div class="sfoot"><button class="btn pri" id="fTerug">Afgerond</button></div>`;
     window.scrollTo(0,0);
     // camera direct in de tik openen (iOS opent hem niet meer na een await), daarna pas opslaan
     const neem=a=>{s.sectie=x;a.fn(s);Store.surveys.put(s);};
@@ -461,7 +461,9 @@
     main.querySelectorAll('.th').forEach(b=>Editor.stripBind(b,b.dataset.id,id=>cfg.openFoto(survey,id),()=>ph.find(p=>p.id===b.dataset.id),async p=>{
       await Store.photos.put(p);toast(p.status==='vervallen'?'Foto vervalt: telt niet mee en komt niet in het document':'Foto teruggezet');show(survey);},
       async(p,s)=>{toast('Foto verwijderd');show(s);}));
-    $('fTerug').onclick=terug;
+    // Afgerond: alleen terug naar het schouwscherm; met open verplichte punten eerst waarschuwen
+    $('fTerug').onclick=async()=>{const s2=await Store.surveys.get(s.id)||s,ph2=await Store.photos.bySurvey(s.id,true),open=Velden.vakken(s2,ph2,Velden.statusOf(s2)==='afronding'?'uit':undefined)[x];
+      if(open.length&&!(await Gegevens.bevestigAf(open)))return;s2.afgerond={...(s2.afgerond||{}),[x]:true};await Store.surveys.put(s2);survey=s2;terug();};
     main.querySelectorAll('[data-rol]').forEach(b=>b.onclick=()=>{const f=Velden.VELDEN.find(v=>v.k===b.dataset.rol);
       Gegevens.rolBlad(s,f,{open:p=>cfg.openFoto(s,p.id),klaar:async()=>show(await Store.surveys.get(s.id)||s),maak:g=>{const a=g?(gal||pri):pri;if(!a)return;wachtRol=f.rol;s.sectie=x;a.fn(s);Store.surveys.put(s);}});});
     if(kast){

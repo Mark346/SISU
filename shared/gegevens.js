@@ -17,6 +17,8 @@
 :is(.geg,.gin) .gh h2{flex:1;min-width:0;margin:0;font-size:18px;font-weight:800;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 :is(.geg,.gin) .gst{font-weight:800;font-size:15px;white-space:nowrap}
 :is(.geg,.gin) .gb{flex:1;overflow-y:auto;padding:12px calc(14px + env(safe-area-inset-right)) 24px calc(14px + env(safe-area-inset-left))}
+.sig{display:block;width:14px;height:14px;border-radius:50%;background:#3b82f6;box-shadow:0 0 0 4px rgba(59,130,246,.2)}.sig.ok{background:#22c55e;box-shadow:0 0 0 4px rgba(34,197,94,.2)}
+:is(.geg,.gin) .gfr{display:flex;gap:8px}:is(.geg,.gin) .gfr .btn{flex:1}
 :is(.geg,.gin) .gf{flex:none;padding:10px calc(14px + env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom)) calc(14px + env(safe-area-inset-left));border-top:1px solid var(--line,#2E323A);background:var(--bg,#121418)}
 :is(.geg,.gin) .gf .btn{width:100%;min-height:54px}
 :is(.geg,.gin) .gdoc{display:flex;align-items:center;gap:10px;color:var(--mute,#A7ADB8);font-size:15px}
@@ -197,12 +199,14 @@
       ${st.moment?`<div class="gmom"><span>Alleen wat je ${esc(Velden.MOMENT[st.moment])} invult</span><button id="gAlle">Alle secties</button></div>`:''}
       ${blokken.length?blokken.join('')+pafHtml()
         :`<div class="gleeg"><p>${st.moment==='vooraf'?'Alles wat je vooraf nodig hebt, is ingevuld.':'Alles wat verplicht is, is ingevuld.'}</p><button class="btn" id="gToon">Bekijk alles</button></div>`}
-    </div><div class="gf"${n?'':' hidden'}><button class="btn pri" id="gNx">Volgende open veld</button></div>`;
+    </div><div class="gf"${n||st.opts.afrond?'':' hidden'}><div class="gfr"><button class="btn${st.opts.afrond?'':' pri'}" id="gNx"${n?'':' hidden'}>Volgende open veld</button>${st.opts.afrond?`<button class="btn pri" id="gAf">Afgerond</button>`:''}</div></div>`;
     R.querySelector('#gX').onclick=sluit;
     R.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{if(st.filter===b.dataset.f)return;save(true);st.filter=b.dataset.f;st.vast.clear();st.edit=null;lijst();R.querySelector('.gb').scrollTop=0;});
     const al=R.querySelector('#gAlle');if(al)al.onclick=()=>{st.moment=null;lijst();};
     const tn=R.querySelector('#gToon');if(tn)tn.onclick=()=>{st.filter='alles';st.vast.clear();lijst();};
     R.querySelector('#gNx').onclick=()=>volgende();
+    const af=R.querySelector('#gAf');if(af)af.onclick=async()=>{save(true);const L=secties(),open=L.flatMap(x=>x.open);
+      if(open.length&&!(await bevestigAf(open)))return;const fn=st.opts.afrond;sluit();fn();};
     R.querySelectorAll('[data-ing]').forEach(b=>b.onclick=()=>{const id=b.dataset.ing,aan=!st.uit.has(id);aan?st.uit.add(id):st.uit.delete(id);
       b.setAttribute('aria-expanded',aan);R.querySelector(`[data-ingl="${id}"]`).hidden=!aan;});
     R.querySelectorAll('[data-opt]').forEach(b=>b.onclick=()=>{const id=b.dataset.opt,aan=!st.optOpen.has(id);aan?st.optOpen.add(id):st.optOpen.delete(id);
@@ -316,7 +320,7 @@
     L.forEach(x=>{const g=R.querySelector(`[data-sh="${x.sc.id}"]`);if(g)g.textContent=x.open.length?x.open.length+' open':'';});
     const t=R.querySelector('[data-f="todo"]');if(t)t.textContent=`Nog te doen (${n})`;
     const p=R.querySelector('.gpr');if(p)p.outerHTML=voortgang();
-    const f=R.querySelector('.gf');if(f)f.hidden=!n;
+    const f=R.querySelector('.gf');if(f)f.hidden=!n&&!st.opts.afrond;const nx=R.querySelector('#gNx');if(nx)nx.hidden=!n;
   }
   function bind(){
     const R=st.root,s=st.s;
@@ -354,6 +358,9 @@
   function herteken(){if(!st)return;lijst();}
 
   /* ---------- bladen ---------- */
+  /* "Afgerond" met nog verplichte punten open: waarschuwen en nog eens laten bevestigen */
+  async function bevestigAf(open){const lijst=open.slice(0,8).map(f=>f.kort||f.l).join(', ')+(open.length>8?' en '+(open.length-8)+' meer':'');
+    return (await vraag(`Nog ${open.length} verplicht open`,'Nog niet ingevuld: '+lijst+'. Weet je zeker dat dit deel afgerond is?',[['ja','Toch afgerond','pri'],['nee','Verder invullen','']]))==='ja';}
   function vraag(titel,tekst,knoppen){css();return new Promise(res=>{
     const d=document.createElement('div');d.className='gbl';d.setAttribute('role','dialog');d.setAttribute('aria-modal','true');d.setAttribute('aria-labelledby','gblT');
     d.innerHTML=`<div class="gblb"><h3 id="gblT">${esc(titel)}</h3>${tekst?`<p>${esc(tekst)}</p>`:''}${knoppen.map(([k,l,c])=>`<button class="btn ${c||''}" data-k="${k}">${esc(l)}</button>`).join('')}</div>`;
@@ -454,6 +461,8 @@
 
   /* ---------- vakken op het schouwscherm: Informatie, Foto's buiten (alleen OFFNET), Foto's binnen ---------- */
   let vkUrls=[];
+  /* signaalbolletje links in een vak: blauw = nog in te vullen, groen = afgerond */
+  const sig=klaar=>`<i class="sig${klaar?' ok':''}" aria-hidden="true"></i>`;
   function vakkenHtml(s,fotos,kant){css();const V=Velden.vakken(s,fotos,kant),on=Velden.onnet(s);
     vkUrls.forEach(u=>URL.revokeObjectURL(u));vkUrls=[];
     const sec=fs=>[...new Set(fs.map(f=>f.t==='teller'||f.t==='foto'||f.t==='fotos'||f.t==='rolfoto'?(f.kort||f.l):(Velden.SECTIES.find(x=>x.id===Velden.groep(f))||{}).kort))].join(' · ');
@@ -463,15 +472,17 @@
       return `<span class="tdth">${L.slice(0,max).map(p=>{const u=URL.createObjectURL(p.blob);vkUrls.push(u);return `<span class="tdti" data-pid="${p.id}"><img src="${u}" alt=""></span>`;}).join('')}${L.length>max?`<b>+${L.length-max}</b>`:''}</span>`;};
     const n=x=>ok.filter(p=>(p.sectie||'buiten')===x).length;
     const pijl=svg('M9 5l7 7-7 7',18);
-    const vk=(id,ic,titel,fs,extra)=>`<button class="tdr tdfo${fs.length?' wrn':''}" data-vk="${id}" aria-label="${esc(titel)}: ${fs.length?fs.length+' nog te doen':'compleet'}"><span class="tdk"><span class="tdi">${ic}</span><span class="tdt"><b>${titel}</b><small>${sub(fs)}</small></span><span class="tdp">${pijl}</span></span>${extra||''}</button>`;
+    const af=s.afgerond||{};
+    const vk=(id,ic,titel,fs,extra)=>`<button class="tdr tdfo${fs.length?' wrn':''}" data-vk="${id}" aria-label="${esc(titel)}: ${af[id]?'afgerond':fs.length?fs.length+' nog te doen':'nog niet afgerond'}"><span class="tdk"><span class="tdi">${sig(af[id])}</span><span class="tdt"><b>${titel}</b><small>${sub(fs)}</small></span><span class="tdp">${pijl}</span></span>${extra||''}</button>`;
     const dot=x=>`<i class="dot" style="background:var(--sec-${x});width:12px;height:12px;border-radius:50%;display:block"></i>`;
-    return `<div class="tdo">${vk('info',svg(ICI,20),'Informatie',V.info)}
+    return `<div class="tdo">${vk('info','','Informatie',V.info)}
       ${on?'':vk('buiten',dot('buiten'),`Foto's buiten · ${n('buiten')}`,V.buiten,thumbs('buiten'))}
       ${vk('binnen',dot('binnen'),`Foto's binnen · ${n('binnen')}`,V.binnen,thumbs('binnen'))}</div>`;}
   function vakkenBind(el,s,klaar,o={}){
     el.querySelectorAll('[data-vk]').forEach(b=>b.onclick=async()=>{const x=b.dataset.vk;
       if(x==='info'){const fo=await Store.photos.bySurvey(s.id,true),V=Velden.vakken(s,fo,o.kant);
-        open(s,{filter:V.info.length?'todo':'alles',zonder:['buiten','binnen','afw'],zonderK:window.KaartTrace?['trace_geo']:undefined,onClose:klaar});}
+        open(s,{filter:V.info.length?'todo':'alles',zonder:['buiten','binnen','afw'],zonderK:window.KaartTrace?['trace_geo']:undefined,onClose:klaar,
+          afrond:async()=>{s.afgerond={...(s.afgerond||{}),info:true};await Store.surveys.put(s);}});}
       else if(o.naar)o.naar(x);});
   }
   /* ---------- verplichte foto met een rol kiezen (aansluitpunt, invoer pand, beginpunt) ---------- */
@@ -511,5 +522,5 @@
       else await zetRol(c,f.rol,alle.concat([c]));
       dicht(true);});
   }
-  window.Gegevens={open,close:()=>close(),naKast,vraag,todoHtml,todoBind,inline,vakkenHtml,vakkenBind,rolBlad,zetRol,bron:null};
+  window.Gegevens={sig,bevestigAf,open,close:()=>close(),naKast,vraag,todoHtml,todoBind,inline,vakkenHtml,vakkenBind,rolBlad,zetRol,bron:null};
 })();

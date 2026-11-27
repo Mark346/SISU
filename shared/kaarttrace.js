@@ -44,20 +44,20 @@
   function html(s){css();migreer(s);urls.forEach(u=>URL.revokeObjectURL(u));urls=[];
     const b=(s.bijlagen||{}).trace_geo;let img='';if(b){const u=URL.createObjectURL(b);urls.push(u);img=`<img src="${u}" alt="">`;}
     const n=s.kaartTrace?(s.kaartTrace.lijnen||[]).length+(s.kaartTrace.kruizen||[]).length:0;
-    return `<button class="plv${b?'':' mist'}" id="plVak" aria-label="${b?'Kaart met tracé bewerken':'Kaart met tracé importeren'}"><span class="pli">${kaartIc}</span><span class="plt"><b>${b?'Kaart met tracé':'Kaart met tracé importeren'}</b><small>${b?(n?'Tracé ingetekend · tik om te bewerken':'Tik om het tracé in te tekenen'):'Verplicht · foto of pdf van de kaart, daarna het tracé intekenen'}</small></span>${img}<span class="plp">${pijl}</span></button>`;}
+    return `<button class="plv${b?'':' mist'}" id="plVak" aria-label="${b?'Kaart met tracé bewerken':'Kaart met tracé importeren'}"><span class="pli">${window.Gegevens&&Gegevens.sig?Gegevens.sig(!!(s.afgerond||{}).kaart):kaartIc}</span><span class="plt"><b>${b?'Kaart met tracé':'Kaart met tracé importeren'}</b><small>${b?(n?'Tracé ingetekend · tik om te bewerken':'Tik om het tracé in te tekenen'):'Verplicht · foto of pdf van de kaart, daarna het tracé intekenen'}</small></span>${img}<span class="plp">${pijl}</span></button>`;}
   function bind(el,s,klaar){const b=el.querySelector('#plVak');if(!b)return;
-    b.onclick=()=>open(s,klaar);}
+    b.onclick=()=>open(s,klaar,{afrond:true});}
 
   /* bestand kiezen: synchroon in de tik (iOS) */
   function kies(){return new Promise((res,rej)=>{const i=document.createElement('input');i.type='file';i.accept='image/*,application/pdf,.pdf';i.style.display='none';
     document.body.appendChild(i);i.onchange=()=>{const f=i.files&&i.files[0];i.remove();f?res(f):rej(new Error('geen bestand'));};i.click();});}
-  function importeer(s,klaar){kies().then(async f=>{
+  function importeer(s,klaar,o){kies().then(async f=>{
       let blob;try{blob=await naarBeeld(f);}catch(e){melding('Dit bestand kon niet gelezen worden');return;}
       const im=await laadImg(blob);
       s.kaartTrace={orig:blob,w:im.naturalWidth,h:im.naturalHeight,lijnen:[],kruizen:[]};
       s.bijlagen={...(s.bijlagen||{}),trace_geo:blob};
       if(window.Velden&&Velden.waarde(s,'trace_geo')==='nvt')Velden.zet(s,'trace_geo','');
-      await Store.surveys.put(s);editor(s,klaar);}).catch(()=>{});}
+      await Store.surveys.put(s);editor(s,klaar,o);}).catch(()=>{});}
   function melding(t){const e=document.getElementById('stoast');if(e){e.textContent=t;e.classList.add('on');setTimeout(()=>e.classList.remove('on'),2500);}else alert(t);}
 
   /* foto verkleinen, pdf: eerste pagina renderen */
@@ -95,13 +95,13 @@
     return d>eps?rdp(P.slice(0,i0+1),eps).slice(0,-1).concat(rdp(P.slice(i0),eps)):[a,b];}
 
   /* ---------- bewerken ---------- */
-  async function editor(s,klaar){css();
+  async function editor(s,klaar,o={}){css();o=o||{};
     if(!s.kaartTrace||!s.kaartTrace.orig){const b=s.bijlagen.trace_geo,im=await laadImg(b);s.kaartTrace={orig:b,w:im.naturalWidth,h:im.naturalHeight,lijnen:[],kruizen:[]};}
     const P={...s.kaartTrace,lijnen:(s.kaartTrace.lijnen||[]).map(l=>l.slice()),kruizen:(s.kaartTrace.kruizen||[]).slice()};
     const hist=[];const snap=()=>hist.push(JSON.stringify({l:P.lijnen,k:P.kruizen}));
     const u=URL.createObjectURL(P.orig);let modus='lijn',gewijzigd=false;
     const d=document.createElement('div');d.className='ple';d.setAttribute('role','dialog');d.setAttribute('aria-modal','true');d.setAttribute('aria-label','Kaart met tracé bewerken');
-    d.innerHTML=`<div class="plh"><button class="plk" id="plX">Annuleren</button><b>Kaart met tracé</b><button class="plk" id="plM" aria-label="Meer">•••</button><button class="plk pri" id="plOk">Klaar</button></div>
+    d.innerHTML=`<div class="plh"><button class="plk" id="plX">Annuleren</button><b>Kaart met tracé</b><button class="plk" id="plM" aria-label="Meer">•••</button><button class="plk pri" id="plOk">${o.afrond?'Afgerond':'Klaar'}</button></div>
       <div class="plv2" id="plV"><div class="plw" id="plW" style="width:${P.w}px;height:${P.h}px"><img src="${u}" alt="Kaart" draggable="false"><svg viewBox="0 0 ${P.w} ${P.h}" id="plS"></svg></div></div>
       <div class="plb"><div class="plseg" role="group" aria-label="Gereedschap"><button data-m="lijn" aria-pressed="true"><svg width="22" height="10" viewBox="0 0 22 10"><path d="M1 5h20" stroke="currentColor" stroke-width="3" stroke-dasharray="5 3"/></svg>Lijn</button><button data-m="kruis" aria-pressed="false"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>Kruis</button></div>
         <span class="plsp"></span><button class="plk pri" id="plAf" hidden>✓ Lijn af</button><button class="plk" id="plU" aria-label="Ongedaan maken">↶ Terug</button>
@@ -156,7 +156,7 @@
     addEventListener('popstate',pop);
     d.querySelector('#plX').onclick=()=>{if(gewijzigd&&!confirm('Wijzigingen in de kaart weggooien?'))return;sluit(false);};
     d.querySelector('#plOk').onclick=async()=>{lijnAf();const b=d.querySelector('#plOk');b.disabled=true;b.textContent='Opslaan…';
-      s.kaartTrace={orig:P.orig,w:P.w,h:P.h,lijnen:P.lijnen,kruizen:P.kruizen};
+      lijnAf();s.kaartTrace={orig:P.orig,w:P.w,h:P.h,lijnen:P.lijnen,kruizen:P.kruizen};if(o.afrond)s.afgerond={...(s.afgerond||{}),kaart:true};
       s.bijlagen={...(s.bijlagen||{}),trace_geo:await samenstellen(s.kaartTrace)};
       if(window.Velden&&Velden.waarde(s,'trace_geo')==='nvt')Velden.zet(s,'trace_geo','');
       await Store.surveys.put(s);sluit(false);if(klaar)klaar();};
@@ -173,6 +173,6 @@
           await Store.surveys.put(s);gewijzigd=false;sluit(false);if(klaar)klaar();}});};
   }
     /* vanuit het document of het gegevensscherm: bewerken als er een kaart is, anders importeren (synchroon in de tik) */
-  function open(s,klaar){migreer(s);if(heeft(s))editor(s,klaar);else importeer(s,klaar);}
+  function open(s,klaar,o){migreer(s);if(heeft(s))editor(s,klaar,o);else importeer(s,klaar,o);}
   window.KaartTrace={html,bind,editor,importeer,heeft,open,migreer};
 })();
