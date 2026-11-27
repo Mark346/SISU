@@ -139,5 +139,10 @@
   /* klein plaatje van één onderdeel (voor knoppen en de legenda) */
   function mini(a,w,h,k){return svgString({orient:'liggend',...a},k||.8).replace(/viewBox="[^"]*" width="\d+" height="\d+"/,`viewBox="0 0 90 36" width="${w||90}" height="${h||36}"`);}
   function legendaItems(){return LEG.map(([naam,a])=>({naam,svg:mini(a)}));}
-  window.Legend={boxMaat,render,burnIn,svgString,size,legendaItems,mini,COLORS:C};
+  /* kleine tegel (img met object-fit:cover): legenda erover, op dezelfde manier bijgesneden, onder het nummertje */
+  function thumb(el,ann){if(!el||!ann)return;const a=ann,leeg=!(a.arrow||a.buis||a.mantel||a.poly||(a.syms&&a.syms.length));
+    const oud=el.querySelector(':scope > svg.legend');if(leeg){if(oud)oud.remove();return;}
+    const svg=render(el,ann,1.3);svg.setAttribute('preserveAspectRatio','xMidYMid slice');
+    const img=el.querySelector(':scope > img');if(img&&img.nextSibling!==svg)el.insertBefore(svg,img.nextSibling);}
+  window.Legend={thumb,boxMaat,render,burnIn,svgString,size,legendaItems,mini,COLORS:C};
 })();

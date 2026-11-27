@@ -406,6 +406,7 @@
   function renderStrip(){
     if(!st)return;const box=st.root.querySelector('#vStrip');if(!box)return;
     box.innerHTML=st.siblings.map((p,i)=>`<button class="th${p.id===st.ph.id?' on':''}${p.status==='vervallen'?' vv':''}" data-id="${p.id}" aria-label="Foto ${i+1}${p.status==='vervallen'?', vervalt':''}"><img src="${st.thumbs[p.id]}" alt=""><span>${i+1}${p.status==='vervallen'?' · vervalt':''}</span></button>`).join('')||'<p class="note">Nog geen foto\'s.</p>';
+    if(Legend.thumb)box.querySelectorAll('.th[data-id]').forEach(b=>{const p=st.siblings.find(q=>q.id===b.dataset.id);if(p&&p.ann)Legend.thumb(b,p.ann);});
     box.querySelectorAll('.th').forEach(b=>stripBind(b,b.dataset.id,id=>{if(id!==st.ph.id){save(true);openEditor(id,st.opts);}},()=>st.siblings.find(p=>p.id===b.dataset.id),async p=>{if(p.id===st.ph.id){st.ph.status=p.status;await save(true);build();}else{await Store.photos.put(p);await loadSiblings();renderStrip();renderCaption();if(st.opts.onChange)st.opts.onChange(p);}},
       async p=>{if(p.id===st.ph.id){st.skNieuw=null;st.skVoor=null;close();return;}await loadSiblings();renderStrip();renderCaption();}));
   }
