@@ -12,32 +12,36 @@
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
 <link rel="stylesheet" href="shared/base.css">
 <link rel="stylesheet" href="shared/thema.css">
-<script>try{if(localStorage.getItem('sisu.thema')==='licht'){document.documentElement.dataset.thema='licht';document.querySelector('meta[name=theme-color]').content='#EEF0F3';}}catch(e){}</script>
+<script>try{if(localStorage.getItem('sisu.thema')==='licht'){document.documentElement.dataset.thema='licht';document.querySelector('meta[name=theme-color]').content='#EEF0F3';}const tg=localStorage.getItem('sisu.tekst');if(tg==='groot'||tg==='extra')document.documentElement.dataset.tekst=tg;}catch(e){}</script>
 <style>
-.versie{flex:none;display:flex;flex-direction:column;align-items:flex-end;font-size:13px;font-weight:600;line-height:1.25;color:var(--mute);white-space:nowrap;padding-right:2px}
+.versie{flex:none;display:flex;flex-direction:column;align-items:flex-end;font-size:0.8125rem;font-weight:600;line-height:1.25;color:var(--mute);white-space:nowrap;padding-right:2px}
 .uitleg{color:var(--mute);margin:4px 0 12px}
 .uitleg b{color:var(--ink)}
-.lg{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;font-size:15px;color:var(--mute);margin-bottom:8px}
+.lg{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;font-size:0.9375rem;color:var(--mute);margin-bottom:8px}
 .lg b{color:var(--ink)}
 .sec{margin-top:14px}
-.veld{display:grid;grid-template-columns:1fr 80px 80px;gap:6px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:8px 8px 8px 14px;margin-bottom:6px}
-.veld .nm{font-weight:700;font-size:15px;line-height:1.25}
-.veld .vb{color:var(--mute);font-size:13px;font-weight:400;margin-top:1px}
-.veld .std{grid-column:1/-1;display:flex;flex-direction:column;gap:4px;margin:4px 6px 4px 0;font-size:14px;font-weight:600;color:var(--mute)}
-.veld .std input{box-sizing:border-box;width:100%;min-width:0;min-height:46px;border-radius:12px;border:1px solid var(--line2);background:var(--well);color:var(--ink);padding:0 12px;font-size:16px;-webkit-appearance:none;appearance:none}
-.cyc{width:80px;min-height:44px;border-radius:var(--r-pill);border:1px solid transparent;padding:0 4px;cursor:pointer;font-size:14px;font-weight:800;text-align:center}
+.veld{display:grid;grid-template-columns:minmax(0,1fr) 5rem 5rem;gap:6px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:8px 8px 8px 14px;margin-bottom:6px}
+.veld .nm{overflow-wrap:anywhere;font-weight:700;font-size:0.9375rem;line-height:1.25}
+.veld .vb{color:var(--mute);font-size:0.8125rem;font-weight:400;margin-top:1px}
+.veld .std{grid-column:1/-1;display:flex;flex-direction:column;gap:4px;margin:4px 6px 4px 0;font-size:0.875rem;font-weight:600;color:var(--mute)}
+.veld .std input{box-sizing:border-box;width:100%;min-width:0;min-height:46px;border-radius:12px;border:1px solid var(--line2);background:var(--well);color:var(--ink);padding:0 12px;font-size:1rem;-webkit-appearance:none;appearance:none}
+.cyc{width:5rem;min-height:44px;border-radius:var(--r-pill);border:1px solid transparent;padding:0 4px;cursor:pointer;font-size:0.875rem;font-weight:800;text-align:center}
 .cyc.verplicht{background:var(--acc);color:var(--on-acc)}
 .cyc.wenselijk{background:var(--f1);color:#fff}
 .cyc.nee{background:var(--bg);color:var(--mute);border-color:var(--line2)}
 .cyc[disabled]{opacity:.45;cursor:default}
-.kop{display:grid;grid-template-columns:1fr 80px 80px;gap:6px;align-items:end;position:sticky;top:57px;background:var(--bg);padding:8px 6px 6px 0;z-index:2}
-.kop h2{font-size:20px;font-weight:800;margin:0}.kop h2 small{display:block;font-size:14px;font-weight:600;color:var(--mute);margin-top:2px}
-.kop span{font-size:13px;font-weight:600;color:var(--mute);text-align:center}
+.kop{display:grid;grid-template-columns:minmax(0,1fr) 5rem 5rem;gap:6px;align-items:end;position:sticky;top:57px;background:var(--bg);padding:8px 6px 6px 0;z-index:2}
+.kop h2{font-size:1.25rem;font-weight:800;margin:0}.kop h2 small{display:block;font-size:0.875rem;font-weight:600;color:var(--mute);margin-top:2px}
+.kop span{font-size:0.8125rem;font-weight:600;color:var(--mute);text-align:center}
 .tot{display:flex;gap:10px;margin:6px 0 4px;flex-wrap:wrap}
-.tot span{background:var(--card);border:1px solid var(--line);border-radius:var(--r-pill);padding:5px 12px;font-size:14px;font-weight:600}
+.tot span{background:var(--card);border:1px solid var(--line);border-radius:var(--r-pill);padding:5px 12px;font-size:0.875rem;font-weight:600}
 .foot{margin:24px 0 10px;display:flex;gap:10px}.foot .btn{flex:1}
 .sub{display:flex;align-items:center;gap:12px;min-height:64px;margin:4px 0 16px;padding:10px 14px;background:var(--card);border:1px solid var(--line);border-radius:16px;color:var(--ink);text-decoration:none}
-.sub span{flex:1;min-width:0}.sub b{display:block;font-size:17px}.sub small{display:block;color:var(--mute);font-size:14px;margin-top:2px}.sub svg{flex:none;color:var(--mute)}
+.sub span{flex:1;min-width:0}.sub b{display:block;font-size:1.0625rem}.sub small{display:block;color:var(--mute);font-size:0.875rem;margin-top:2px}.sub svg{flex:none;color:var(--mute)}
+.tgr{margin-bottom:6px}
+.tsegm{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:0 0 16px}
+.tsegm button{min-height:48px;border-radius:14px;border:1.5px solid var(--line2);background:transparent;color:var(--ink);font:inherit;font-weight:700;cursor:pointer;padding:0 4px}
+.tsegm button[aria-checked="true"]{background:var(--acc);border-color:var(--acc);color:var(--on-acc)}
 .tgl{width:100%;font:inherit;color:inherit;text-align:left;cursor:pointer}
 .tsw{flex:none;position:relative;width:56px;height:34px;border-radius:17px;border:1.5px solid var(--line2);background:var(--well)}
 .tsw::after{content:'';position:absolute;top:3px;left:3px;width:26px;height:26px;border-radius:50%;background:var(--mute);transition:left .15s}
@@ -48,6 +52,8 @@
 <header class="bar"><a class="back bpill" href="index.html"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>Terug</a><h1>Instellingen</h1><span class="versie" id="versie"></span></header>
 <main class="page">
   <button class="sub tgl" id="buiten" role="switch" aria-checked="false"><span><b>Buitenmodus</b><small>Licht thema met donkere tekst en dikke randen, beter leesbaar in fel zonlicht</small></span><i class="tsw" aria-hidden="true"></i></button>
+  <div class="sub tgr" role="group" aria-labelledby="tgrT"><span><b id="tgrT">Tekstgrootte</b><small>Voor alle schermen behalve de afronding</small></span></div>
+  <div class="tsegm" id="tgr" role="radiogroup" aria-labelledby="tgrT"><button role="radio" data-tg="">Normaal</button><button role="radio" data-tg="groot">Groot</button><button role="radio" data-tg="extra">Extra groot</button></div>
   <a class="sub" href="paf.html"><span><b>PAF-import</b><small>Items uit een PAF (pdf) koppelen aan velden, of niet importeren</small></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></a>
   <p class="uitleg">Alle onderdelen van het site survey document. Kies per onderdeel wat er nodig is bij de <b>input</b> (vóór het schouwen) en bij de <b>output</b> (het document). Tik op een knop om te wisselen: Verplicht → Wenselijk → Nee. Onder elke sectie staat wanneer je die meestal invult: vooraf, ter plekke of achteraf.</p>
   <p class="uitleg">Een schouw gaat vanzelf door de stappen <b>Uitwerking</b> → <b>Afronding</b> (bij Naar afronding) → <b>Klaar</b> (bij Document maken).</p>
@@ -62,6 +68,11 @@
 <script src="shared/velden.js"></script>
 <script>
 const $=id=>document.getElementById(id);
+/* Tekstgrootte; wordt onthouden in 'sisu.tekst' */
+(function(){const k=[...document.querySelectorAll('#tgr [data-tg]')],zet=v=>{k.forEach(b=>b.setAttribute('aria-checked',b.dataset.tg===v));
+  if(v)document.documentElement.dataset.tekst=v;else delete document.documentElement.dataset.tekst;};
+  let v='';try{v=localStorage.getItem('sisu.tekst')||'';}catch(e){}zet(v);
+  k.forEach(b=>b.onclick=()=>{v=b.dataset.tg;try{v?localStorage.setItem('sisu.tekst',v):localStorage.removeItem('sisu.tekst');}catch(e){}zet(v);});})();
 /* Buitenmodus aan/uit; wordt onthouden in 'sisu.thema' en geldt voor de app-schermen (niet de afronding) */
 (function(){const b=$('buiten'),zet=aan=>{b.setAttribute('aria-checked',aan);if(aan)document.documentElement.dataset.thema='licht';else delete document.documentElement.dataset.thema;
   const m=document.querySelector('meta[name=theme-color]');if(m)m.content=aan?'#EEF0F3':'#121418';};

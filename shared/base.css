@@ -84,7 +84,7 @@
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--bg);color:var(--ink);
   font-family:var(--font);
-  font-size:16px;line-height:1.4;-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
+  font-size:1rem;line-height:1.4;-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
 button,input,select,textarea{font:inherit;color:inherit}
 [hidden]{display:none!important}
 a{color:var(--acc)}
@@ -98,12 +98,12 @@ a{color:var(--acc)}
 /* bovenbalk met terug naar het hoofdmenu */
 .bar{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:8px;background:var(--bg);
   padding:calc(6px + env(safe-area-inset-top)) calc(12px + env(safe-area-inset-right)) 6px calc(12px + env(safe-area-inset-left));border-bottom:1px solid var(--line)}
-.bar h1{font-size:18px;font-weight:800;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.back{display:inline-flex;align-items:center;min-height:44px;padding:0 12px 0 4px;border-radius:12px;color:var(--ink);text-decoration:none;font-weight:700;font-size:16px;background:none;border:0;cursor:pointer}
+.bar h1{font-size:1.125rem;font-weight:800;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.back{display:inline-flex;align-items:center;min-height:44px;padding:0 12px 0 4px;border-radius:12px;color:var(--ink);text-decoration:none;font-weight:700;font-size:1rem;background:none;border:0;cursor:pointer}
 .back:active{background:var(--card2)}
 
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;min-width:44px;padding:0 20px;border-radius:var(--r-pill);
-  border:1px solid var(--line2);background:transparent;color:var(--ink);font-weight:600;font-size:16px;cursor:pointer;text-decoration:none}
+  border:1px solid var(--line2);background:transparent;color:var(--ink);font-weight:600;font-size:1rem;cursor:pointer;text-decoration:none}
 .btn:active{transform:translateY(1px)}
 .btn.pri{background:var(--acc);border-color:var(--acc);color:var(--on-acc);font-weight:800;min-height:56px}
 .hlogo{flex:none;width:32px;height:32px;display:block}
@@ -112,9 +112,9 @@ a{color:var(--acc)}
 .hbtn:active{background:var(--card2)}
 /* startscherm en schouwoverzicht: geen lijn onder de bovenbalk, daar komt de vezelband */
 .bar.metband{border-bottom:0;padding-bottom:10px}
-.bar.start .hlogo+h1{font-size:22px}
+.bar.start .hlogo+h1{font-size:1.375rem}
 /* terugknop als pil (alle schermen) */
-.bpill{flex:none;gap:4px;min-height:44px;padding:0 14px 0 8px;border:1px solid var(--line);border-radius:22px;background:var(--card);font-weight:600;font-size:15px}
+.bpill{flex:none;gap:4px;min-height:44px;padding:0 14px 0 8px;border:1px solid var(--line);border-radius:22px;background:var(--card);font-weight:600;font-size:0.9375rem}
 .btn[disabled]{opacity:.5}
-.note{color:var(--mute);font-size:16px}
+.note{color:var(--mute);font-size:1rem}
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px}

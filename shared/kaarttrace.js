@@ -8,13 +8,13 @@
   function css(){if(cssOk)return;cssOk=true;const st=document.createElement('style');st.textContent=`
 .plv{display:flex;align-items:center;gap:12px;width:100%;padding:14px 16px;border-radius:var(--r,16px);background:var(--card);border:1px solid #3b82f6;color:var(--ink);text-align:left;font:inherit;cursor:pointer}
 .plv .pli{flex:none;width:40px;height:40px;border-radius:10px;background:rgba(59,130,246,.16);display:grid;place-items:center;color:var(--info-tekst,#60a5fa)}
-.plv .plt{flex:1;min-width:0}.plv .plt b{display:block;font-size:18px;font-weight:700;line-height:1.2}.plv .plt small{display:block;color:var(--mute);font-size:14px;margin-top:2px}
+.plv .plt{flex:1;min-width:0}.plv .plt b{display:block;font-size:1.125rem;font-weight:700;line-height:1.2}.plv .plt small{display:block;color:var(--mute);font-size:0.875rem;margin-top:2px}
 .plv.mist .pli{background:rgba(249,115,22,.18);color:var(--warn-tekst,#fb923c)}.plv.mist .plt small{color:var(--warn-tekst,#fdba74)}
 .plv img{flex:none;width:64px;height:48px;object-fit:cover;border-radius:6px;background:#fff}
 .plv .plp{flex:none;color:var(--mute)}
 .ple{position:fixed;inset:0;z-index:200;background:#0d0f12;display:flex;flex-direction:column;color:#fff;touch-action:none;user-select:none;-webkit-user-select:none}
 .ple .plh{display:flex;align-items:center;gap:8px;padding:calc(8px + env(safe-area-inset-top)) 12px 8px;background:#15181d;border-bottom:1px solid #2a2e35}
-.ple .plh b{flex:1;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.ple .plh b{flex:1;font-size:1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .ple button{font:inherit}
 .ple .plk{min-height:40px;padding:0 12px;border-radius:999px;border:1px solid #3a3e46;background:transparent;color:#fff;font-weight:600}
 .ple .plk.pri{background:#f2f3f5;color:#111;border-color:#f2f3f5}
@@ -26,7 +26,7 @@
 .ple .plseg{display:flex;border:1px solid #3a3e46;border-radius:999px;overflow:hidden}
 .ple .plseg button{min-height:44px;padding:0 12px;border:0;background:transparent;color:#cfd3da;font-weight:700;display:flex;align-items:center;gap:6px}
 .ple .plseg button[aria-pressed="true"]{background:${ROOD};color:#fff}
-.ple .plhint{width:100%;font-size:13px;color:#9aa1ab;margin:0}
+.ple .plhint{width:100%;font-size:0.8125rem;color:#9aa1ab;margin:0}
 .ple .plsp{flex:1}
 .plm{position:fixed;inset:0;z-index:210;background:rgba(0,0,0,.55);display:flex;align-items:flex-end}
 .plm>div{width:100%;background:#1b1e23;border-radius:18px 18px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:8px}

@@ -26,3 +26,11 @@ html[data-thema="licht"] ::placeholder{color:#6B7280}
 html[data-thema="licht"] input:not([type=checkbox]):not([type=radio]):not([type=range]),
 html[data-thema="licht"] select,html[data-thema="licht"] textarea{border-width:2px}
 html[data-thema="licht"] .btn{border-width:1.5px}
+
+/* ---------- Tekstgrootte (Instellingen): Normaal 100 % / Groot 115 % / Extra groot 130 % ----------
+   Alle letters staan in rem, dus ze schalen mee met deze wortelgrootte. */
+html[data-tekst="groot"]{font-size:18.4px}
+html[data-tekst="extra"]{font-size:20.8px}
+/* adres in de kop helemaal tonen (over meer regels) in plaats van afkappen */
+.bar h1{white-space:normal;overflow:visible;text-overflow:clip;line-height:1.2;overflow-wrap:anywhere}
+html .sui .sht b{white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere}
