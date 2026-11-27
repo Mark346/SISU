@@ -38,10 +38,10 @@
 <main class="page" id="main"><p class="note">Laden…</p></main>
 <script src="shared/thema.js"></script>
 <script src="shared/vendor/supabase/supabase.js"></script>
-<script src="shared/online.js?v=106"></script>
+<script src="shared/online.js?v=107"></script>
 <script src="shared/store.js"></script>
 <script src="shared/blobveilig.js"></script>
-<script src="shared/sync.js?v=106"></script>
+<script src="shared/sync.js?v=107"></script>
 <script>
 const $=id=>document.getElementById(id),main=$('main');
 const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -119,9 +119,9 @@ async function inlogScherm(){const oc=open();let info=null;if(oc)info=await Onli
     <label for="ww">Wachtwoord${nieuw?' (minstens 8 tekens)':''}</label><input id="ww" type="password" autocomplete="${nieuw?'new-password':'current-password'}">
     ${nieuw?'<label for="ww2">Wachtwoord nog een keer</label><input id="ww2" type="password" autocomplete="new-password">':''}
     <div class="rij"><button class="btn pri" id="ok">${nieuw?'Account maken':'Inloggen'}</button></div><p class="melding" id="cm" hidden></p>
-    <p style="margin-top:14px">${nieuw?'Heb je al een account? <a href="#" id="wissel">Inloggen</a>':'Nog geen account? <a href="#" id="wissel">Account maken</a>'}</p>
-    ${nieuw?'':'<p style="margin-top:8px">Wachtwoord vergeten? Vraag de beheerder om je account opnieuw aan te maken.</p>'}</div>`;
-  $('wissel').onclick=e=>{e.preventDefault();mail=$('mail').value;nieuw=!nieuw;teken();};
+    <p style="margin-top:14px">${!oc?'Nog geen account? Neem contact op met <a href="mailto:contact@zoofi.app">contact@zoofi.app</a>.':nieuw?'Heb je al een account? <a href="#" id="wissel">Inloggen</a>':'Nog geen account? <a href="#" id="wissel">Account maken</a>'}</p>
+    ${nieuw?'':'<p style="margin-top:8px">Wachtwoord vergeten? Neem contact op met je beheerder of met contact@zoofi.app.</p>'}</div>`;
+  if($('wissel'))$('wissel').onclick=e=>{e.preventDefault();mail=$('mail').value;nieuw=!nieuw;teken();};
   $('ok').onclick=async()=>{const m=$('mail').value.trim(),w=$('ww').value;
     if(!/^\S+@\S+\.\S+$/.test(m))return melding('cm','Vul een geldig e-mailadres in.');
     if(nieuw&&w.length<8)return melding('cm','Kies een wachtwoord van minstens 8 tekens.');

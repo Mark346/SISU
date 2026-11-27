@@ -205,7 +205,7 @@
     const open=rest.filter(x=>st(x)!=='klaar'),done=rest.filter(x=>st(x)==='klaar'),lastOpen=open[0];
     title(cfg.startTitel||cfg.naam);survey=null;if(cfg.onScreen)cfg.onScreen('start');
     const fotos={};for(const x of all)fotos[x.id]=await Store.photos.bySurvey(x.id,true);
-    if(!all.length)newOpen=true;
+    const nOpen=newOpen||!all.length; // lege lijst: formulier open, maar niet blijvend
     // statusregel: gekleurd bolletje + "Uitwerking · vandaag" (+ "gemaakt in …" als het uit een andere variant komt);
     // klaar met open velden: "Klaar · 3 open" in waarschuwingskleur
     const sst=x=>{const m=Velden.statusMeta(st(x)),vo=Velden.voortgang(x,fotos[x.id],'uit'),onv=m.id==='klaar'&&x.onvolledig&&vo.mist.length;
@@ -217,8 +217,8 @@
     const pafMenu=!!(window.Paf&&cfg.typeKiezen);
     main.innerHTML=`
      <div class="shead"><h2>Schouwen</h2>${open.length?`<span>${open.length} bezig</span>`:''}</div><button class="ssync" id="ssync" type="button" hidden></button>
-     <button class="btn pri snew" id="new" aria-expanded="${newOpen}" aria-controls="snp"${newOpen?' hidden':''}>${ICO.plus}Nieuwe schouw</button>
-     <div class="snp" id="snp"${newOpen?'':' hidden'}>
+     <button class="btn pri snew" id="new" aria-expanded="${nOpen}" aria-controls="snp"${nOpen?' hidden':''}>${ICO.plus}Nieuwe schouw</button>
+     <div class="snp" id="snp"${nOpen?'':' hidden'}>
        ${pafMenu?`<button class="btn pri spaf" id="gopaf">Start met een PAF (pdf)</button><p class="note">De gegevens uit de PAF worden ingevuld; wat ontbreekt vul je daarna aan.</p><details class="stip"><summary>Doe je dit op je iPhone? Hier een tip</summary><ol>
          <li>Maak op de iPhone in de app Opdrachten een nieuwe opdracht (bijvoorbeeld "PAF naar Zoofi") en zet aan dat hij in het deelmenu staat, alleen voor pdf's.</li>
          <li>Voeg de actie Bewaar bestand toe, naar een vaste map in iCloud Drive, bijvoorbeeld "Zoofi PAF", en laat hem bestaande bestanden vervangen.</li>
