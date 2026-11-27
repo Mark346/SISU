@@ -82,7 +82,10 @@
 .gblb label{display:block;font-weight:700;margin:4px 0 4px}
 .gblb input{display:block;box-sizing:border-box;width:100%;min-width:0;min-height:48px;border-radius:14px;border:1px solid var(--line2);background:var(--well);color:inherit;padding:0 12px;font-size:16px;-webkit-appearance:none;appearance:none}
 .gblb img{width:100%;max-height:160px;object-fit:cover;border-radius:var(--r-thumb,14px)}
-.gblb .grk{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.gblb .grnu{display:flex;align-items:center;gap:12px;padding:10px;border:2px solid #4ade80;border-radius:14px;margin:4px 0 10px}
+.grnf{position:relative;flex:none;width:96px;height:72px;border-radius:10px;overflow:hidden}.grnf img{width:100%;height:100%;object-fit:cover;display:block}
+.grnu b{font-size:16px;color:#4ade80}.grleeg{color:#fdba74!important;font-weight:600}
+.grk{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .gblb .grk button{position:relative;padding:0;border:2px solid transparent;border-radius:12px;background:none;cursor:pointer;overflow:hidden;aspect-ratio:4/3}
 .gblb .grk button.on{border-color:var(--ok,#22C55E)}
 .gblb .grk img{width:100%;height:100%;max-height:none;object-fit:cover;border-radius:10px;display:block}
@@ -482,13 +485,15 @@
     const us=[];const u=b=>{const x=URL.createObjectURL(b);us.push(x);return x;};
     const d=document.createElement('div');d.className='gbl';d.setAttribute('role','dialog');d.setAttribute('aria-modal','true');d.setAttribute('aria-labelledby','grT');
     d.innerHTML=`<div class="gblb"><h3 id="grT">${esc(f.kort||f.l)}</h3><p>${esc(f.vb?hoofd(f.vb)+'.':'')}</p>
-      ${bijl&&heeft&&!nu?`<img src="${u(s.bijlagen[f.k])}" alt="Huidige foto">`:''}
-      ${o.maak?`<button class="btn pri" data-r="cam">Foto maken</button><button class="btn" data-r="gal">Uit galerij</button>`:''}
+      ${nu?`<div class="grnu"><span class="grnf"><img src="${u(nu.blob)}" alt="Gekozen foto"></span><b>✓ Gekozen: foto ${hier.indexOf(nu)+1}</b></div>`
+        :bijl&&heeft?`<div class="grnu"><span class="grnf"><img src="${u(s.bijlagen[f.k])}" alt="Gekozen foto"></span><b>✓ Foto gekozen</b></div>`:`<p class="grleeg">Nog geen foto gekozen.</p>`}
+      ${nu&&window.Editor?`<button class="btn pri" data-r="leg">Legenda toevoegen op deze foto</button>`:''}
+      ${o.maak?`<button class="btn${nu?'':' pri'}" data-r="cam">${heeft?'Andere foto maken':'Foto maken'}</button><button class="btn" data-r="gal">Uit galerij</button>`:''}
       ${hier.length?`<p>${o.maak?'Of kies':'Kies'} een foto die er al is:</p><div class="grk">${hier.map(p=>`<button data-p="${p.id}" class="${p===nu?'on':''}" aria-pressed="${p===nu}" aria-label="Foto ${hier.indexOf(p)+1}${p.rol&&p!==nu?' (al gebruikt als andere verplichte foto)':''}"><img src="${u(p.blob)}" alt=""><span>${hier.indexOf(p)+1}${p===nu?' ✓':''}</span></button>`).join('')}</div>`:`<p>Er zijn nog geen foto's ${esc(sx)}.</p>`}
-      ${nu&&window.Editor?`<button class="btn" data-r="leg">Legenda toevoegen op deze foto</button>`:''}
       ${heeft?`<button class="btn" data-r="weg">${bijl?'Foto weghalen':'Niet meer als verplichte foto'}</button>`:''}
       <button class="btn" data-r="x">Annuleren</button></div>`;
     document.body.appendChild(d);d.querySelector('button').focus();
+    if(window.Legend&&Legend.thumb){d.querySelectorAll('[data-p]').forEach(b=>{const p=hier.find(x=>x.id===b.dataset.p);if(p&&p.ann)Legend.thumb(b,p.ann);});if(nu&&nu.ann)Legend.thumb(d.querySelector('.grnf'),nu.ann);}
     const dicht=r=>{us.forEach(x=>URL.revokeObjectURL(x));d.remove();if(r&&o.klaar)o.klaar();};
     d.addEventListener('click',e=>{if(e.target===d)dicht(false);});
     d.querySelectorAll('[data-r]').forEach(b=>b.onclick=async()=>{const r=b.dataset.r;
