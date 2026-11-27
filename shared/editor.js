@@ -75,6 +75,7 @@
 .ved .ovp{height:34px;border-radius:17px;background:var(--overlay,rgba(18,20,24,.72));color:#fff;display:flex;align-items:center;gap:7px;padding:0 12px;font-weight:600;font-size:15px;white-space:nowrap}
 .ved .ovp.r{margin-left:auto}
 .ved .dot{flex:none;width:9px;height:9px;border-radius:5px}
+.ved .vkapot{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;gap:8px;padding:24px;text-align:center;background:#1b1e23;color:#fff}.ved .vkapot span{color:#9aa1ab;font-size:15px}
 .ved .vovb{position:absolute;right:10px;bottom:10px;display:flex;gap:8px}
 .ved .vrail{flex:none;width:64px;display:flex;justify-content:center;padding:10px 0}
 .ved .vrail .in{display:flex;flex-direction:column;align-items:center;gap:6px;padding:6px;border-radius:28px;background:var(--card,#1C1F25)}
@@ -248,6 +249,9 @@
     fitPhoto();
     q('#vBack').onclick=()=>{save(true);close();};
     if(q('#vRest'))q('#vRest').onclick=()=>setStatus(st.ph,'ok');
+    // beschadigde foto (oude Safari-fout): duidelijk melden in plaats van een vraagteken
+    {const im=q('#vPh img');if(im)im.onerror=()=>{const b=q('#vPh');if(!b||b.querySelector('.vkapot'))return;const m=document.createElement('div');m.className='vkapot';
+      m.innerHTML='<b>Deze foto is beschadigd</b><span>Door een fout in Safari is het plaatje niet meer te lezen. Verwijder hem hieronder en maak de foto opnieuw.</span>';b.appendChild(m);};}
     q('#vWeg').onclick=async()=>{const p=st.ph;if(saveT){clearTimeout(saveT);saveT=null;}const s=await verwijder(p);if(!s)return;st.skNieuw=null;st.skVoor=null;close();if(window.SurveyUI&&SurveyUI.toast)SurveyUI.toast('Foto verwijderd');};
     q('#vUndo').onclick=undo;
     q('#vWipe').onclick=()=>{const a=st.ph.ann;if(!(a.arrow||a.buis||(a.syms&&a.syms.length))){toast('Er staat nog niets op deze foto.');return;}remember();st.ph.ann={orient:a.orient};st.sel=null;save(true);redraw();renderCaption();toast('Tekening gewist. Ongedaan zet hem terug.');};

@@ -96,6 +96,7 @@
 .sui .spnoot p{margin:0;font-size:15px;line-height:1.4;white-space:pre-line}
 .sstat{display:flex;flex-direction:column;gap:8px;margin-top:6px}
 .sui .stodo{margin-top:4px}
+.sui .kapot{position:relative;background:#2a1d1d!important}.sui .kapot img{opacity:0}.sui .kapot::after{content:'Beschadigd';position:absolute;inset:0;display:grid;place-items:center;font-size:11px;font-weight:700;color:#ff9b95}
 .sui .opth{font-size:15px;color:var(--mute);margin:14px 0 6px}
 .sui .uitr.opt{background:transparent;border:2px dashed var(--mute);color:var(--mute)}
 .sui .spaf{width:100%;margin-top:0}
@@ -418,7 +419,8 @@
   addEventListener('popstate',e=>{if(!cfg||!cfg.fotoVakken||!survey)return;const st=e.state||{};if(st.geg)return;
     const v=st.zf||null;if(v!==view){view=v;show(survey);}});
   /* pijlen en legenda-items ook op de kleine tegels */
-  function tegels(root,ph){if(!window.Legend||!Legend.thumb)return;root.querySelectorAll('.th[data-id],.rt[data-pid],.tdti[data-pid]').forEach(el=>{const p=ph.find(q=>q.id===(el.dataset.id||el.dataset.pid));if(p&&p.ann)Legend.thumb(el,p.ann);});}
+  function tegels(root,ph){root.querySelectorAll('.th img,.rt img,.tdti img').forEach(i=>i.onerror=()=>{const t=i.parentElement;if(t)t.classList.add('kapot');});
+if(!window.Legend||!Legend.thumb)return;root.querySelectorAll('.th[data-id],.rt[data-pid],.tdti[data-pid]').forEach(el=>{const p=ph.find(q=>q.id===(el.dataset.id||el.dataset.pid));if(p&&p.ann)Legend.thumb(el,p.ann);});}
   async function fotoScherm(s,x,ph){
     const ok=ph.filter(p=>p.status!=='vervallen'),L=ph.filter(p=>(p.sectie||'buiten')===x),T=await recount();
     // de witte knop telt alleen de foto's van deze kant, zonder plattegrond of kaart
