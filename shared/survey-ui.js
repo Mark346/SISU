@@ -103,6 +103,8 @@
 .sstat{display:flex;flex-direction:column;gap:8px;margin-top:6px}
 .sui .stodo{margin-top:4px}
 .sui .kapot{position:relative;background:var(--danger-vlak)!important}.sui .kapot img{opacity:0}.sui .kapot::after{content:'Beschadigd';position:absolute;inset:0;display:grid;place-items:center;font-size:11px;font-weight:700;color:var(--danger-tekst)}
+.sui .ferr{margin:6px 2px 0;color:var(--danger-tekst);font-weight:700;font-size:15px}.sui .tseg+.ferr{margin:-8px 2px 14px}
+.sui input.f.fout,.sui .tseg.fout button{border-color:var(--danger-tekst);border-width:2px}
 .sui .opth{font-size:15px;color:var(--mute);margin:14px 0 6px}
 .sui .uitr.opt{background:transparent;border:2px dashed var(--mute);color:var(--mute)}
 .sui .spaf{width:100%;margin-top:0}
@@ -219,9 +221,10 @@
          <li>Voeg de actie Bewaar bestand toe, naar een vaste map in iCloud Drive, bijvoorbeeld "Zoofi PAF", en laat hem bestaande bestanden vervangen.</li>
          <li>Gebruik: tik in Outlook op de bijlage, kies Deel, kies PAF naar Zoofi. Open daarna Zoofi en tik Start met een PAF. De bestandskiezer toont de laatst bewaarde pdf meestal bovenaan bij Recent.</li></ol></details>
        <details class="shand"><summary>Handmatig invullen</summary><div class="shandb">`:''}
-       ${cfg.typeKiezen?`<span class="styp" id="stypL">Type aansluiting</span><div class="tseg" role="group" aria-labelledby="stypL"><button data-typ="OFFNET" aria-pressed="false">OFFNET<small>buiten en binnen</small></button><button data-typ="ONNET" aria-pressed="false">ONNET<small>alleen binnen</small></button></div>`:''}
+       ${cfg.typeKiezen?`<span class="styp" id="stypL">Type aansluiting</span><div class="tseg" role="group" aria-labelledby="stypL"><button data-typ="OFFNET" aria-pressed="false">OFFNET<small>buiten en binnen</small></button><button data-typ="ONNET" aria-pressed="false">ONNET<small>alleen binnen</small></button></div><p class="ferr" id="typErr" hidden></p>`:''}
        <label for="adr">Adres van de nieuwe schouw</label>
        <input class="f" id="adr" autocomplete="street-address" placeholder="Straat en huisnummer, plaats">
+       <p class="ferr" id="adrErr" hidden></p>
        ${!pafMenu&&lastOpen&&lastOpen.adres?`<button class="btn take" id="take"><span>Adres overnemen:</span>${esc(lastOpen.adres)}</button>`:''}
        <div class="row">${all.length?'<button class="btn" id="cancel">Annuleren</button>':''}<button class="btn pri" id="go" style="flex:1.4">Start schouw</button></div>
        ${pafMenu?'</div></details>':''}
@@ -247,9 +250,16 @@
     if($('cancel'))$('cancel').onclick=()=>{newOpen=false;$('adr').value='';$('snp').hidden=true;$('new').hidden=false;$('new').setAttribute('aria-expanded','false');$('new').focus();};
     $('adr').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();$('go').click();}};
     if($('take'))$('take').onclick=()=>{$('adr').value=lastOpen.adres;};
-    let typ=null;main.querySelectorAll('[data-typ]').forEach(b=>b.onclick=()=>{typ=b.dataset.typ;main.querySelectorAll('[data-typ]').forEach(x=>{const on=x===b;x.classList.toggle('on',on);x.setAttribute('aria-pressed',on);});});
-    $('go').onclick=async()=>{const a=$('adr').value.trim();if(!a){toast('Vul eerst het adres in');$('adr').focus();return;}
-      if(cfg.typeKiezen&&!typ){toast('Kies eerst OFFNET of ONNET');main.querySelector('[data-typ]').focus();return;}
+    /* formulierfout onder het veld; blijft staan tot hij is opgelost */
+    const fout=(el,id,t)=>{const p=$(id);if(!p)return;p.textContent=t;p.hidden=!t;if(!el)return;
+      if(t){el.setAttribute('aria-invalid','true');el.setAttribute('aria-describedby',id);el.classList.add('fout');}else{el.removeAttribute('aria-invalid');el.removeAttribute('aria-describedby');el.classList.remove('fout');}};
+    const tg=main.querySelector('.tseg');
+    $('adr').addEventListener('input',()=>{if($('adr').value.trim())fout($('adr'),'adrErr','');});
+    let typ=null;main.querySelectorAll('[data-typ]').forEach(b=>b.onclick=()=>{typ=b.dataset.typ;fout(tg,'typErr','');main.querySelectorAll('[data-typ]').forEach(x=>{const on=x===b;x.classList.toggle('on',on);x.setAttribute('aria-pressed',on);});});
+    $('go').onclick=async()=>{const a=$('adr').value.trim();
+      const geenTyp=cfg.typeKiezen&&!typ;
+      fout(tg,'typErr',geenTyp?'Kies OFFNET of ONNET.':'');fout($('adr'),'adrErr',a?'':'Vul het adres in.');
+      if(geenTyp){main.querySelector('[data-typ]').focus();return;}if(!a){$('adr').focus();return;}
       newOpen=false;
       const x=await Store.surveys.put({adres:a,variant:cfg.variant,status:'uitwerking',...(typ?{velden:{type_aansluiting:typ},sectie:typ==='ONNET'?'binnen':'buiten'}:{})});await openSchouw(x);
       // eerst wat je vooraf moet weten (alleen als daar iets verplicht is)
