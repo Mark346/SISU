@@ -272,7 +272,7 @@
     if(st.raw&&st.raw.length>1)o+=`<polyline points="${st.raw.map(p=>p.join(',')).join(' ')}" fill="none" stroke="#fff" stroke-width="4" stroke-dasharray="7 6" stroke-linecap="round" stroke-linejoin="round"/>`;
     const bx=boxSel();if(bx){const {s,w,h}=bx,k=unitsPerPx(),L=s.x-w/2,T=s.y-h/2;
       o+=`<rect x="${L}" y="${T}" width="${w}" height="${h}" fill="none" stroke="#fff" stroke-width="${2*k}" stroke-dasharray="${5*k} ${4*k}"/>`;
-      grepen(bx).forEach(([x,y,a])=>{o+=a==='xy'?`<circle cx="${x}" cy="${y}" r="${11*k}" fill="#fff" stroke="#111" stroke-width="${3*k}"/>`:`<rect x="${x-8*k}" y="${y-8*k}" width="${16*k}" height="${16*k}" rx="${3*k}" fill="#fff" stroke="#111" stroke-width="${3*k}"/>`;});}
+      grepen(bx,k).forEach(([x,y])=>{o+=`<circle cx="${x}" cy="${y}" r="${10*k}" fill="#fff" stroke="#111" stroke-width="${3*k}"/>`;});}
     if(st.sel){const P=st.ph.ann[st.sel]||[];const k=unitsPerPx();
       o+=`<polyline points="${P.map(p=>p.join(',')).join(' ')}" fill="none" stroke="#fff" stroke-opacity=".5" stroke-width="${2*k}" stroke-dasharray="${5*k} ${4*k}"/>`;
       P.forEach(p=>{o+=`<circle cx="${p[0]}" cy="${p[1]}" r="${11*k}" fill="#fff" stroke="#111" stroke-width="${3*k}"/>`;});}
@@ -280,7 +280,8 @@
   }
   /* geselecteerd binnen-item (CPE + WODF, FDB, serverkast) met zijn maat */
   function boxSel(){if(!st||st.ssel==null)return null;const s=(st.ph.ann.syms||[])[st.ssel];const m=s&&Legend.boxMaat(s);if(!m){st.ssel=null;return null;}return {s,w:m[0],h:m[1]};}
-  const grepen=({s,w,h})=>[[s.x+w/2,s.y+h/2,'xy'],[s.x+w/2,s.y,'x'],[s.x,s.y+h/2,'y']];
+  // vier hoekgrepen, net buiten het item, zodat je het midden nog kunt pakken om te verschuiven
+  const grepen=({s,w,h},k)=>[[-1,-1],[1,-1],[1,1],[-1,1]].map(([a,b])=>[s.x+a*(w/2+9*k),s.y+b*(h/2+9*k),a,b]);
   function unitsPerPx(){const el=st.root.querySelector('#vPh');const r=el.getBoundingClientRect();return size()[0]/(r.width||1);}
 
   /* ---- aanraken: vegen, tikken, slepen, lang drukken ---- */
@@ -294,7 +295,7 @@
       // 1. greep van de geselecteerde lijn (44 px raakvlak)
       if(st.sel){const P=a[st.sel]||[];let bi=-1,bd=22*k;P.forEach((q,i)=>{const d=dist(q,p);if(d<bd){bd=d;bi=i;}});if(bi>=0){g.kind='handle';g.i=bi;remember();return;}}
       // 1b. greep van het geselecteerde binnen-item: lengte en breedte
-      const bx=boxSel();if(bx){const gi=grepen(bx).findIndex(([x,y])=>dist([x,y],p)<22*k);if(gi>=0){g.kind='rsz';g.ax=grepen(bx)[gi][2];g.tl=[bx.s.x-bx.w/2,bx.s.y-bx.h/2];g.wh=[bx.w,bx.h];remember();return;}}
+      const bx=boxSel();if(bx){const G=grepen(bx,k),gi=G.findIndex(([x,y])=>dist([x,y],p)<17*k);if(gi>=0){const [,,a,b]=G[gi];g.kind='rsz';g.dir=[a,b];g.anker=[bx.s.x-a*bx.w/2,bx.s.y-b*bx.h/2];remember();return;}}
       // 2. symbool (binnen-items: overal binnen de rechthoek)
       const raak=s=>{const m=Legend.boxMaat(s);return m?Math.abs(p[0]-s.x)<=Math.max(m[0]/2,12*k)&&Math.abs(p[1]-s.y)<=Math.max(m[1]/2,12*k):dist([s.x,s.y],p)<24*k;};
       const S=a.syms||[];for(let i=S.length-1;i>=0;i--){if(raak(S[i])){g.kind='sym';g.i=i;g.off=[S[i].x-p[0],S[i].y-p[1]];armLong(g,()=>popDelete(e.clientX,e.clientY,()=>{remember();a.syms.splice(i,1);st.ssel=null;afterChange('Symbool verwijderd.');}));return;}}
@@ -312,8 +313,10 @@
       if(!g.moved)return;
       if(g.kind==='handle'){st.ph.ann[st.sel][g.i]=[Math.round(p[0]),Math.round(p[1])];redraw();save();}
       else if(g.kind==='rsz'){const s=st.ph.ann.syms[st.ssel];if(!s)return;
-        const w=g.ax==='y'?g.wh[0]:Math.max(10,p[0]-g.tl[0]),h=g.ax==='x'?g.wh[1]:Math.max(10,p[1]-g.tl[1]);
-        s.w=Math.round(w);s.h=Math.round(h);s.x=Math.round(g.tl[0]+w/2);s.y=Math.round(g.tl[1]+h/2);redraw();save();}
+        // alleen groter of kleiner: de verhouding blijft, de tegenoverliggende hoek blijft staan
+        delete s.w;delete s.h;const [dw,dh]=Legend.boxMaat({t:s.t});
+        const f=Math.max(.3,Math.min(10,Math.max(g.dir[0]*(p[0]-g.anker[0])/dw,g.dir[1]*(p[1]-g.anker[1])/dh)));
+        s.s=Math.round(f*100)/100;s.x=Math.round(g.anker[0]+g.dir[0]*dw*f/2);s.y=Math.round(g.anker[1]+g.dir[1]*dh*f/2);redraw();save();}
       else if(g.kind==='sym'){const s=st.ph.ann.syms[g.i];s.x=Math.round(p[0]+g.off[0]);s.y=Math.round(p[1]+g.off[1]);redraw();save();}
       else if(g.kind==='draw'){const q=st.raw[st.raw.length-1];if(dist(p,q)>=2.5){st.raw.push(p);redraw();}}
     });
@@ -321,14 +324,14 @@
       if(!g||e.pointerId!==g.id)return;clearTimeout(g.lt);const d=g;g=null;
       if(d.long)return;
       if(d.kind==='draw'){finishDraw();return;}
-      if(d.moved){if(d.kind==='rsz'){afterChange('Maat aangepast.');return;}if(d.kind==='handle'){afterChange('Lijn bijgesteld.');}else if(d.kind==='sym'){afterChange('Symbool verplaatst.');}return;}
+      if(d.moved){if(d.kind==='rsz'){afterChange('Grootte aangepast.');return;}if(d.kind==='handle'){afterChange('Lijn bijgesteld.');}else if(d.kind==='sym'){afterChange('Symbool verplaatst.');}return;}
       if(e.type==='pointercancel')return;
       // tikken
       const t0=TOOLS.find(x=>x.id===st.tool);
       if(d.kind==='line'&&t0.draw){st.sel=d.key;toast('');redraw();toast(hintText());return;}
       if(d.kind==='line'){placeSym(t0,d.p0);return;}
       if(d.kind==='rsz'){undoNoop();return;}
-      if(d.kind==='sym'){undoNoop();if(Legend.boxMaat(st.ph.ann.syms[d.i])){st.ssel=d.i;st.sel=null;redraw();toast('Sleep de witte grepen om de lengte en breedte aan te passen. Lang drukken om te verwijderen.');}return;}
+      if(d.kind==='sym'){undoNoop();if(Legend.boxMaat(st.ph.ann.syms[d.i])){st.ssel=d.i;st.sel=null;redraw();toast('Sleep een hoekje om hem groter of kleiner te maken. Slepen in het midden verschuift, lang drukken verwijdert.');}return;}
       if(d.kind==='handle'){undoNoop();return;}
       if(st.ssel!=null){st.ssel=null;redraw();toast('');return;}
       if(st.sel){st.sel=null;redraw();toast('');return;}
@@ -344,7 +347,7 @@
   function placeSym(t,p){
     const type=t.id;telGebruik(t.id);
     remember();const a=st.ph.ann;a.syms=(a.syms||[]).concat([{t:type,x:Math.round(p[0]),y:Math.round(p[1])}]);
-    if(Legend.boxMaat({t:type})){st.ssel=a.syms.length-1;afterChange(`${t.name} geplaatst. Sleep om te verschuiven, de witte grepen maken hem langer of breder.`);}
+    if(Legend.boxMaat({t:type})){st.ssel=a.syms.length-1;afterChange(`${t.name} geplaatst. Sleep om te verschuiven, een hoekje maakt hem groter of kleiner.`);}
     else afterChange(`${t.name} geplaatst. Sleep om te verschuiven.`);
     if(type==='lo'){renderCaption();setTimeout(()=>{const i=st&&st.root.querySelector('#vLo');if(i)i.focus();},50);}
   }

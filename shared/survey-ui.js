@@ -293,7 +293,12 @@
     return it?`<div class="spnoot"><small>PAF overige informatie</small><p>${esc(it.waarde)}</p></div>`:'';}
   async function statusBlock(el,s,na){
     let ch=Velden.migreer(s);if(window.KaartTrace&&KaartTrace.migreer(s))ch=true;
-    const ph=await Store.photos.bySurvey(s.id,true),ok=ph.filter(p=>p.status!=='vervallen');
+    let ph=await Store.photos.bySurvey(s.id,true);
+    /* kastfoto die alleen als bijlage bestond: ook als foto binnen bewaren (telt mee, legenda erop mogelijk) */
+    const kb=(s.bijlagen||{}).afw_foto,kbron=(s.bijlageBron||{}).afw_foto;
+    if(cfg.fotoVakken&&kb&&!(kbron&&ph.some(p=>p.id===kbron))){const p=await Store.photos.put({surveyId:s.id,blob:kb,ann:{orient:'liggend'},bron:'veeg',status:'ok',sectie:'binnen'});
+      s.bijlageBron={...(s.bijlageBron||{}),afw_foto:p.id};ch=true;ph=await Store.photos.bySurvey(s.id,true);}
+    const ok=ph.filter(p=>p.status!=='vervallen');
     if(naFoto(s,ok.length))ch=true;
     if(ch){norm(s);await Store.surveys.put(s);}
     const cur=Velden.statusOf(s),idx=Velden.STATUS.findIndex(x=>x.id===cur);
