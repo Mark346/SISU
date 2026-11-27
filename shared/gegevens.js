@@ -422,7 +422,8 @@
 .tdl .dot{width:9px;height:9px;border-radius:50%;flex:none}
 .tdth{flex:1;min-width:0;display:flex;gap:4px;align-items:center;overflow:hidden}
 .tdth img{flex:none;width:36px;height:36px;object-fit:cover;border-radius:8px;border:1px solid var(--line2)}
-.tdth b{font-size:13px;color:var(--mute);margin-left:2px}`;
+.tdth b{font-size:13px;color:var(--mute);margin-left:2px}
+.tdti{position:relative;flex:none;width:36px;height:36px;border-radius:8px;overflow:hidden;border:1px solid var(--line2)}.tdti img{display:block;width:100%;height:100%;border:0;border-radius:0}`;
   { const st0=document.createElement('style');st0.textContent=TDCSS;document.head.appendChild(st0); }
   /* ---------- velden direct op een scherm (bijv. gegevens kast, tellers binnen) ---------- */
   function inline(el,s,keys,o={}){css();
@@ -456,7 +457,7 @@
     const sub=fs=>fs.length?`${fs.length} nog te doen · ${esc(sec(fs))}`:'<span class="okk">✓ Compleet</span>';
     const ok=(fotos||[]).filter(p=>p.status!=='vervallen'&&p.blob);
     const thumbs=x=>{const L=ok.filter(p=>(p.sectie||'buiten')===x),max=7;if(!L.length)return'';
-      return `<span class="tdth">${L.slice(0,max).map(p=>{const u=URL.createObjectURL(p.blob);vkUrls.push(u);return `<img src="${u}" alt="">`;}).join('')}${L.length>max?`<b>+${L.length-max}</b>`:''}</span>`;};
+      return `<span class="tdth">${L.slice(0,max).map(p=>{const u=URL.createObjectURL(p.blob);vkUrls.push(u);return `<span class="tdti" data-pid="${p.id}"><img src="${u}" alt=""></span>`;}).join('')}${L.length>max?`<b>+${L.length-max}</b>`:''}</span>`;};
     const n=x=>ok.filter(p=>(p.sectie||'buiten')===x).length;
     const pijl=svg('M9 5l7 7-7 7',18);
     const vk=(id,ic,titel,fs,extra)=>`<button class="tdr tdfo${fs.length?' wrn':''}" data-vk="${id}" aria-label="${esc(titel)}: ${fs.length?fs.length+' nog te doen':'compleet'}"><span class="tdk"><span class="tdi">${ic}</span><span class="tdt"><b>${titel}</b><small>${sub(fs)}</small></span><span class="tdp">${pijl}</span></span>${extra||''}</button>`;

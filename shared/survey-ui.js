@@ -317,6 +317,7 @@
       <ol class="sstep" aria-hidden="true">${Velden.STATUS.map((x,i)=>`<li class="${i===idx?'nu':''}"><i style="${i<=idx?'background:'+x.kleur:''}"></i><span>${esc(x.naam)}</span></li>`).join('')}</ol></div>${pafNoot(s)}${kaart}</div>`;
     if(!el.isConnected)return;langDruk(el.querySelector('#sbH'),()=>terugBlad(s,reopen));
     if(window.KaartTrace)KaartTrace.bind(el,s,reopen);
+    if(cfg.fotoVakken)tegels(el,ph);
     const td=el.querySelector('.stodo');if(td&&cfg.fotoVakken)Gegevens.vakkenBind(td,s,reopen,{kant:cur==='afronding'?'uit':undefined,naar:naarFotos});
     else if(td)Gegevens.todoBind(td,s,reopen,{kant:cur==='afronding'?'uit':undefined,camera:()=>{const a=(cfg.acties(s,0)||[]).find(x=>x.pri);if(a)a.fn(s);else document.querySelector('.sacts .btn.pri')?.click();}});
   }
@@ -409,7 +410,7 @@
   addEventListener('popstate',e=>{if(!cfg||!cfg.fotoVakken||!survey)return;const st=e.state||{};if(st.geg)return;
     const v=st.zf||null;if(v!==view){view=v;show(survey);}});
   /* pijlen en legenda-items ook op de kleine tegels */
-  function tegels(root,ph){if(!window.Legend||!Legend.thumb)return;root.querySelectorAll('.th[data-id],.rt[data-pid]').forEach(el=>{const p=ph.find(q=>q.id===(el.dataset.id||el.dataset.pid));if(p&&p.ann)Legend.thumb(el,p.ann);});}
+  function tegels(root,ph){if(!window.Legend||!Legend.thumb)return;root.querySelectorAll('.th[data-id],.rt[data-pid],.tdti[data-pid]').forEach(el=>{const p=ph.find(q=>q.id===(el.dataset.id||el.dataset.pid));if(p&&p.ann)Legend.thumb(el,p.ann);});}
   async function fotoScherm(s,x,ph){
     const ok=ph.filter(p=>p.status!=='vervallen'),L=ph.filter(p=>(p.sectie||'buiten')===x),T=await recount();
     // de witte knop telt alleen de foto's van deze kant, zonder plattegrond of kaart
