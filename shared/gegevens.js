@@ -503,7 +503,7 @@
         else{delete nu.rol;await Store.photos.put(nu);}return dicht(true);}
       dicht(false);if(o.maak)o.maak(r==='gal');}); // camera direct in de tik openen
     d.querySelectorAll('[data-p]').forEach(b=>b.onclick=async()=>{const p=hier.find(x=>x.id===b.dataset.p);
-      if(bijl){s.bijlagen={...(s.bijlagen||{}),[f.k]:p.blob};s.bijlageBron={...(s.bijlageBron||{}),[f.k]:p.id};if(f.k==='afw_foto')s.kastGevraagd=true;
+      if(bijl){s.bijlagen={...(s.bijlagen||{}),[f.k]:await Velden.kopie(p.blob)};s.bijlageBron={...(s.bijlageBron||{}),[f.k]:p.id};if(f.k==='afw_foto')s.kastGevraagd=true;
         if(Velden.waarde(s,f.k)==='nvt')Velden.zet(s,f.k,'');await Store.surveys.put(s);}
       else await zetRol(p,f.rol,alle);
       dicht(true);});

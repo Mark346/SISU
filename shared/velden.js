@@ -289,6 +289,24 @@
     const mis=fs.filter(f=>!gevuld(s,f,fotos));
     return{klaar:fs.length-mis.length,totaal:fs.length,mist:mis,pct:fs.length?Math.round((fs.length-mis.length)/fs.length*100):100};
   }
-  window.Velden={VELDEN,SECTIES,MOMENT,VG,VG_VAAK,VG_VOORSTEL,CONTACTEN,STATUS,V,W,N,cfg,setCfg,resetCfg,waarde,zet,actief,gevuld,voortgang,
+  /* Bijlagen (kastfoto, kaart) moeten een eigen kopie van het plaatje hebben: deelt de schouw hetzelfde
+     bestand met een foto en wordt die foto verwijderd, dan kan Safari de schouw niet meer opslaan
+     ("Error preparing Blob/File data"). kopie() maakt een losse kopie, herstelBlobs() repareert kapotte. */
+  async function kopie(b){if(!b)return b;return new Blob([await b.arrayBuffer()],{type:b.type||'image/jpeg'});}
+  async function leesbaar(b){try{await b.slice(0,16).arrayBuffer();return true;}catch(e){return false;}}
+  async function herstelBlobs(s,fotos){let ch=false;const bl={...(s.bijlagen||{})},bb={...(s.bijlageBron||{})};
+    for(const k of Object.keys(bl)){const b=bl[k];if(!(b instanceof Blob))continue;
+      const bp=(fotos||[]).find(p=>p.id===bb[k]&&p.status!=='vervallen');
+      if(await leesbaar(b)){continue;}
+      ch=true;if(bp&&await leesbaar(bp.blob))bl[k]=await kopie(bp.blob);else{delete bl[k];delete bb[k];}}
+    if(ch){s.bijlagen=bl;s.bijlageBron=bb;}
+    const kt=s.kaartTrace;if(kt&&kt.orig instanceof Blob&&!(await leesbaar(kt.orig))){ch=true;if(bl.trace_geo&&await leesbaar(bl.trace_geo))kt.orig=bl.trace_geo;else delete s.kaartTrace;}
+    return ch;}
+  /* opslaan; lukt dat niet door een kapot plaatje, dan alle plaatjes van de schouw los kopiëren (kapotte weg) en nog eens */
+  async function bewaar(s){try{return await Store.surveys.put(s);}catch(e){
+    const bl={...(s.bijlagen||{})};for(const k of Object.keys(bl)){const b=bl[k];if(!(b instanceof Blob))continue;try{bl[k]=await kopie(b);}catch(x){delete bl[k];if(s.bijlageBron)delete s.bijlageBron[k];}}
+    s.bijlagen=bl;if(s.kaartTrace&&s.kaartTrace.orig instanceof Blob){try{s.kaartTrace.orig=await kopie(s.kaartTrace.orig);}catch(x){delete s.kaartTrace;}}
+    return await Store.surveys.put(s);}}
+  window.Velden={bewaar,kopie,herstelBlobs,VELDEN,SECTIES,MOMENT,VG,VG_VAAK,VG_VOORSTEL,CONTACTEN,STATUS,V,W,N,cfg,setCfg,resetCfg,waarde,zet,actief,gevuld,voortgang,
     ROLLEN,todo,vak,vakken,VAK_SECTIES,onnet,onnetFix,adresNaam,standaard,setStandaard,statusOf,statusMeta,gearchiveerd,groep,inLijst,nodig,secties,verborgen,zelfdeAan,migreer};
 })();

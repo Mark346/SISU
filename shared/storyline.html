@@ -118,12 +118,12 @@ async function load(){
   $('back').href='../'+(PAGE[S.variant]||'index.html')+'?survey='+encodeURIComponent(S.id);
   P=await Store.photos.bySurvey(S.id,true);
   // naar afronding = status Afronding (vanaf Uitwerking, als er foto's zijn)
-  let ch=Velden.migreer(S);if(Velden.adresNaam(S))ch=true;if(window.KaartTrace&&KaartTrace.migreer(S))ch=true;
+  let ch=Velden.migreer(S);if(await Velden.herstelBlobs(S,P))ch=true;if(Velden.adresNaam(S))ch=true;if(window.KaartTrace&&KaartTrace.migreer(S))ch=true;
   for(const p of Velden.onnetFix(S,P)){await Store.photos.put(p);ch=true;} // ONNET: geen buiten tracé
   if(S.status==='archief'&&S.gearchiveerd==null){S.gearchiveerd=true;ch=true;}
   const cur=Velden.statusOf(S);if(S.status!==cur){S.status=cur;ch=true;}
   if(cur==='uitwerking'&&P.some(p=>p.status!=='vervallen')){S.status='afronding';if(!S.eersteFoto)S.eersteFoto=new Date().toISOString();ch=true;}
-  if(ch)await Store.surveys.put(S);
+  if(ch)await Velden.bewaar(S);
   // terug: naar de schouw (in de variant waarin hij gemaakt is)
   $('back').href='../'+({richt:'richt.html',loop:'loop.html'}[S.variant]||'index.html')+'?survey='+encodeURIComponent(S.id);
   // volgorde netjes doornummeren (1, 2, 3 …)
@@ -237,7 +237,7 @@ function bind(){
       const p=await Store.photos.put({surveyId:S.id,blob:r.blob,ann:{orient:r.orient||'liggend'},bron:S.variant||'veeg',status:'ok',sectie:f.sectie});
       await Gegevens.zetRol(p,f.rol,await Store.photos.bySurvey(S.id,true));P=await Store.photos.bySurvey(S.id,true);await recount();render();edit(P.findIndex(x=>x.id===p.id));}).catch(()=>msg('Foto maken lukte niet'))});});
   document.querySelectorAll('[data-kast]').forEach(b=>b.onclick=()=>Gegevens.rolBlad(S,Velden.VELDEN.find(v=>v.k==='afw_foto'),{open:p=>edit(P.findIndex(x=>x.id===p.id)),klaar:opnieuw,
-    maak:g=>Camera.take({galerij:g}).then(async r=>{if(!r||!r.blob)return;const p=await Store.photos.put({surveyId:S.id,blob:r.blob,ann:{orient:r.orient||'liggend'},bron:S.variant||'veeg',status:'ok',sectie:'binnen'});S.bijlagen={...(S.bijlagen||{}),afw_foto:r.blob};S.kastGevraagd=true;S.bijlageBron={...(S.bijlageBron||{}),afw_foto:p.id};await Store.surveys.put(S);await opnieuw();edit(P.findIndex(x=>x.id===p.id));}).catch(()=>msg('Foto maken lukte niet'))}));
+    maak:g=>Camera.take({galerij:g}).then(async r=>{if(!r||!r.blob)return;const p=await Store.photos.put({surveyId:S.id,blob:r.blob,ann:{orient:r.orient||'liggend'},bron:S.variant||'veeg',status:'ok',sectie:'binnen'});S.bijlagen={...(S.bijlagen||{}),afw_foto:await Velden.kopie(r.blob)};S.kastGevraagd=true;S.bijlageBron={...(S.bijlageBron||{}),afw_foto:p.id};await Store.surveys.put(S);await opnieuw();edit(P.findIndex(x=>x.id===p.id));}).catch(()=>msg('Foto maken lukte niet'))}));
   document.querySelectorAll('[data-naar]').forEach(b=>b.onclick=()=>{location.href=pagina(b.dataset.naar);});
   document.querySelectorAll('[data-ed]').forEach(el=>{el.onclick=()=>edit(+el.dataset.ed);el.onkeydown=e=>{if(e.key==='Enter')edit(+el.dataset.ed);};});
   document.querySelectorAll('[data-sct]').forEach(b=>b.onclick=async()=>{const p=P[+b.dataset.sct];p.sectie=p.sectie==='binnen'?'buiten':'binnen';if(p.rol){delete p.rol;}await Store.photos.put(p);render();});

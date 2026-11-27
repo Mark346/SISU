@@ -293,15 +293,15 @@
   function pafNoot(s){const it=s.paf&&(s.paf.info||[]).find(x=>/overige informatie/i.test(x.label||'')&&String(x.waarde||'').trim());
     return it?`<div class="spnoot"><small>PAF overige informatie</small><p>${esc(it.waarde)}</p></div>`:'';}
   async function statusBlock(el,s,na){
-    let ch=Velden.migreer(s);if(window.KaartTrace&&KaartTrace.migreer(s))ch=true;
+    let ch=Velden.migreer(s);if(window.KaartTrace&&KaartTrace.migreer(s))ch=true;if(await Velden.herstelBlobs(s,await Store.photos.bySurvey(s.id,true)))ch=true;
     let ph=await Store.photos.bySurvey(s.id,true);
     /* kastfoto die alleen als bijlage bestond: ook als foto binnen bewaren (telt mee, legenda erop mogelijk) */
     const kb=(s.bijlagen||{}).afw_foto,kbron=(s.bijlageBron||{}).afw_foto;
-    if(cfg.fotoVakken&&kb&&!(kbron&&ph.some(p=>p.id===kbron))){const p=await Store.photos.put({surveyId:s.id,blob:kb,ann:{orient:'liggend'},bron:'veeg',status:'ok',sectie:'binnen'});
+    if(cfg.fotoVakken&&kb&&!(kbron&&ph.some(p=>p.id===kbron))){const p=await Store.photos.put({surveyId:s.id,blob:await Velden.kopie(kb),ann:{orient:'liggend'},bron:'veeg',status:'ok',sectie:'binnen'});
       s.bijlageBron={...(s.bijlageBron||{}),afw_foto:p.id};ch=true;ph=await Store.photos.bySurvey(s.id,true);}
     const ok=ph.filter(p=>p.status!=='vervallen');
     if(naFoto(s,ok.length))ch=true;
-    if(ch){norm(s);await Store.surveys.put(s);}
+    if(ch){norm(s);await Velden.bewaar(s);}
     const cur=Velden.statusOf(s),idx=Velden.STATUS.findIndex(x=>x.id===cur);
     const reopen=()=>{if(na)na();else show(s);};
     // fase Uitwerking en Afronding: nog te doen, informatie en foto's apart
@@ -461,7 +461,7 @@
     main.querySelectorAll('[data-rol]').forEach(b=>b.onclick=()=>{const f=Velden.VELDEN.find(v=>v.k===b.dataset.rol);
       Gegevens.rolBlad(s,f,{open:p=>cfg.openFoto(s,p.id),klaar:async()=>show(await Store.surveys.get(s.id)||s),maak:g=>{const a=g?(gal||pri):pri;if(!a)return;wachtRol=f.rol;s.sectie=x;a.fn(s);Store.surveys.put(s);}});});
     if(kast){
-      const kf=g=>Camera.take({galerij:g}).then(async r=>{if(!r||!r.blob)return;const p=await Store.photos.put({surveyId:s.id,blob:r.blob,ann:{orient:r.orient||'liggend'},bron:'veeg',status:'ok',sectie:'binnen'});s.bijlagen={...(s.bijlagen||{}),afw_foto:r.blob};s.kastGevraagd=true;s.bijlageBron={...(s.bijlageBron||{}),afw_foto:p.id};await Store.surveys.put(s);await show(s);cfg.openFoto(s,p.id);});
+      const kf=g=>Camera.take({galerij:g}).then(async r=>{if(!r||!r.blob)return;const p=await Store.photos.put({surveyId:s.id,blob:r.blob,ann:{orient:r.orient||'liggend'},bron:'veeg',status:'ok',sectie:'binnen'});s.bijlagen={...(s.bijlagen||{}),afw_foto:await Velden.kopie(r.blob)};s.kastGevraagd=true;s.bijlageBron={...(s.bijlageBron||{}),afw_foto:p.id};await Store.surveys.put(s);await show(s);cfg.openFoto(s,p.id);});
       // zelfde werking als de andere verplichte foto's: maken, uit galerij of kiezen uit de foto's binnen
       $('kSlot').onclick=()=>Gegevens.rolBlad(s,Velden.VELDEN.find(v=>v.k==='afw_foto'),{open:p=>cfg.openFoto(s,p.id),klaar:async()=>show(await Store.surveys.get(s.id)||s),maak:g=>kf(g)});
       const km=$('kMeer'),kv=$('kVeld');
