@@ -8,12 +8,22 @@
   const db=supabase.createClient(URL_,KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,storageKey:'sisu.auth'}});
   const ls={get:k=>{try{return localStorage.getItem(k);}catch(e){return null;}},set:(k,v)=>{try{v==null?localStorage.removeItem(k):localStorage.setItem(k,v);}catch(e){}}};
   const fout=e=>{const m=(e&&(e.message||e.error_description||e.msg))||String(e);
+    if(/Invalid login credentials/i.test(m))return 'E-mailadres of wachtwoord klopt niet.';
+    if(/already registered|already been registered|already exists/i.test(m))return 'Dit e-mailadres heeft al een account. Kies "Inloggen".';
+    if(/Password should be at least|weak password/i.test(m))return 'Kies een wachtwoord van minstens 8 tekens.';
+    if(/Email not confirmed/i.test(m))return 'Dit account is nog niet bevestigd (in Supabase staat "Confirm email" nog aan).';
+    if(/Email address .* is invalid/i.test(m))return 'Dit e-mailadres wordt niet geaccepteerd.';
     if(/rate limit|security purposes/i.test(m))return 'Even wachten: je hebt net al een mail gekregen. Probeer het over een minuut opnieuw.';
     if(/expired|invalid/i.test(m)&&/token|otp/i.test(m))return 'Die code klopt niet of is verlopen. Vraag een nieuwe aan.';
     if(/Failed to fetch|NetworkError|Load failed/i.test(m))return 'Geen verbinding met internet.';
     return m;};
   const basis=()=>location.href.replace(/[?#].*$/,'').replace(/[^/]*$/,'');
   /* ---- inloggen: een mail met een link én een code (de code werkt ook in de app op het beginscherm) ---- */
+  /* ---- inloggen met e-mail en wachtwoord (geen mail nodig; 'Confirm email' staat uit in Supabase) ---- */
+  async function inloggen(email,ww){const {data,error}=await db.auth.signInWithPassword({email:email.trim(),password:ww});if(error)throw new Error(fout(error));return data.user;}
+  async function registreer(email,ww){const {data,error}=await db.auth.signUp({email:email.trim(),password:ww});if(error)throw new Error(fout(error));
+    if(!data.session)throw new Error('Account gemaakt, maar bevestigen per mail staat nog aan. Zet in Supabase "Confirm email" uit.');
+    if(data.user&&Array.isArray(data.user.identities)&&!data.user.identities.length)throw new Error(fout({message:'already registered'}));return data.user;}
   async function stuurInlog(email){const {error}=await db.auth.signInWithOtp({email:email.trim(),options:{emailRedirectTo:basis()+'account.html',shouldCreateUser:true}});if(error)throw new Error(fout(error));}
   async function bevestigCode(email,code){const {data,error}=await db.auth.verifyOtp({email:email.trim(),token:String(code).replace(/\s/g,''),type:'email'});if(error)throw new Error(fout(error));return data.user;}
   async function gebruiker(){const {data}=await db.auth.getSession();return data&&data.session?data.session.user:null;}
@@ -43,7 +53,7 @@
   async function leden(bedrijf){const {data,error}=await db.from('leden').select('user_id,rol,email,gemaakt').eq('bedrijf_id',bedrijf).order('email');if(error)throw new Error(fout(error));return data;}
   async function zetRol(bedrijf,user,rol){const {error}=await db.from('leden').update({rol}).eq('bedrijf_id',bedrijf).eq('user_id',user);if(error)throw new Error(fout(error));}
   async function verwijderLid(bedrijf,user){const {error}=await db.from('leden').delete().eq('bedrijf_id',bedrijf).eq('user_id',user);if(error)throw new Error(fout(error));}
-  window.Online={beschikbaar:true,db,stuurInlog,bevestigCode,gebruiker,uitloggen,profiel,kiesBedrijf,wordBeheerder,maakBedrijf,
+  window.Online={beschikbaar:true,db,inloggen,registreer,stuurInlog,bevestigCode,gebruiker,uitloggen,profiel,kiesBedrijf,wordBeheerder,maakBedrijf,
     maakUitnodiging,uitnodigingen,trekIn,uitnodigingInfo,accepteer,leden,zetRol,verwijderLid,link,
     onAuth:fn=>db.auth.onAuthStateChange((e,s)=>fn(e,s))};
 })();
