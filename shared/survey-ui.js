@@ -439,7 +439,7 @@
     main.querySelectorAll('[data-rol]').forEach(b=>b.onclick=()=>{const f=Velden.VELDEN.find(v=>v.k===b.dataset.rol);
       Gegevens.rolBlad(s,f,{klaar:()=>show(s),maak:g=>{const a=g?(gal||pri):pri;if(!a)return;wachtRol=f.rol;s.sectie=x;a.fn(s);Store.surveys.put(s);}});});
     if(kast){
-      const kf=g=>Camera.take({galerij:g}).then(async r=>{if(!r||!r.blob)return;s.bijlagen={...(s.bijlagen||{}),afw_foto:r.blob};s.kastGevraagd=true;if(s.bijlageBron)delete s.bijlageBron.afw_foto;await Store.surveys.put(s);toast('Foto van de kast opgeslagen');show(s);});
+      const kf=g=>Camera.take({galerij:g}).then(async r=>{if(!r||!r.blob)return;const p=await Store.photos.put({surveyId:s.id,blob:r.blob,ann:{orient:r.orient||'liggend'},bron:'veeg',status:'ok',sectie:'binnen'});s.bijlagen={...(s.bijlagen||{}),afw_foto:r.blob};s.kastGevraagd=true;s.bijlageBron={...(s.bijlageBron||{}),afw_foto:p.id};await Store.surveys.put(s);toast('Foto van de kast opgeslagen');show(s);});
       // zelfde werking als de andere verplichte foto's: maken, uit galerij of kiezen uit de foto's binnen
       $('kSlot').onclick=()=>Gegevens.rolBlad(s,Velden.VELDEN.find(v=>v.k==='afw_foto'),{klaar:()=>show(s),maak:g=>kf(g)});
       const km=$('kMeer'),kv=$('kVeld');

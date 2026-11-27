@@ -20,7 +20,9 @@
         if(!Velden.actief(S,f)){if(f.als&&f.als.niet!=null)continue; // ONNET: buiten tracé komt niet in het document
           rijen.push({l:f.l,v:'N.v.t'});continue;}
         switch(f.t){
-          case 'foto':flush();blok.push({t:'beeld',l:f.l,blob:(S.bijlagen||{})[f.k]||null,tekst:v==='nvt'?(f.nvt||'Niet beschikbaar'):'',mist:verpl&&!vol});break;
+          case 'foto':{flush();const bp=fotos.find(p=>p.id===(S.bijlageBron||{})[f.k]); // kastfoto uit de foto's: met de legenda erop
+            const bb=bp?(bp.ann&&window.Legend?await Legend.burnIn(bp.blob,bp.ann):bp.blob):(S.bijlagen||{})[f.k]||null;
+            blok.push({t:'beeld',l:f.l,blob:bb,tekst:v==='nvt'?(f.nvt||'Niet beschikbaar'):'',mist:verpl&&!vol});break;}
           case 'fotos':{flush();const ff=fotos.filter(p=>(p.sectie||'buiten')===f.sectie);if(ff.length||verpl)blok.push({t:'fotos',fotos:ff,mist:verpl&&!ff.length,l:f.l});break;}
           case 'vg':{flush();const it=(v&&v.items)||{};blok.push({t:'vg',items:Velden.VG.filter(a=>it[a.id]&&it[a.id].aan).map(a=>({...a,risico:it[a.id].risico!=null?it[a.id].risico:a.risico,afspraak:it[a.id].afspraak!=null?it[a.id].afspraak:a.afspraak})),mist:verpl&&!vol});break;}
           case 'legenda':flush();blok.push({t:'legenda'});break;

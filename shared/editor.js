@@ -270,11 +270,17 @@
     hnd.setAttribute('viewBox',`0 0 ${W} ${H}`);hnd.setAttribute('preserveAspectRatio','none');
     let o='';
     if(st.raw&&st.raw.length>1)o+=`<polyline points="${st.raw.map(p=>p.join(',')).join(' ')}" fill="none" stroke="#fff" stroke-width="4" stroke-dasharray="7 6" stroke-linecap="round" stroke-linejoin="round"/>`;
+    const bx=boxSel();if(bx){const {s,w,h}=bx,k=unitsPerPx(),L=s.x-w/2,T=s.y-h/2;
+      o+=`<rect x="${L}" y="${T}" width="${w}" height="${h}" fill="none" stroke="#fff" stroke-width="${2*k}" stroke-dasharray="${5*k} ${4*k}"/>`;
+      grepen(bx).forEach(([x,y,a])=>{o+=a==='xy'?`<circle cx="${x}" cy="${y}" r="${11*k}" fill="#fff" stroke="#111" stroke-width="${3*k}"/>`:`<rect x="${x-8*k}" y="${y-8*k}" width="${16*k}" height="${16*k}" rx="${3*k}" fill="#fff" stroke="#111" stroke-width="${3*k}"/>`;});}
     if(st.sel){const P=st.ph.ann[st.sel]||[];const k=unitsPerPx();
       o+=`<polyline points="${P.map(p=>p.join(',')).join(' ')}" fill="none" stroke="#fff" stroke-opacity=".5" stroke-width="${2*k}" stroke-dasharray="${5*k} ${4*k}"/>`;
       P.forEach(p=>{o+=`<circle cx="${p[0]}" cy="${p[1]}" r="${11*k}" fill="#fff" stroke="#111" stroke-width="${3*k}"/>`;});}
     hnd.innerHTML=o;
   }
+  /* geselecteerd binnen-item (CPE + WODF, FDB, serverkast) met zijn maat */
+  function boxSel(){if(!st||st.ssel==null)return null;const s=(st.ph.ann.syms||[])[st.ssel];const m=s&&Legend.boxMaat(s);if(!m){st.ssel=null;return null;}return {s,w:m[0],h:m[1]};}
+  const grepen=({s,w,h})=>[[s.x+w/2,s.y+h/2,'xy'],[s.x+w/2,s.y,'x'],[s.x,s.y+h/2,'y']];
   function unitsPerPx(){const el=st.root.querySelector('#vPh');const r=el.getBoundingClientRect();return size()[0]/(r.width||1);}
 
   /* ---- aanraken: vegen, tikken, slepen, lang drukken ---- */
@@ -287,8 +293,11 @@
       hidePop();const p=pt(e),k=unitsPerPx(),a=st.ph.ann;g={p0:p,c0:[e.clientX,e.clientY],moved:false,id:e.pointerId};
       // 1. greep van de geselecteerde lijn (44 px raakvlak)
       if(st.sel){const P=a[st.sel]||[];let bi=-1,bd=22*k;P.forEach((q,i)=>{const d=dist(q,p);if(d<bd){bd=d;bi=i;}});if(bi>=0){g.kind='handle';g.i=bi;remember();return;}}
-      // 2. symbool
-      const S=a.syms||[];for(let i=S.length-1;i>=0;i--){if(dist([S[i].x,S[i].y],p)<24*k){g.kind='sym';g.i=i;g.off=[S[i].x-p[0],S[i].y-p[1]];armLong(g,()=>popDelete(e.clientX,e.clientY,()=>{remember();a.syms.splice(i,1);afterChange('Symbool verwijderd.');}));return;}}
+      // 1b. greep van het geselecteerde binnen-item: lengte en breedte
+      const bx=boxSel();if(bx){const gi=grepen(bx).findIndex(([x,y])=>dist([x,y],p)<22*k);if(gi>=0){g.kind='rsz';g.ax=grepen(bx)[gi][2];g.tl=[bx.s.x-bx.w/2,bx.s.y-bx.h/2];g.wh=[bx.w,bx.h];remember();return;}}
+      // 2. symbool (binnen-items: overal binnen de rechthoek)
+      const raak=s=>{const m=Legend.boxMaat(s);return m?Math.abs(p[0]-s.x)<=Math.max(m[0]/2,12*k)&&Math.abs(p[1]-s.y)<=Math.max(m[1]/2,12*k):dist([s.x,s.y],p)<24*k;};
+      const S=a.syms||[];for(let i=S.length-1;i>=0;i--){if(raak(S[i])){g.kind='sym';g.i=i;g.off=[S[i].x-p[0],S[i].y-p[1]];armLong(g,()=>popDelete(e.clientX,e.clientY,()=>{remember();a.syms.splice(i,1);st.ssel=null;afterChange('Symbool verwijderd.');}));return;}}
       // 3. lijn (pijl of buis)
       for(const key of LINES){if(a[key]&&lineDist(p,a[key])<18*k){g.kind='line';g.key=key;armLong(g,()=>popDelete(e.clientX,e.clientY,()=>{remember();delete a[key];if(st.sel===key)st.sel=null;afterChange(key==='arrow'?'Pijl verwijderd.':key==='buis'?'Buis verwijderd.':'Mantelbuis verwijderd.');}));break;}}
       if(!g.kind)g.kind='bg';
@@ -302,6 +311,9 @@
       }
       if(!g.moved)return;
       if(g.kind==='handle'){st.ph.ann[st.sel][g.i]=[Math.round(p[0]),Math.round(p[1])];redraw();save();}
+      else if(g.kind==='rsz'){const s=st.ph.ann.syms[st.ssel];if(!s)return;
+        const w=g.ax==='y'?g.wh[0]:Math.max(10,p[0]-g.tl[0]),h=g.ax==='x'?g.wh[1]:Math.max(10,p[1]-g.tl[1]);
+        s.w=Math.round(w);s.h=Math.round(h);s.x=Math.round(g.tl[0]+w/2);s.y=Math.round(g.tl[1]+h/2);redraw();save();}
       else if(g.kind==='sym'){const s=st.ph.ann.syms[g.i];s.x=Math.round(p[0]+g.off[0]);s.y=Math.round(p[1]+g.off[1]);redraw();save();}
       else if(g.kind==='draw'){const q=st.raw[st.raw.length-1];if(dist(p,q)>=2.5){st.raw.push(p);redraw();}}
     });
@@ -309,13 +321,16 @@
       if(!g||e.pointerId!==g.id)return;clearTimeout(g.lt);const d=g;g=null;
       if(d.long)return;
       if(d.kind==='draw'){finishDraw();return;}
-      if(d.moved){if(d.kind==='handle'){afterChange('Lijn bijgesteld.');}else if(d.kind==='sym'){afterChange('Symbool verplaatst.');}return;}
+      if(d.moved){if(d.kind==='rsz'){afterChange('Maat aangepast.');return;}if(d.kind==='handle'){afterChange('Lijn bijgesteld.');}else if(d.kind==='sym'){afterChange('Symbool verplaatst.');}return;}
       if(e.type==='pointercancel')return;
       // tikken
       const t0=TOOLS.find(x=>x.id===st.tool);
       if(d.kind==='line'&&t0.draw){st.sel=d.key;toast('');redraw();toast(hintText());return;}
       if(d.kind==='line'){placeSym(t0,d.p0);return;}
-      if(d.kind==='handle'||d.kind==='sym'){undoNoop();return;}
+      if(d.kind==='rsz'){undoNoop();return;}
+      if(d.kind==='sym'){undoNoop();if(Legend.boxMaat(st.ph.ann.syms[d.i])){st.ssel=d.i;st.sel=null;redraw();toast('Sleep de witte grepen om de lengte en breedte aan te passen. Lang drukken om te verwijderen.');}return;}
+      if(d.kind==='handle'){undoNoop();return;}
+      if(st.ssel!=null){st.ssel=null;redraw();toast('');return;}
       if(st.sel){st.sel=null;redraw();toast('');return;}
       const t=TOOLS.find(x=>x.id===st.tool);
       if(t.draw){toast('Veeg een lijn over de route: houd je vinger op de foto en beweeg.');return;}
@@ -329,7 +344,8 @@
   function placeSym(t,p){
     const type=t.id;telGebruik(t.id);
     remember();const a=st.ph.ann;a.syms=(a.syms||[]).concat([{t:type,x:Math.round(p[0]),y:Math.round(p[1])}]);
-    afterChange(`${t.name} geplaatst. Sleep om te verschuiven.`);
+    if(Legend.boxMaat({t:type})){st.ssel=a.syms.length-1;afterChange(`${t.name} geplaatst. Sleep om te verschuiven, de witte grepen maken hem langer of breder.`);}
+    else afterChange(`${t.name} geplaatst. Sleep om te verschuiven.`);
     if(type==='lo'){renderCaption();setTimeout(()=>{const i=st&&st.root.querySelector('#vLo');if(i)i.focus();},50);}
   }
   function finishDraw(){
@@ -363,14 +379,16 @@
     const idx=st.siblings.filter(p=>p.status!=='vervallen');const me=idx.findIndex(p=>p.id===ph.id);
     const prev=me>0?idx[me-1]:null,same=prev&&cur.text&&cur.text===(prev.bijschrift||'');
     const chip=x=>`<button class="chip${x.k==='lo'?' lo':''}${cur.sel.includes(x.k)?' on':''}" data-k="${x.k}" aria-pressed="${cur.sel.includes(x.k)}">${esc(x.short)}</button>`;
+    // binnen: alleen de blokjes van de binnen-items (en Let op), buiten de rest; zonder kant alles
+    const kantOk=x=>!ph.sectie||cur.sel.includes(x.k)||x.k==='lo'||(ph.sectie==='binnen')===BINNEN.has(x.bij||x.k);
     const an=ph.ann||{},heeft=t=>t==='mantel'?!!(an.mantel&&an.mantel.length>1):((an.syms||[]).some(x=>x.t===t));
     // de zin staat bovenaan in de kaart, de blokjes eronder
     box.innerHTML=`<div class="cap${cur.text?'':' empty'}" id="vCapTxt">${esc(cur.text)||'Nog geen bijschrift. Veeg een pijl of tik een blokje.'}</div>
       ${same?`<div class="same">Zelfde als vorige foto. Iets toevoegen?</div>`:''}
-      <div class="chips">${CH.filter(x=>!x.route&&(!x.bij||heeft(x.bij)||cur.sel.includes(x.k))).map(chip).join('')}</div>
+      <div class="chips">${CH.filter(x=>!x.route&&(!x.bij||heeft(x.bij)||cur.sel.includes(x.k))&&kantOk(x)).map(chip).join('')}</div>
       ${cur.sel.includes('lo')?`<input class="vin" id="vLo" placeholder="Let op: waarop?" value="${esc(c.lo||'')}" aria-label="Tekst bij Let op">`:''}
-      <div class="vlab" style="padding-top:4px">Route</div>
-      <div class="chips">${CH.filter(x=>x.route).map(chip).join('')}</div>
+      ${ph.sectie==='binnen'?'':`<div class="vlab" style="padding-top:4px">Route</div>
+      <div class="chips">${CH.filter(x=>x.route).map(chip).join('')}</div>`}
       <input class="vin" id="vVrij" placeholder="Eigen tekst (vrij)" value="${esc(c.vrij||'')}" aria-label="Eigen tekst bij het bijschrift">`;
     box.querySelectorAll('.chip').forEach(b=>b.onclick=()=>{
       remember();const k=b.dataset.k,base=capOf(st.ph).sel.slice(),i=base.indexOf(k);if(i>=0)base.splice(i,1);else base.push(k);

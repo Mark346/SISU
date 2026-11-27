@@ -44,7 +44,19 @@
     return `<rect x="${x-w/2}" y="${y-h/2}" width="${w}" height="${h}" rx="${h/2}" fill="${fill}" stroke="${rim}" stroke-width="${3*k}"/>`+
       `<text x="${x}" y="${y+fs*.36}" font-size="${fs}" font-weight="800" text-anchor="middle" fill="${ink}" font-family="${FONT}">${esc(text)}</text>`;
   }
+  /* binnen-items (CPE + WODF, FDB lasbox, serverkast) kunnen een eigen lengte en breedte hebben: s.w, s.h */
+  const BOX={cpe:[92.4,24],fdb:[22.4,32.2],sk:[25.2,30.8]};
+  function boxMaat(s){const d=BOX[s&&s.t];if(!d)return null;const m=s.s>0?s.s:1;return [s.w>0?+s.w:d[0]*m,s.h>0?+s.h:d[1]*m];}
+  function boxSvg(s,k,w,h){const x=+s.x,y=+s.y,L=x-w/2,T=y-h/2,sw=3*k;let o='';
+    if(s.t==='cpe'){const fs=Math.max(4,Math.min(12*k,h*.55,(w-8*k)/6.2));
+      o=`<rect x="${L}" y="${T}" width="${w}" height="${h}" rx="${2*k}" fill="${C.brown}" stroke="${C.green}" stroke-width="${sw}"/><text x="${x}" y="${y+fs*.36}" font-size="${fs}" font-weight="800" text-anchor="middle" fill="#fff" font-family="${FONT}">CPE + WODF</text>`;}
+    else if(s.t==='fdb'){const fs=Math.max(4,Math.min(10*k,(w-4*k)/1.9,h*.4));
+      o=`<rect x="${L}" y="${T}" width="${w}" height="${h}" fill="${C.brown}" stroke="${C.green}" stroke-width="${sw}"/><text x="${x}" y="${T+fs+3*k}" font-size="${fs}" font-weight="800" text-anchor="middle" fill="#fff" font-family="${FONT}">FDB</text>`;}
+    else o=`<rect x="${L}" y="${T}" width="${w}" height="${h}" fill="none" stroke="${C.green}" stroke-width="${sw*1.2}"/>`;
+    if(s.label)o+=`<text x="${x}" y="${y+h/2+15*k}" font-size="${13*k}" font-weight="800" text-anchor="middle" fill="${C.white}" stroke="${C.dark}" stroke-width="${3*k}" paint-order="stroke" font-family="${FONT}">${esc(s.label)}</text>`;
+    return o;}
   function symSvg(s,k){
+    if(BOX[s.t]&&(s.w>0||s.h>0)){const [w,h]=boxMaat(s);return boxSvg(s,k,w,h);}
     k=k*(s.s>0?s.s:1); // optioneel: grootte per symbool (bijv. kleiner op afstand)
     const x=+s.x,y=+s.y,r=14*k,sw=3*k;let o='';
     switch(s.t){
@@ -127,5 +139,5 @@
   /* klein plaatje van één onderdeel (voor knoppen en de legenda) */
   function mini(a,w,h,k){return svgString({orient:'liggend',...a},k||.8).replace(/viewBox="[^"]*" width="\d+" height="\d+"/,`viewBox="0 0 90 36" width="${w||90}" height="${h||36}"`);}
   function legendaItems(){return LEG.map(([naam,a])=>({naam,svg:mini(a)}));}
-  window.Legend={render,burnIn,svgString,size,legendaItems,mini,COLORS:C};
+  window.Legend={boxMaat,render,burnIn,svgString,size,legendaItems,mini,COLORS:C};
 })();

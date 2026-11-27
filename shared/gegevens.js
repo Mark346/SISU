@@ -484,6 +484,7 @@
       ${bijl&&heeft&&!nu?`<img src="${u(s.bijlagen[f.k])}" alt="Huidige foto">`:''}
       ${o.maak?`<button class="btn pri" data-r="cam">Foto maken</button><button class="btn" data-r="gal">Uit galerij</button>`:''}
       ${hier.length?`<p>${o.maak?'Of kies':'Kies'} een foto die er al is:</p><div class="grk">${hier.map(p=>`<button data-p="${p.id}" class="${p===nu?'on':''}" aria-pressed="${p===nu}" aria-label="Foto ${hier.indexOf(p)+1}${p.rol&&p!==nu?' (al gebruikt als andere verplichte foto)':''}"><img src="${u(p.blob)}" alt=""><span>${hier.indexOf(p)+1}${p===nu?' ✓':''}</span></button>`).join('')}</div>`:`<p>Er zijn nog geen foto's ${esc(sx)}.</p>`}
+      ${nu&&window.Editor?`<button class="btn" data-r="leg">Legenda toevoegen op deze foto</button>`:''}
       ${heeft?`<button class="btn" data-r="weg">${bijl?'Foto weghalen':'Niet meer als verplichte foto'}</button>`:''}
       <button class="btn" data-r="x">Annuleren</button></div>`;
     document.body.appendChild(d);d.querySelector('button').focus();
@@ -491,6 +492,7 @@
     d.addEventListener('click',e=>{if(e.target===d)dicht(false);});
     d.querySelectorAll('[data-r]').forEach(b=>b.onclick=async()=>{const r=b.dataset.r;
       if(r==='x')return dicht(false);
+      if(r==='leg'){dicht(false);Editor.openEditor(nu.id,{onClose:()=>{if(o.klaar)o.klaar();}});return;}
       if(r==='weg'){if(bijl){const bl={...(s.bijlagen||{})};delete bl[f.k];s.bijlagen=bl;if(s.bijlageBron)delete s.bijlageBron[f.k];await Store.surveys.put(s);}
         else{delete nu.rol;await Store.photos.put(nu);}return dicht(true);}
       dicht(false);if(o.maak)o.maak(r==='gal');}); // camera direct in de tik openen

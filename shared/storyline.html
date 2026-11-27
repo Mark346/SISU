@@ -164,8 +164,8 @@ function render(){
           rij.push(`<div class="dr tl${mist?' mist':''}" data-k="${f.k}"><span class="l">${mist?UIT:''}${lab}</span><span class="v">${ctl}</span></div>`);break;}
         case 'rolfoto':{const p=P.find(q=>q.status!=='vervallen'&&q.rol===f.rol);
           rij.push(`<button class="dr${mist?' mist':''}" data-rol="${f.k}"><span class="l">${lab}</span><span class="v">${p?`<img class="mini" src="${urls[p.id]}" alt="">${nr[p.id]?'Foto '+nr[p.id]:'Ja'}`:mist?ONT:'<span class="leeg">—</span>'}</span></button>`);break;}
-        case 'foto':{flush();const b=(S.bijlagen||{})[f.k];let u='';if(b){u=URL.createObjectURL(b);urls['b_'+f.k]=u;}
-          out+=`<button class="db${mist?' mist':''}" ${f.k==='afw_foto'?'data-kast="1"':f.k==='trace_geo'&&window.KaartTrace?'data-kaart="1"':`data-sec="${Velden.groep(f)}"`}><div class="bl">${lab}</div>${b?`<img src="${u}" alt="${lab}">`:v==='nvt'?`<p><b>${esc(f.nvt||'Niet beschikbaar')}</b></p>`:`<div class="gat${mist?'':' stil'}">${mist?'<i class="ui">!</i>':''}${f.k==='trace_geo'&&window.KaartTrace?(mist?'Kaart ontbreekt':'Geen kaart')+' · tik om te importeren':(mist?'Foto ontbreekt':'Geen foto')+' · tik om toe te voegen'}</div>`}${b&&f.k==='trace_geo'&&window.KaartTrace?'<div style="margin-top:6px;font-size:14px;color:#666;font-weight:600">✎ Tik om het tracé aan te passen</div>':''}</button>`;break;}
+        case 'foto':{flush();const bp=P.find(p=>p.id===(S.bijlageBron||{})[f.k]&&p.status!=='vervallen'),b=bp?bp.blob:(S.bijlagen||{})[f.k];let u='';if(b){u=URL.createObjectURL(b);urls['b_'+f.k]=u;}
+          out+=`<button class="db${mist?' mist':''}" ${f.k==='afw_foto'?'data-kast="1"':f.k==='trace_geo'&&window.KaartTrace?'data-kaart="1"':`data-sec="${Velden.groep(f)}"`}><div class="bl">${lab}</div>${b?(bp&&bp.ann?`<div class="phb" data-bron="${bp.id}" style="position:relative"><img src="${u}" alt="${lab}" style="display:block;width:100%"></div>`:`<img src="${u}" alt="${lab}">`):v==='nvt'?`<p><b>${esc(f.nvt||'Niet beschikbaar')}</b></p>`:`<div class="gat${mist?'':' stil'}">${mist?'<i class="ui">!</i>':''}${f.k==='trace_geo'&&window.KaartTrace?(mist?'Kaart ontbreekt':'Geen kaart')+' · tik om te importeren':(mist?'Foto ontbreekt':'Geen foto')+' · tik om toe te voegen'}</div>`}${b&&f.k==='trace_geo'&&window.KaartTrace?'<div style="margin-top:6px;font-size:14px;color:#666;font-weight:600">✎ Tik om het tracé aan te passen</div>':''}</button>`;break;}
         case 'fotos':{flush();const L=P.map((p,i)=>({p,i})).filter(x=>(x.p.sectie||'buiten')===f.sectie);
           out+=L.length?L.map(({p,i})=>kaart(p,i,nr,binnen)).join(''):`<div class="gat${mist?'':' stil'}">${mist?'<i class="ui">!</i>':''}Nog geen foto's ${esc(f.sectie)}</div>`;
           out+=`<button class="mk" data-naar="${f.sectie}">Foto's ${esc(f.sectie)} maken</button>`;break;}
@@ -183,6 +183,7 @@ function render(){
   };
   $('doc').innerHTML=`<h1>Site survey</h1><p class="sub">${esc(S.adres||'')}${Velden.waarde(S,'datum_survey')?' · '+esc(fmtD(Velden.waarde(S,'datum_survey'))):''}</p>`
     +Velden.SECTIES.map(sectieHtml).join('');
+  document.querySelectorAll('.phb[data-bron]').forEach(el=>{const p=P.find(x=>x.id===el.dataset.bron);if(p&&p.ann)Legend.render(el,p.ann);});
   document.querySelectorAll('.pc .ph').forEach(el=>{const p=P[+el.dataset.ed];if(p.ann)Legend.render(el,p.ann);});
   bind();
 }
@@ -236,7 +237,7 @@ function bind(){
       const p=await Store.photos.put({surveyId:S.id,blob:r.blob,ann:{orient:r.orient||'liggend'},bron:S.variant||'veeg',status:'ok',sectie:f.sectie});
       await Gegevens.zetRol(p,f.rol,await Store.photos.bySurvey(S.id,true));P=await Store.photos.bySurvey(S.id,true);await recount();render();edit(P.findIndex(x=>x.id===p.id));}).catch(()=>msg('Foto maken lukte niet'))});});
   document.querySelectorAll('[data-kast]').forEach(b=>b.onclick=()=>Gegevens.rolBlad(S,Velden.VELDEN.find(v=>v.k==='afw_foto'),{klaar:opnieuw,
-    maak:g=>Camera.take({galerij:g}).then(async r=>{if(!r||!r.blob)return;S.bijlagen={...(S.bijlagen||{}),afw_foto:r.blob};S.kastGevraagd=true;if(S.bijlageBron)delete S.bijlageBron.afw_foto;await Store.surveys.put(S);render();}).catch(()=>msg('Foto maken lukte niet'))}));
+    maak:g=>Camera.take({galerij:g}).then(async r=>{if(!r||!r.blob)return;const p=await Store.photos.put({surveyId:S.id,blob:r.blob,ann:{orient:r.orient||'liggend'},bron:S.variant||'veeg',status:'ok',sectie:'binnen'});S.bijlagen={...(S.bijlagen||{}),afw_foto:r.blob};S.kastGevraagd=true;S.bijlageBron={...(S.bijlageBron||{}),afw_foto:p.id};await Store.surveys.put(S);await opnieuw();}).catch(()=>msg('Foto maken lukte niet'))}));
   document.querySelectorAll('[data-naar]').forEach(b=>b.onclick=()=>{location.href=pagina(b.dataset.naar);});
   document.querySelectorAll('[data-ed]').forEach(el=>{el.onclick=()=>edit(+el.dataset.ed);el.onkeydown=e=>{if(e.key==='Enter')edit(+el.dataset.ed);};});
   document.querySelectorAll('[data-sct]').forEach(b=>b.onclick=async()=>{const p=P[+b.dataset.sct];p.sectie=p.sectie==='binnen'?'buiten':'binnen';if(p.rol){delete p.rol;}await Store.photos.put(p);render();});
