@@ -23,6 +23,9 @@
 .sui .shead{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin:8px 0 14px}
 .sui .shead h2{margin:0;font-size:2.25rem;line-height:1;font-weight:800;letter-spacing:-.02em}
 .sui .shead span{color:var(--mute);font-size:0.9375rem;white-space:nowrap}
+.sui .ssync{display:inline-flex;align-items:center;gap:8px;max-width:100%;margin:-6px 0 14px;padding:6px 12px 6px 10px;border-radius:999px;border:1.5px solid var(--line2);background:var(--well);color:var(--mute);font:inherit;font-size:0.875rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+.sui .ssync::before{content:'';flex:none;width:9px;height:9px;border-radius:50%;background:var(--mute)}
+.sui .ssync.ok::before{background:var(--st-klaar,#2e8b57)}.sui .ssync.bezig::before{background:#2f6fde}.sui .ssync.uit::before{background:#c58a00}.sui .ssync.fout{color:var(--ink)}.sui .ssync.fout::before{background:#c0392b}
 .sui .snew{width:100%;min-height:60px;font-size:1.1875rem}
 .sui .snp{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px}
 .sui .snp label{margin:0 0 8px}
@@ -213,7 +216,7 @@
     const kaart=(x,knoppen)=>`<div class="sdone"><div class="sh"><b>${esc(x.adres||'zonder adres')}</b>${sst(x)}</div>${knoppen}</div>`;
     const pafMenu=!!(window.Paf&&cfg.typeKiezen);
     main.innerHTML=`
-     <div class="shead"><h2>Schouwen</h2>${open.length?`<span>${open.length} bezig</span>`:''}</div>
+     <div class="shead"><h2>Schouwen</h2>${open.length?`<span>${open.length} bezig</span>`:''}</div><button class="ssync" id="ssync" type="button" hidden></button>
      <button class="btn pri snew" id="new" aria-expanded="${newOpen}" aria-controls="snp"${newOpen?' hidden':''}>${ICO.plus}Nieuwe schouw</button>
      <div class="snp" id="snp"${newOpen?'':' hidden'}>
        ${pafMenu?`<button class="btn pri spaf" id="gopaf">Start met een PAF (pdf)</button><p class="note">De gegevens uit de PAF worden ingevuld; wat ontbreekt vul je daarna aan.</p><details class="stip"><summary>Doe je dit op je iPhone? Hier een tip</summary><ol>
@@ -238,6 +241,7 @@
          <div class="sb"><a class="btn" href="shared/document.html?survey=${encodeURIComponent(x.id)}">Document</a><button class="btn" data-share="${esc(x.id)}">Delen (PDF)</button></div>
          <div class="sb"><button class="btn" data-unarch="${esc(x.id)}">Terugzetten</button><button class="btn sdel2" data-del="${esc(x.id)}" data-naam="${esc(x.adres||'')}">Verwijderen</button></div>`)).join('')}</div>`:''):''}
      ${cfg.startExtra||''}`;
+    if(window.Sync&&Sync.teken)Sync.teken();
     main.querySelectorAll('.sv,[data-open]').forEach(b=>b.onclick=async()=>openSchouw(await Store.surveys.get(b.dataset.id||b.dataset.open)));
     main.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>verwijderSchouw(b.dataset.del,b.dataset.naam,()=>start()));
     main.querySelectorAll('[data-arch]').forEach(b=>b.onclick=async()=>{const x=await Store.surveys.get(b.dataset.arch);x.gearchiveerd=true;x.status=Velden.statusOf(x);await Store.surveys.put(x);toast('Gearchiveerd');start();});

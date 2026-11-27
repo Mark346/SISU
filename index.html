@@ -23,6 +23,9 @@
 <script src="shared/thema.js"></script>
 <script src="shared/store.js"></script>
 <script src="shared/blobveilig.js"></script>
+<script src="shared/vendor/supabase/supabase.js"></script>
+<script src="shared/online.js?v=105"></script>
+<script src="shared/sync.js?v=105"></script>
 <script src="shared/legend.js"></script>
 <script src="shared/camera.js"></script>
 <script src="shared/editor.js"></script>
@@ -61,6 +64,8 @@ SurveyUI.init({
   tellen:(s,ph)=>({invoeringen:ph.reduce((n,p)=>n+(((p.ann&&p.ann.syms)||[]).filter(x=>x.t==='dv').length),0)}),
   openFoto:(s,id)=>edit(s,id)
 });
+/* nieuwe schouwen of foto's van collega's binnen: werklijst verversen als je erop staat en niets aan het typen bent */
+document.addEventListener('sisu-sync-nieuw',()=>{const adr=document.getElementById('adr');if(!SurveyUI.current()&&!(adr&&adr.value.trim())&&!document.querySelector('input:focus,textarea:focus'))SurveyUI.start();});
 if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
 </body>
