@@ -422,6 +422,7 @@
     for(const k of Object.keys(bb))if(bb[k]===p.id){delete bb[k];delete bl[k];ch=true;}
     const rest=await Store.photos.bySurvey(s.id);
     if(ch){s.bijlageBron=bb;s.bijlagen=bl;}s.nFoto=rest.length;await Store.surveys.put(s);
+    try{dispatchEvent(new CustomEvent('foto-weg',{detail:{id:p.id,surveyId:s.id}}));}catch(e){}
     return s;}
   /* tik = openen, lang drukken = verwijderen (onWeg) of, zonder onWeg, vervalt / terugzetten */
   function stripBind(el,id,onOpen,getPhoto,onStatus,onWeg){

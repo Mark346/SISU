@@ -409,6 +409,10 @@
   /* terugknop bovenin: van fotoscherm naar de schouw, van de schouw naar de lijst */
   function terug(){if(view){if(history.state&&history.state.zf&&history.length>1&&history.state.via)history.back();else{view=null;show(survey);}return;}
     history.replaceState(null,'',location.pathname);start();}
+  /* foto verwijderd: meteen overal uit beeld halen en daarna het scherm opnieuw opbouwen vanuit de opslag */
+  addEventListener('foto-weg',e=>{const id=e.detail&&e.detail.id;if(!id)return;
+    document.querySelectorAll(`[data-id="${id}"],[data-pid="${id}"]`).forEach(el=>{const k=el.closest('.rolk');if(k&&el.classList.contains('rt')){el.innerHTML='<i class="uitr" aria-hidden="true">!</i>';const sm=k.querySelector('small');if(sm)sm.textContent='Ontbreekt · tik om te maken';k.classList.add('wrn');}else el.remove();});
+    if(survey&&e.detail.surveyId===survey.id)setTimeout(async()=>{const s=await Store.surveys.get(survey.id);if(s&&!document.querySelector('.ved'))show(s);},350);});
   addEventListener('popstate',e=>{if(!cfg||!cfg.fotoVakken||!survey)return;const st=e.state||{};if(st.geg)return;
     const v=st.zf||null;if(v!==view){view=v;show(survey);}});
   /* pijlen en legenda-items ook op de kleine tegels */
