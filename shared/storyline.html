@@ -60,6 +60,7 @@
 .vgl{margin:0;padding-left:18px;font-size:15px;line-height:1.45}
 .mk{width:100%;margin:6px 0 10px;min-height:48px;border-radius:99px;border:1px solid #111;background:#fff;color:#111;font-weight:800;font-size:15px;cursor:pointer}
 .de{padding:10px;border-bottom:1px solid #ccc;background:#fff8f0;box-shadow:inset 4px 0 0 #FF7A1A}
+.dzelf{display:block;width:100%;margin:10px 0 2px;min-height:44px;border:1.5px dashed #9aa1ab;border-radius:999px;background:#fff;color:#111;font:inherit;font-weight:700}
 .de .l{display:block;font-weight:800;font-size:15px;margin-bottom:6px;color:#111}
 .de input,.de textarea{display:block;box-sizing:border-box;width:100%;min-width:0;min-height:48px;border:1px solid #999;border-radius:8px;padding:0 10px;font-size:17px;color:#111;background:#fff;-webkit-appearance:none;appearance:none}
 .de textarea{min-height:90px;padding:8px 10px;line-height:1.4}
@@ -208,6 +209,7 @@ function editor(f,v){
     :f.t==='lang'?`<textarea id="${id}" data-ein placeholder="${ph}">${esc(v||'')}</textarea>`
     :`<input id="${id}" data-ein type="${{datum:'date',tel:'tel',mail:'email',getal:'number'}[f.t]||'text'}" value="${esc(v==null?'':v)}" placeholder="${ph}" enterkeyhint="next"${f.t==='getal'?' inputmode="numeric"':''}>`;
   return `<div class="de" data-ek="${f.k}"><label class="l" id="l_${f.k}" for="${id}">${esc(f.l)}</label>${inv}
+    ${f.zelfde?`<button class="dzelf" data-ed2="zelfde">${f.zelfde.veld==='klant_zelfde'?'Adres van de schouw overnemen':'Gegevens contactpersoon klant overnemen'}</button>`:''}
     <div class="deb"><button data-ed2="klaar">Klaar</button><button class="pri" data-ed2="volg">Volgende ›</button></div></div>`;
 }
 function opslaanNu(){clearTimeout(svT);svT=null;return S?Store.surveys.put(S):null;}
@@ -224,6 +226,10 @@ function bindEditor(){const el=document.querySelector('.de');if(!el)return;const
     if(on){bewerkOpen(k);}else volgende();});
   el.querySelector('[data-ed2="klaar"]').onclick=async()=>{await opslaanNu();bewerk=null;render();};
   el.querySelector('[data-ed2="volg"]').onclick=volgende;
+  // overnemen: de schakelaar "zelfde als" aanzetten, dan volgen adres, postcode en plaats het schouwadres (locatie)
+  const zf=el.querySelector('[data-ed2="zelfde"]');if(zf)zf.onclick=async()=>{const f=Velden.VELDEN.find(x=>x.k===el.dataset.ek);
+    Velden.zet(S,f.zelfde.veld,'Ja');for(const g of Velden.VELDEN)if(g.zelfde&&g.zelfde.veld===f.zelfde.veld&&S.velden)delete S.velden[g.k];
+    await Store.surveys.put(S);bewerk=null;render();};
 }
 function bind(){
   bindEditor();

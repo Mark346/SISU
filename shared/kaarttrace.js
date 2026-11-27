@@ -101,7 +101,7 @@
     const hist=[];const snap=()=>hist.push(JSON.stringify({l:P.lijnen,k:P.kruizen}));
     const u=URL.createObjectURL(P.orig);let modus='lijn',gewijzigd=false;
     const d=document.createElement('div');d.className='ple';d.setAttribute('role','dialog');d.setAttribute('aria-modal','true');d.setAttribute('aria-label','Kaart met tracé bewerken');
-    d.innerHTML=`<div class="plh"><button class="plk" id="plX">Annuleren</button><b>Kaart met tracé</b><button class="plk" id="plM" aria-label="Meer">•••</button><button class="plk pri" id="plOk">${o.afrond?'Plattegrond klaar':'Klaar'}</button></div>
+    d.innerHTML=`<div class="plh"><button class="plk" id="plX">Annuleren</button><b>Kaart met tracé</b><button class="plk" id="plM" aria-label="Meer">•••</button><button class="plk pri" id="plOk">${o.afrond?'Kaart klaar':'Klaar'}</button></div>
       <div class="plv2" id="plV"><div class="plw" id="plW" style="width:${P.w}px;height:${P.h}px"><img src="${u}" alt="Kaart" draggable="false"><svg viewBox="0 0 ${P.w} ${P.h}" id="plS"></svg></div></div>
       <div class="plb"><div class="plseg" role="group" aria-label="Gereedschap"><button data-m="lijn" aria-pressed="true"><svg width="22" height="10" viewBox="0 0 22 10"><path d="M1 5h20" stroke="currentColor" stroke-width="3" stroke-dasharray="5 3"/></svg>Lijn</button><button data-m="kruis" aria-pressed="false"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>Kruis</button></div>
         <span class="plsp"></span><button class="plk pri" id="plAf" hidden>✓ Lijn af</button><button class="plk" id="plU" aria-label="Ongedaan maken">↶ Terug</button>
