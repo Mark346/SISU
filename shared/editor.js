@@ -65,6 +65,9 @@
 .ved .vtop{display:flex;align-items:flex-start;background:#000;padding-top:env(safe-area-inset-top)}
 .ved .vcol{position:relative;flex:1;min-width:0;display:flex;justify-content:center}
 .ved .vph{position:relative;margin:0 auto;background:#000;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.ved .vph{overflow:hidden}
+.ved .vzm{position:absolute;inset:0;transform-origin:0 0;will-change:transform}
+.ved .vpas{position:absolute;left:10px;bottom:10px;z-index:2;font-size:1.25rem}
 .ved .vph img{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;display:block;pointer-events:none}
 .ved .vph svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 .ved .vph.grey img{filter:grayscale(1) brightness(.6)}
@@ -233,7 +236,7 @@
     <div class="vscroll">
       <div class="vtop">
         <div class="vcol">
-          <div class="vph${vv?' grey':''}" id="vPh"><img src="${st.url}" alt="Foto ${n}"><svg class="leg"></svg><svg class="hnd"></svg></div>
+          <div class="vph${vv?' grey':''}" id="vPh"><div class="vzm" id="vZm"><img src="${st.url}" alt="Foto ${n}"><svg class="leg"></svg><svg class="hnd"></svg></div><button class="ovb vpas" id="vPas" hidden aria-label="Terug naar passend in beeld">${ICO.pas||'⤢'}</button></div>
           <div class="vov">
             <button class="ovb" id="vBack" aria-label="Terug">${ICO.terug}</button>
             <span class="ovp">Foto ${n||''}${st.siblings.length>1?' / '+st.siblings.length:''}</span>
@@ -273,6 +276,7 @@
     const col=st.root.querySelector('.vcol'),maxW=(col&&col.clientWidth)||st.root.clientWidth,maxH=Math.max(220,Math.round(window.innerHeight*.55));
     let w=maxW,h=w*H/W;if(h>maxH){h=maxH;w=h*W/H;}
     el.style.width=Math.round(w)+'px';el.style.height=Math.round(h)+'px';
+    if(st.zoomReset&&st.z&&st.z.s>1)st.zoomReset();
   }
   function redraw(){
     if(!st)return;const R=st.root,[W,H]=size(),leg=R.querySelector('svg.leg'),hnd=R.querySelector('svg.hnd');if(!leg)return;
@@ -292,12 +296,34 @@
   function boxSel(){if(!st||st.ssel==null)return null;const s=(st.ph.ann.syms||[])[st.ssel];const m=s&&Legend.boxMaat(s);if(!m){st.ssel=null;return null;}return {s,w:m[0],h:m[1]};}
   // vier hoekgrepen, net buiten het item, zodat je het midden nog kunt pakken om te verschuiven
   const grepen=({s,w,h},k)=>[[-1,-1],[1,-1],[1,1],[-1,1]].map(([a,b])=>[s.x+a*(w/2+9*k),s.y+b*(h/2+9*k),a,b]);
-  function unitsPerPx(){const el=st.root.querySelector('#vPh');const r=el.getBoundingClientRect();return size()[0]/(r.width||1);}
+  function unitsPerPx(){const el=st.root.querySelector('#vZm')||st.root.querySelector('#vPh');const r=el.getBoundingClientRect();return size()[0]/(r.width||1);}
 
   /* ---- aanraken: vegen, tikken, slepen, lang drukken ---- */
   function bindPointer(el){
     let g=null;
-    const pt=e=>{const r=el.getBoundingClientRect(),[W,H]=size();return[Math.max(0,Math.min(W,(e.clientX-r.left)/r.width*W)),Math.max(0,Math.min(H,(e.clientY-r.top)/r.height*H))];};
+    const zm=el.querySelector('#vZm')||el;
+    /* zoomen met twee vingers (alleen in de app-schermen; op de afronding blijft de editor zoals hij was) */
+    const magZoom=!!window.SurveyUI,ptrs=new Map();let pinch=null,naPinch=false;
+    st.z={s:1,x:0,y:0};
+    const zet=()=>{const z=st.z;zm.style.transform=z.s===1?'':`translate(${z.x}px,${z.y}px) scale(${z.s})`;const b=el.querySelector('#vPas');if(b)b.hidden=z.s<=1.01;};
+    const begrens=()=>{const z=st.z,W=el.clientWidth,H=el.clientHeight;z.x=Math.min(0,Math.max(W*(1-z.s),z.x));z.y=Math.min(0,Math.max(H*(1-z.s),z.y));};
+    st.zoomReset=()=>{st.z={s:1,x:0,y:0};zet();redraw();};
+    const pb=el.querySelector('#vPas');if(pb){pb.addEventListener('pointerdown',e=>e.stopPropagation());pb.onclick=e=>{e.stopPropagation();st.zoomReset();};}
+    const breek=()=>{if(!g)return;clearTimeout(g.lt);if(g.kind==='draw'){st.raw=null;}g=null;redraw();};
+    el.addEventListener('pointerdown',e=>{if(!magZoom)return;ptrs.set(e.pointerId,[e.clientX,e.clientY]);
+      if(ptrs.size===2){breek();naPinch=true;const [a,b]=[...ptrs.values()],r=el.getBoundingClientRect();
+        pinch={d:Math.hypot(a[0]-b[0],a[1]-b[1])||1,m:[(a[0]+b[0])/2-r.left,(a[1]+b[1])/2-r.top],z:{...st.z}};}
+      if(ptrs.size>=2)e.stopImmediatePropagation();},true);
+    el.addEventListener('pointermove',e=>{if(!magZoom||!ptrs.has(e.pointerId))return;ptrs.set(e.pointerId,[e.clientX,e.clientY]);
+      if(pinch&&ptrs.size>=2){e.stopImmediatePropagation();const [a,b]=[...ptrs.values()],r=el.getBoundingClientRect(),d=Math.hypot(a[0]-b[0],a[1]-b[1]),m=[(a[0]+b[0])/2-r.left,(a[1]+b[1])/2-r.top];
+        const z0=pinch.z,s=Math.max(1,Math.min(6,z0.s*d/pinch.d)),cx=(pinch.m[0]-z0.x)/z0.s,cy=(pinch.m[1]-z0.y)/z0.s;
+        st.z={s,x:m[0]-cx*s,y:m[1]-cy*s};begrens();zet();}
+      else if(naPinch)e.stopImmediatePropagation();},true);
+    const los=e=>{if(!magZoom)return;ptrs.delete(e.pointerId);if(pinch){e.stopImmediatePropagation();if(ptrs.size<2){pinch=null;redraw();}}
+      else if(naPinch)e.stopImmediatePropagation();if(!ptrs.size)naPinch=false;};
+    el.addEventListener('pointerup',los,true);el.addEventListener('pointercancel',los,true);
+    el.addEventListener('pointerdown',e=>{if(naPinch)e.stopImmediatePropagation();},true);
+    const pt=e=>{const r=zm.getBoundingClientRect(),[W,H]=size();return[Math.max(0,Math.min(W,(e.clientX-r.left)/r.width*W)),Math.max(0,Math.min(H,(e.clientY-r.top)/r.height*H))];};
     el.addEventListener('pointerdown',e=>{
       if(g||st.ph.status==='vervallen'){if(st.ph.status==='vervallen')toast('Deze foto vervalt. Zet hem eerst terug.');return;}
       e.preventDefault();try{el.setPointerCapture(e.pointerId);}catch(x){}
