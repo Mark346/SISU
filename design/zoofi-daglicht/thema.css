@@ -1,0 +1,83 @@
+/* Zoofi – stijl "Daglicht" (zie design/zoofi-daglicht/DESIGN.md).
+   Licht is de standaard: zwarte tekst op wit, zwarte hoofdknop. Donker kan via de knop in de bovenbalk
+   of Instellingen (localStorage 'sisu.thema' = 'donker'). De bovenbalk is in beide standen grafiet,
+   zodat het logo en de 12 bolletjes er altijd precies hetzelfde uitzien.
+   Alleen geladen op de app-schermen (index, instellingen, paf), NIET op de afronding en het document. */
+
+/* ---------- Lichte stand (standaard) ---------- */
+html:not([data-thema="donker"]){
+  --bg:#E4E7EB; --card:#FFFFFF; --card2:#D9DEE4; --well:#EEF1F4;
+  --line:#6B7480; --line2:#1F2937;
+  --ink:#0A0C0F; --mute:#3A434E;
+  --acc:#0A0C0F; --on-acc:#FFFFFF;
+  --track:#C3CAD3;
+  --ok:#15803D; --on-ok:#FFFFFF; --warn:#8A5A00; --red:#C81E1E;
+  --signal-fill:#FFD000; --signal-on:#0A0C0F; --signal-line:#8A5A00; --signal-text:#8A5A00;
+  --warn-tekst:#8A5A00; --ok-tekst:#15803D; --danger-tekst:#B91C1C; --binnen-tekst:#6D28D9;
+  --info:#1D4ED8; --info-tekst:#1D4ED8; --danger-vlak:#FDECEC; --toast-link:#93C5FD;
+  --badge-off:#15803D; --badge-onnet:#6D28D9; --badge-on:#FFFFFF;
+  --overlay:rgba(18,20,24,.72);
+  color-scheme:light;
+}
+
+/* ---------- Donkere stand ---------- */
+html[data-thema="donker"]{
+  --bg:#121418; --card:#1E2127; --card2:#2C3038; --well:#121418;
+  --line:#6A7280; --line2:#A3ABB6;
+  --ink:#FFFFFF; --mute:#C8CDD4;
+  --acc:#FFFFFF; --on-acc:#0A0C0F;
+  --track:#3A3F47;
+  --ok:#22C55E; --on-ok:#0A0C0F; --warn:#FFD000; --red:#F04444;
+  --signal-fill:#FFD000; --signal-on:#0A0C0F; --signal-line:#FFD000; --signal-text:#FFD000;
+  --warn-tekst:#FFD000; --ok-tekst:#4ADE80; --danger-tekst:#FF8A80; --binnen-tekst:#B79CFF;
+  --info:#3B82F6; --info-tekst:#7FB0FF; --danger-vlak:#2A1D1D; --toast-link:#1D4ED8;
+  --badge-off:#22C55E; --badge-onnet:#A78BFA; --badge-on:#0A0C0F;
+  color-scheme:dark;
+}
+/* let op: de vezelkleuren --f1 t/m --f12 worden hier NIET aangepast (bolletjes blijven gelijk) */
+
+/* ---------- Bovenbalk altijd grafiet ---------- */
+/* Elke regel begint met "html ": de app voegt een deel van zijn stijl pas later toe (survey-ui.js, gegevens.js, editor.js),
+   en zonder dat extra woord zou die latere stijl het winnen. */
+html .bar,html .vezelband{background:#121418}
+html .bar{color:#F3F4F6;border-bottom:0}
+html .bar h1{color:#F3F4F6}
+html .bar .bpill,html .bar .back,html .bar .hbtn{background:#1C1F25;border:1px solid #3A3E46;color:#F3F4F6}
+html .bar .back:active,html .bar .hbtn:active{background:#2A2E35}
+html .vezelband{padding-bottom:12px}
+html .vezelband+.page{padding-top:16px}
+
+/* ---------- Randen, letters en labels (beide standen) ---------- */
+html .card,html .sui .sv,html .sui .snp,html .sui .sdone,html .sui .tel,html .sui .snext,html .sui .rolk,html .tdr,html .plv,html .sui .spnoot,html .sui .sfold,html .sui .kgrp,html .sui .kastk,html .tl,html .btn{border-width:1.5px}
+html .sui .tel .r{border-bottom-width:1.5px}
+html input:not([type=checkbox]):not([type=radio]):not([type=range]),html select,html textarea{border-width:1.5px}
+html ::placeholder{color:var(--mute);opacity:.8}
+html .sui .sst,html .sui .sdoc{font-size:1rem}
+html .tdt small,html .sui .rolk .rn small,html .plv .plt small,html .sui .tel .r .l small{font-size:0.9375rem}
+html .sui .sstep li{font-size:0.875rem}
+html .sui .sstep li i{height:7px;border-radius:4px}
+html .sui .styb{background:var(--badge-off);color:var(--badge-on);font-size:0.8125rem;padding:4px 9px}
+html .sui .styb.on{background:var(--badge-onnet);color:var(--badge-on)}
+html .sui .sdelx{color:var(--danger-tekst)}
+
+/* ---------- Eén signaalkleur: geel = nog te doen, groen ✓ = klaar ---------- */
+html .tdr.wrn,html .sui .rolk.wrn,html .plv.mist{border-color:var(--signal-line);box-shadow:inset 7px 0 0 var(--signal-fill)}
+html .tdr.wrn{padding-left:16px}html .sui .rolk.wrn{padding-left:14px}html .plv.mist{padding-left:20px}
+html .tdi,html .plv .pli,html .plv.mist .pli{background:var(--well)}
+html .plv{border-color:var(--line)}
+html .sig{width:30px;height:30px;box-shadow:none;background:var(--ok);display:grid;place-items:center}
+html .sig::after{content:'✓';font-style:normal;font-weight:800;font-size:17px;color:var(--on-ok)}
+html .tdr.wrn .sig,html .plv.mist .sig{background:var(--signal-fill)}
+html .tdr.wrn .sig::after,html .plv.mist .sig::after{content:'!';font-weight:900;font-size:19px;color:var(--signal-on)}
+html .sui .uitr{background:var(--signal-fill);color:var(--signal-on)}
+html .plv.mist .plt small{color:var(--signal-text)}
+html .sui .snext.wrn{background:var(--signal-fill);border-color:var(--signal-fill)}
+html .sui .snext.wrn .t b{color:var(--signal-on)}
+html .sui .sst .wrn{color:var(--signal-text)}
+
+/* ---------- Tekstgrootte (Instellingen): Normaal 100 % / Groot 115 % / Extra groot 130 % ---------- */
+html[data-tekst="groot"]{font-size:18.4px}
+html[data-tekst="extra"]{font-size:20.8px}
+/* adres in de kop helemaal tonen (over meer regels) in plaats van afkappen */
+.bar h1{white-space:normal;overflow:visible;text-overflow:clip;line-height:1.2;overflow-wrap:anywhere}
+html .sui .sht b{white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere}
