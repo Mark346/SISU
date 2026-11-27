@@ -75,6 +75,7 @@
 .ved .ovp{height:34px;border-radius:17px;background:var(--overlay,rgba(18,20,24,.72));color:#fff;display:flex;align-items:center;gap:7px;padding:0 12px;font-weight:600;font-size:15px;white-space:nowrap}
 .ved .ovp.r{margin-left:auto}
 .ved .dot{flex:none;width:9px;height:9px;border-radius:5px}
+.ved .vovb{position:absolute;right:10px;bottom:10px;display:flex;gap:8px}
 .ved .vrail{flex:none;width:64px;display:flex;justify-content:center;padding:10px 0}
 .ved .vrail .in{display:flex;flex-direction:column;align-items:center;gap:6px;padding:6px;border-radius:28px;background:var(--card,#1C1F25)}
 .ved .vrail button{width:44px;height:44px;border-radius:22px;border:0;background:transparent;color:var(--ink,#F3F4F6);display:flex;align-items:center;justify-content:center;padding:0;cursor:pointer}
@@ -230,13 +231,8 @@
             <span class="ovp">Foto ${n||''}${st.siblings.length>1?' / '+st.siblings.length:''}</span>
             ${sec?`<span class="ovp r"><i class="dot" style="background:var(--sec-${sec==='binnen'?'binnen':'buiten'})"></i>${sec==='binnen'?'Binnen':'Buiten'}</span>`:''}
           </div>
+          <div class="vovb"><button class="ovb" id="vUndo" aria-label="Ongedaan maken">${ICO.undo}</button><button class="ovb" id="vWipe" aria-label="Tekening wissen">${ICO.gum}</button></div>
         </div>
-        <div class="vrail"><div class="in" role="toolbar" aria-label="Snel kiezen">
-          ${tools.slice(0,2).map(t=>`<button class="tl${on(t)?' on':''}" data-t="${t.id}" aria-pressed="${on(t)}" aria-label="${esc(t.name)}">${miniOf(t,1.4)}</button>`).join('')}
-          <hr>
-          <button id="vUndo" aria-label="Ongedaan maken">${ICO.undo}</button>
-          <button id="vWipe" aria-label="Wis foto (tekening wissen)">${ICO.gum}</button>
-        </div></div>
       </div>
       <div class="vhint"><p></p>${vv?'<button class="sm" id="vRest">Terugzetten</button>':''}</div>
       <div class="vtools" role="toolbar" aria-label="Legenda">${tools.map(t=>`<button class="tl${on(t)?' on':''}" data-t="${t.id}" aria-pressed="${on(t)}">${miniOf(t,1.3)}<span>${t.name}</span></button>`).join('')}</div>
