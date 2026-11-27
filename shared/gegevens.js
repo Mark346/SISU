@@ -57,6 +57,7 @@
 :is(.geg,.gin) .stp button{flex:none;width:48px;height:48px;border-radius:24px;border:1px solid var(--line2);background:var(--well);color:var(--ink);font-size:1.5rem;font-weight:800;cursor:pointer;padding:0}
 :is(.geg,.gin) .zw{display:flex;align-items:center;gap:12px;min-height:56px;padding:8px 14px;font-weight:700;font-size:1rem}
 :is(.geg,.gin) .zw span{flex:1}
+:is(.geg,.gin) .zw{cursor:pointer;-webkit-user-select:none;user-select:none}
 :is(.geg,.gin) .sw{flex:none;position:relative;width:56px;height:34px;border-radius:17px;border:1px solid var(--line2);background:var(--well);cursor:pointer;padding:0}
 :is(.geg,.gin) .sw i{position:absolute;top:3px;left:3px;width:26px;height:26px;border-radius:13px;background:var(--mute);transition:left .15s}
 :is(.geg,.gin) .sw[aria-checked="true"]{background:var(--acc);border-color:var(--acc)}:is(.geg,.gin) .sw[aria-checked="true"] i{left:25px;background:var(--on-acc)}
@@ -288,7 +289,7 @@
       default:{
         if(f.stap)return `<div class="stp"><button data-stp="${f.k}" data-d="-1" aria-label="Eén minder">−</button><input id="${id}" data-k="${f.k}" data-num="1" inputmode="numeric" enterkeyhint="next" value="${esc(v==null?'':v)}" placeholder="0"><button data-stp="${f.k}" data-d="1" aria-label="Eén meer">+</button></div>`;
         const ty={datum:'date',tel:'tel',mail:'email',getal:'number'}[f.t]||'text';
-        return `<input id="${id}" type="${ty}" data-k="${f.k}" value="${esc(v==null?'':v)}" placeholder="${esc(vbTekst(f,half))}" enterkeyhint="next"${f.t==='getal'?' inputmode="numeric"':''}${f.t==='mail'?' autocomplete="email"':''}${f.t==='tel'?' autocomplete="tel"':''}>`;}
+        return `<input id="${id}" type="${ty}" data-k="${f.k}" value="${esc(v==null?'':v)}" placeholder="${esc(vbTekst(f,half))}" enterkeyhint="next"${f.t==='getal'?' inputmode="numeric"':''}${f.t==='mail'?' autocomplete="email"':''}${f.t==='tel'?' autocomplete="tel"':''}${/postcode/.test(f.k)?' autocapitalize="characters" autocomplete="postal-code"':''}>`;}
     }
   }
   function vg(){const v=Velden.waarde(st.s,'vg');return v&&typeof v==='object'?{items:{},...v}:{items:{}};}
@@ -335,6 +336,8 @@
       st.vast.add(k);Velden.zet(s,k,n);const i=R.querySelector(`input[data-k="${k}"]`);if(i)i.value=n;save();upd();});
     R.querySelectorAll('.ch button').forEach(b=>b.onclick=()=>{const k=b.dataset.k,on=Velden.waarde(s,k)===b.dataset.v;st.vast.add(k);Velden.zet(s,k,on?'':b.dataset.v);
       if(st.filter==='alles')st.edit=null;save(true).then(()=>herteken());});
+    // de hele rij van een schakelaar is aantikbaar, niet alleen het knopje
+    R.querySelectorAll('.zw').forEach(r=>r.onclick=e=>{if(e.target.closest('[data-sw]'))return;const b=r.querySelector('[data-sw]');if(b)b.click();});
     R.querySelectorAll('[data-sw]').forEach(b=>b.onclick=()=>{const k=b.dataset.sw,f=Velden.VELDEN.find(x=>x.k===k),aan=Velden.zelfdeAan(s,k);
       if(aan)Object.entries(f.bron).forEach(([doel,bron])=>{const vv=(s.velden||{})[doel];if(vv==null||vv==='')Velden.zet(s,doel,Velden.waarde(s,bron)||'');}); // uitzetten: neem de klantgegevens over om aan te passen
       Velden.zet(s,k,aan?'Nee':'Ja');save(true).then(()=>herteken());});
@@ -444,7 +447,7 @@
       if(f.stap)return `<div class="stp"><button data-istp="${f.k}" data-d="-1" aria-label="Eén minder">−</button><input id="${id}" data-ik="${f.k}" data-num="1" inputmode="numeric" value="${esc(v==null?'':v)}" placeholder="0"><button data-istp="${f.k}" data-d="1" aria-label="Eén meer">+</button></div>`;
       if(f.t==='lang')return `<textarea id="${id}" data-ik="${f.k}" placeholder="${esc(f.vb?'bijv. '+f.vb:'')}">${esc(v||'')}</textarea>`;
       if(f.t==='teller')return `<input id="${id}" data-ik="${f.k}" data-num="1" inputmode="decimal" value="${esc(v==null?'':v)}" placeholder="0">`;
-      return `<input id="${id}" type="${{getal:'number',tel:'tel',mail:'email',datum:'date'}[f.t]||'text'}" data-ik="${f.k}" value="${esc(v==null?'':v)}" placeholder="${esc(f.vb?'bijv. '+f.vb:'')}">`;};
+      return `<input id="${id}" type="${{getal:'number',tel:'tel',mail:'email',datum:'date'}[f.t]||'text'}" data-ik="${f.k}" value="${esc(v==null?'':v)}" placeholder="${esc(f.vb?'bijv. '+f.vb:'')}"${/postcode/.test(f.k)?' autocapitalize="characters" autocomplete="postal-code"':''}>`;};
     el.classList.add('gin');
     el.innerHTML=F.map(f=>`<div class="fr" data-ir="${f.k}"><label class="fl" for="gi_${f.k}"><span>${esc(f.kort||f.l)}</span><i class="vink" role="img" aria-label="ingevuld" hidden>✓</i></label>${inv(f)}</div>`).join('');
     let t=null;const bewaar=now=>{clearTimeout(t);const go=async()=>{await Store.surveys.put(s);if(o.onChange)o.onChange(s);};if(now)go();else t=setTimeout(go,350);};
